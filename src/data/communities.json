@@ -1,0 +1,993 @@
+{
+  "McLean": {
+    "type": "city",
+    "county": "Fairfax County",
+    "parent_city": null,
+    "character": "affluent suburban enclave with large wooded lots and an established, understated elegance",
+    "highlights": [
+      "one of the most affluent ZIP codes on the East Coast",
+      "large private lots with mature trees and privacy",
+      "adjacent to Tysons Corner retail and dining",
+      "quick access to DC via Chain Bridge or I-495",
+      "home to many diplomats, executives, and government officials"
+    ],
+    "commute": "approximately 10–15 miles to downtown DC; no Metro access directly in McLean, but Silver Line accessible at nearby Tysons stations",
+    "metro": "McLean (Silver Line) and Tysons Corner (Silver Line) nearby",
+    "notable": "Residents enjoy the George Washington Memorial Parkway, Scott's Run Nature Preserve, and proximity to Langley without the density of urban suburbs"
+  },
+  "Great Falls": {
+    "type": "city",
+    "county": "Fairfax County",
+    "parent_city": null,
+    "character": "secluded estate community with a rural feel, large acreage lots, and equestrian properties",
+    "highlights": [
+      "estate-sized lots from 1 to 10+ acres",
+      "Great Falls National Park on the Potomac River",
+      "no commercial density — quiet and private",
+      "top-rated schools including Langley HS pyramid",
+      "horse-friendly zoning in many areas"
+    ],
+    "commute": "approximately 20–25 miles to DC; no Metro access, primarily car-dependent; Dulles Toll Road accessible",
+    "metro": null,
+    "notable": "One of the most sought-after addresses in the DC area for buyers seeking land, privacy, and top schools in a prestigious zip code"
+  },
+  "Vienna": {
+    "type": "city",
+    "county": "Fairfax County",
+    "parent_city": null,
+    "character": "charming, walkable small town with a strong community identity and tree-lined streets",
+    "highlights": [
+      "vibrant Maple Avenue corridor with local restaurants, boutiques, and coffee shops",
+      "W&OD Trail running through town — ideal for cycling, running, and walking",
+      "Orange Line Metro access at Vienna/Fairfax-GMU station",
+      "active community events and farmers markets",
+      "highly walkable by Northern Virginia standards"
+    ],
+    "commute": "approximately 14 miles to DC; direct Orange Line Metro service",
+    "metro": "Vienna/Fairfax-GMU (Orange Line)",
+    "notable": "Vienna strikes a rare balance between small-town charm and suburban convenience, making it one of NoVA's most consistently in-demand markets"
+  },
+  "Oakton": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "Fairfax",
+    "character": "established, family-oriented suburb with quality schools and a quiet residential feel",
+    "highlights": [
+      "top-rated Oakton High School pyramid",
+      "convenient to Fairfax County Parkway and I-66",
+      "mix of established communities and newer construction",
+      "close to Vienna and Fairfax amenities"
+    ],
+    "commute": "approximately 18 miles to DC; accessible via I-66 or Fairfax County Parkway; Vienna Metro nearby",
+    "metro": "Vienna/Fairfax-GMU (Orange Line) — nearby",
+    "notable": "Oakton is a premium Fairfax County address prized for its schools, neighborhood stability, and low-key suburban character"
+  },
+  "Fairfax": {
+    "type": "city",
+    "county": "Fairfax County",
+    "parent_city": null,
+    "character": "diverse county seat with a historic Old Town district and convenient suburban amenities",
+    "highlights": [
+      "historic Old Town Fairfax with restaurants, shops, and seasonal events",
+      "Fairfax County Government Center and major employment hub",
+      "convenient to I-66, Route 50, and Fairfax County Parkway",
+      "George Mason University campus",
+      "active arts and dining scene"
+    ],
+    "commute": "approximately 20 miles to DC; accessible via I-66 or Route 50; no direct Metro but bus connections available",
+    "metro": "Vienna/Fairfax-GMU (Orange Line) — nearby",
+    "notable": "Fairfax offers strong value relative to neighboring cities while maintaining quality schools and a thriving community identity"
+  },
+  "Centreville": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "Fairfax",
+    "character": "established family suburb along the Route 28 technology corridor",
+    "highlights": [
+      "affordable entry point into Fairfax County",
+      "convenient to Route 28 Tech Corridor employers",
+      "Bull Run Regional Park for outdoor recreation",
+      "Centreville High School district",
+      "good highway access via I-66 and Route 29"
+    ],
+    "commute": "approximately 25 miles to DC; accessible via I-66 or Route 29; no direct Metro",
+    "metro": null,
+    "notable": "Centreville provides solid Fairfax County schools and suburban living at a more accessible price point than inner-ring communities"
+  },
+  "Chantilly": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "Fairfax",
+    "character": "thriving suburb at the heart of Northern Virginia's technology and aviation corridor",
+    "highlights": [
+      "Smithsonian National Air and Space Museum Udvar-Hazy Center",
+      "proximity to Dulles International Airport",
+      "Route 28 Technology Corridor employment hub",
+      "well-regarded Chantilly High School district",
+      "mix of established neighborhoods and newer townhome communities"
+    ],
+    "commute": "approximately 25–28 miles to DC; accessible via Route 28 and I-66 or Dulles Toll Road; Silver Line at Dulles is nearby",
+    "metro": "Washington Dulles (Silver Line) — nearby",
+    "notable": "Chantilly is a go-to address for tech professionals and families who value top schools, commuter access, and proximity to Dulles Airport"
+  },
+  "Reston": {
+    "type": "city",
+    "county": "Fairfax County",
+    "parent_city": null,
+    "character": "America's first planned community — a walkable, diverse, amenity-rich suburban city with an urban core",
+    "highlights": [
+      "Reston Town Center — premier dining, retail, hotel, and office destination",
+      "Silver Line Metro access at two stations",
+      "150+ miles of trails and pathways throughout the community",
+      "W&OD Trail access and multiple community lakes and pools",
+      "strong international and corporate community near Tysons and Dulles"
+    ],
+    "commute": "approximately 18–22 miles to DC; direct Silver Line Metro service",
+    "metro": "Reston Town Center and Wiehle-Reston East (Silver Line)",
+    "notable": "Reston is one of NoVA's most lifestyle-complete communities, offering a genuine live-work-play environment that appeals to young professionals and families alike"
+  },
+  "Herndon": {
+    "type": "city",
+    "county": "Fairfax County",
+    "parent_city": null,
+    "character": "affordable, diverse town adjacent to Dulles Airport with a revitalized historic downtown",
+    "highlights": [
+      "revitalized downtown Herndon with new dining and local shops",
+      "W&OD Trail access",
+      "proximity to Dulles International Airport",
+      "Silver Line Metro access at nearby Innovation Center station",
+      "international community with diverse dining options"
+    ],
+    "commute": "approximately 25 miles to DC; Silver Line Metro accessible",
+    "metro": "Innovation Center (Silver Line) — nearby",
+    "notable": "Herndon offers one of the best price-per-square-foot values in Fairfax County with strong upside potential driven by Metro connectivity and continued Dulles corridor growth"
+  },
+  "Springfield": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "Fairfax",
+    "character": "established I-95 corridor suburb with convenient highway access and a broad range of housing options",
+    "highlights": [
+      "Franconia-Springfield Metro station on the Blue/Yellow line",
+      "Springfield Town Center for shopping and dining",
+      "convenient access to I-95, I-395, and the Fairfax County Parkway",
+      "Fort Belvoir proximity — popular with military and government families",
+      "Accotink Stream Valley Trail for outdoor recreation"
+    ],
+    "commute": "approximately 15–18 miles to DC; Blue and Yellow Line Metro access; I-395 commuter corridor",
+    "metro": "Franconia-Springfield (Blue/Yellow Line)",
+    "notable": "Springfield's combination of Metro access, highway connectivity, and diverse housing stock makes it one of Fairfax County's most practical and in-demand communities"
+  },
+  "Burke": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "Fairfax",
+    "character": "well-established family suburb with strong neighborhood cohesion and recreational amenities",
+    "highlights": [
+      "Lake Accotink Park with boating, trails, and picnic areas",
+      "well-regarded Lake Braddock school pyramid",
+      "strong HOA communities with pools and recreation facilities",
+      "convenient to I-495 and Fairfax County Parkway",
+      "consistent home values and stable long-term market"
+    ],
+    "commute": "approximately 18–20 miles to DC; Franconia-Springfield Metro nearby; VRE access at Burke Centre station",
+    "metro": "Franconia-Springfield (Blue/Yellow Line) — nearby; Burke Centre VRE",
+    "notable": "Burke has been one of Fairfax County's steadiest real estate markets for decades, offering top schools, parks, and community character"
+  },
+  "Annandale": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "Fairfax",
+    "character": "diverse, affordable urban-edge community known for its vibrant international food scene",
+    "highlights": [
+      "nationally recognized Korean and global dining corridor on Little River Turnpike",
+      "more affordable entry point into Fairfax County",
+      "convenient to I-495, I-395, and Columbia Pike",
+      "close to Arlington and Alexandria amenities",
+      "established neighborhoods with large lots"
+    ],
+    "commute": "approximately 12 miles to DC; accessible via I-495 and I-395; no direct Metro but bus connections to Orange Line",
+    "metro": "Ballston or Pentagon City (nearby via bus)",
+    "notable": "Annandale offers strong value for buyers wanting Fairfax County schools and proximity to DC without the premium pricing of closer-in communities"
+  },
+  "Falls Church": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": null,
+    "character": "diverse urban-edge neighborhood bordering Falls Church City with quick access to Metro",
+    "highlights": [
+      "East Falls Church Metro station on Orange/Silver Line",
+      "W&OD Trail access",
+      "close proximity to Tysons Corner and Arlington",
+      "diverse mix of housing types and price points",
+      "easy access to I-66 and I-495"
+    ],
+    "commute": "approximately 8–10 miles to DC; Orange and Silver Line Metro access",
+    "metro": "East Falls Church (Orange/Silver Line)",
+    "notable": "The Falls Church area offers one of the best commute profiles in Fairfax County with direct Metro access and quick access to major employment centers"
+  },
+  "Lorton": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "Fairfax",
+    "character": "growing south Fairfax community with arts, waterfront access, and emerging new development",
+    "highlights": [
+      "Workhouse Arts Center — nationally recognized arts and cultural campus",
+      "Occoquan Reservoir and waterfront recreation",
+      "Laurel Hill Golf Club",
+      "VRE (Virginia Railway Express) commuter rail access",
+      "new residential development offering larger homes at competitive prices"
+    ],
+    "commute": "approximately 20–25 miles to DC; I-95 commuter corridor; VRE Lorton station",
+    "metro": null,
+    "notable": "Lorton's transformation from a former federal correctional facility site to a thriving arts and residential community represents one of NoVA's great redevelopment success stories"
+  },
+  "Clifton": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "Fairfax",
+    "character": "historic rural village with a small-town feel preserved by strict zoning and equestrian character",
+    "highlights": [
+      "historic Town of Clifton with preserved 19th-century architecture",
+      "equestrian properties and large wooded lots",
+      "Bull Run Regional Park and hiking trails",
+      "Robinson school pyramid with strong academic reputation",
+      "very low commercial density — genuinely rural character"
+    ],
+    "commute": "approximately 25–30 miles to DC; car-dependent; no Metro or rail access",
+    "metro": null,
+    "notable": "Clifton is one of the few communities in Fairfax County that has successfully preserved its rural and historic character while offering top-rated schools"
+  },
+  "Dunn Loring": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "Falls Church",
+    "character": "compact urban-edge neighborhood with Orange Line Metro access and walkable amenities",
+    "highlights": [
+      "Dunn Loring-Merrifield Metro station on the Orange/Silver Line",
+      "proximity to Mosaic District",
+      "easy access to I-495 and Route 50",
+      "walkable to retail and restaurants",
+      "convenient to Tysons Corner employment corridor"
+    ],
+    "commute": "approximately 10 miles to DC; direct Orange/Silver Line Metro",
+    "metro": "Dunn Loring-Merrifield (Orange/Silver Line)",
+    "notable": "Dunn Loring offers an excellent commute profile and walkability that is rare in Fairfax County at a relatively accessible price point"
+  },
+  "Merrifield": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "Falls Church",
+    "character": "rapidly transforming urban district anchored by the acclaimed Mosaic District",
+    "highlights": [
+      "Mosaic District — upscale mixed-use destination with restaurants, boutiques, cinema, and Trader Joe's",
+      "Dunn Loring-Merrifield Metro station",
+      "new luxury residential and mixed-use development",
+      "walkable urban feel unusual for Fairfax County",
+      "convenient to I-495 and major employment centers"
+    ],
+    "commute": "approximately 10 miles to DC; direct Orange/Silver Line Metro",
+    "metro": "Dunn Loring-Merrifield (Orange/Silver Line)",
+    "notable": "Merrifield's Mosaic District has become one of NoVA's most desirable lifestyle destinations, driving strong appreciation in surrounding residential areas"
+  },
+  "Tysons": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "McLean",
+    "character": "Northern Virginia's premier business and retail hub rapidly transforming into a walkable urban center",
+    "highlights": [
+      "Tysons Corner Center and Tysons Galleria — among the largest malls in the US",
+      "four Silver Line Metro stations providing exceptional transit access",
+      "major corporate office headquarters",
+      "new luxury high-rise residential development",
+      "one of the largest employment centers in the DC metro area"
+    ],
+    "commute": "approximately 12–15 miles to DC; direct Silver Line Metro with four stations",
+    "metro": "McLean, Tysons Corner, Greensboro, Spring Hill (Silver Line)",
+    "notable": "Tysons is undergoing one of the largest planned urban transformations in the country, with billions in investment reshaping it from suburban mall into a 24-hour city"
+  },
+  "Wolf Trap": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "Vienna",
+    "character": "quiet, upscale enclave surrounded by parkland and performing arts culture",
+    "highlights": [
+      "Wolf Trap National Park for the Performing Arts — unique outdoor concert venue",
+      "low-density, private neighborhood character",
+      "top-rated Langley HS school pyramid",
+      "adjacent to Great Falls and McLean estates",
+      "Dulles Toll Road and I-495 easily accessible"
+    ],
+    "commute": "approximately 18 miles to DC; car-dependent; Silver Line at Tysons nearby",
+    "metro": "McLean or Tysons Corner (Silver Line) — nearby",
+    "notable": "Wolf Trap offers a rare combination of performing arts access, National Park surroundings, top schools, and prestigious Fairfax County address at a modest premium"
+  },
+  "Bailey's Crossroads": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "Falls Church",
+    "character": "dense, diverse urban-edge community bordering Arlington with strong transit access",
+    "highlights": [
+      "exceptional walkability and urban character for Fairfax County",
+      "diverse international dining and retail",
+      "Columbia Pike corridor with planned streetcar and development",
+      "close proximity to Arlington and Alexandria",
+      "affordable relative to neighboring jurisdictions"
+    ],
+    "commute": "approximately 7–9 miles to DC; bus connections to Pentagon and Yellow/Blue Metro",
+    "metro": "Pentagon City or Pentagon (Yellow/Blue Line) — via bus",
+    "notable": "Bailey's Crossroads is one of the most culturally diverse communities in NoVA and offers excellent value for buyers seeking an urban lifestyle without DC prices"
+  },
+  "Seven Corners": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "Falls Church",
+    "character": "dense transit-oriented community at the intersection of several major commercial corridors",
+    "highlights": [
+      "exceptionally convenient location — 15 minutes to DC",
+      "diverse dining and international retail options",
+      "proximity to Falls Church City and East Falls Church Metro",
+      "affordable urban-edge living",
+      "easy access to Route 50, I-66, and I-495"
+    ],
+    "commute": "approximately 8–10 miles to DC; East Falls Church Metro nearby",
+    "metro": "East Falls Church (Orange/Silver Line) — nearby",
+    "notable": "Seven Corners provides outstanding commute access and urban-edge amenities at price points well below comparable Arlington and Falls Church City properties"
+  },
+  "West Springfield": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "Springfield",
+    "character": "well-established family suburb with strong neighborhood associations and recreational amenities",
+    "highlights": [
+      "well-regarded West Springfield High School district",
+      "Lake Accotink Park for recreation and trails",
+      "convenient to I-495, I-95, and Fairfax County Parkway",
+      "Franconia-Springfield Metro within reach",
+      "strong community identity with long-term residents"
+    ],
+    "commute": "approximately 18 miles to DC; Franconia-Springfield Metro and I-395 commuter route",
+    "metro": "Franconia-Springfield (Blue/Yellow Line) — nearby",
+    "notable": "West Springfield consistently ranks as one of Fairfax County's most stable and family-friendly communities with strong long-term appreciation"
+  },
+  "Franconia": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "Springfield",
+    "character": "southern Fairfax community with Metro access and proximity to Fort Belvoir",
+    "highlights": [
+      "Franconia-Springfield Metro station on Blue/Yellow Line",
+      "Kingstowne Town Center for shopping and dining",
+      "Fort Belvoir proximity — popular with DOD families",
+      "I-95 and I-395 access",
+      "mix of established single-family and townhome communities"
+    ],
+    "commute": "approximately 15–18 miles to DC; direct Blue/Yellow Line Metro",
+    "metro": "Franconia-Springfield (Blue/Yellow Line)",
+    "notable": "Franconia's Metro access and proximity to Fort Belvoir make it a perennial favorite for military families and government contractors seeking suburban living with transit options"
+  },
+  "Arlington": {
+    "type": "county",
+    "county": "Arlington County",
+    "parent_city": null,
+    "character": "DC's most urban Virginia suburb — walkable, transit-rich, and consistently among the most desirable places to live in America",
+    "highlights": [
+      "11 Metro stations across Orange, Silver, Blue, and Yellow lines",
+      "Rosslyn-Ballston corridor — one of the most successful transit-oriented development corridors in the US",
+      "extensive network of trails including the Custis and Four Mile Run trails",
+      "Pentagon, Amazon HQ2, Boeing, and major government employers",
+      "top-rated Arlington Public Schools system"
+    ],
+    "commute": "directly adjacent to DC; Metro commute to downtown in 10–20 minutes from most neighborhoods",
+    "metro": "Multiple stations across Orange, Silver, Blue, and Yellow lines",
+    "notable": "Arlington is the crown jewel of Northern Virginia real estate — combining walkability, transit access, top schools, and consistent appreciation that has made it one of the most valuable counties per square mile in the US"
+  },
+  "North Arlington": {
+    "type": "neighborhood",
+    "county": "Arlington County",
+    "parent_city": "Arlington",
+    "character": "upscale established residential enclave with Potomac River access and prestigious addresses",
+    "highlights": [
+      "some of the most expensive single-family homes in the DC metro area",
+      "direct access to GW Parkway and Potomac waterfront",
+      "top-rated schools including Washington-Liberty and Yorktown HS pyramids",
+      "leafy, walkable neighborhoods like Lyon Park, Cherrydale, and Donaldson Run",
+      "proximity to Key Bridge, Chain Bridge, and DC border"
+    ],
+    "commute": "approximately 4–8 miles to DC; Orange/Silver Line Metro at Clarendon or Ballston",
+    "metro": "Clarendon, Virginia Square, Ballston (Orange/Silver Line)",
+    "notable": "North Arlington properties are among the most consistently sought-after and reliably appreciating assets in the entire DC metro market"
+  },
+  "South Arlington": {
+    "type": "neighborhood",
+    "county": "Arlington County",
+    "parent_city": "Arlington",
+    "character": "diverse, arts-forward community undergoing significant revitalization along the Columbia Pike corridor",
+    "highlights": [
+      "Columbia Pike revitalization with new restaurants, retail, and residential",
+      "Shirlington Village — unique walkable arts and dining district",
+      "more affordable entry point into Arlington County",
+      "proximity to Pentagon and Crystal City employers",
+      "diverse community with strong neighborhood associations"
+    ],
+    "commute": "approximately 4–6 miles to DC; Pentagon Metro nearby; I-395 access",
+    "metro": "Pentagon or Pentagon City (Blue/Yellow Line)",
+    "notable": "South Arlington offers Arlington County's best value proposition — desirable address, improving amenities, and strong appreciation potential as Columbia Pike investment continues"
+  },
+  "Clarendon": {
+    "type": "neighborhood",
+    "county": "Arlington County",
+    "parent_city": "Arlington",
+    "character": "Arlington's premier entertainment and lifestyle district with exceptional walkability and a vibrant restaurant scene",
+    "highlights": [
+      "among the most walkable neighborhoods in the entire DC metro area",
+      "nationally recognized restaurant and bar scene",
+      "weekly farmers market and year-round street festivals",
+      "Orange/Silver Line Metro directly below",
+      "mix of historic bungalows and modern luxury condos"
+    ],
+    "commute": "approximately 5 miles to DC; direct Orange/Silver Line Metro",
+    "metro": "Clarendon (Orange/Silver Line)",
+    "notable": "Clarendon has long been considered one of the best urban neighborhoods in the DC area — consistently ranking in national livability surveys for its walkability, dining, and community culture"
+  },
+  "Ballston": {
+    "type": "neighborhood",
+    "county": "Arlington County",
+    "parent_city": "Arlington",
+    "character": "rapidly evolving urban neighborhood blending residential, commercial, and university anchors",
+    "highlights": [
+      "Ballston Quarter — premier mixed-use retail, dining, and entertainment center",
+      "Marymount University campus",
+      "Orange/Silver Line Metro",
+      "major office towers and government employers",
+      "strong condo and apartment market with newer luxury product"
+    ],
+    "commute": "approximately 6 miles to DC; direct Orange/Silver Line Metro",
+    "metro": "Ballston-MU (Orange/Silver Line)",
+    "notable": "Ballston's continuing transformation into a true urban mixed-use center has driven consistent real estate appreciation and broad buyer demand across all property types"
+  },
+  "Pentagon City": {
+    "type": "neighborhood",
+    "county": "Arlington County",
+    "parent_city": "Arlington",
+    "character": "high-density urban neighborhood anchored by the Pentagon and Fashion Centre mall with exceptional transit",
+    "highlights": [
+      "Pentagon and Pentagon City Metro stations — Blue and Yellow Lines",
+      "Fashion Centre at Pentagon City — upscale shopping",
+      "Amazon HQ2 in adjacent National Landing",
+      "Reagan National Airport within minutes",
+      "one of the most transit-accessible addresses in the DC suburbs"
+    ],
+    "commute": "approximately 4–5 miles to DC; direct Blue and Yellow Line Metro; minutes to Reagan National Airport",
+    "metro": "Pentagon City (Blue/Yellow Line)",
+    "notable": "Pentagon City's proximity to major employment centers, National Landing development, and two Metro stations makes it one of the highest-demand rental and condo markets in NoVA"
+  },
+  "Crystal City": {
+    "type": "neighborhood",
+    "county": "Arlington County",
+    "parent_city": "Arlington",
+    "character": "established urban district being transformed by Amazon HQ2 and National Landing redevelopment",
+    "highlights": [
+      "Amazon HQ2 at National Landing — transformative economic driver",
+      "Crystal City Metro (Blue/Yellow Line) with free underground pedestrian network",
+      "Reagan National Airport walkable distance",
+      "Crystal Drive restaurant corridor with new dining",
+      "major government and defense contractor employment base"
+    ],
+    "commute": "approximately 3–4 miles to DC; Blue/Yellow Line Metro; walkable to Reagan National Airport",
+    "metro": "Crystal City (Blue/Yellow Line)",
+    "notable": "The National Landing redevelopment and Amazon HQ2 presence have made Crystal City one of the most significant real estate investment stories in the DC area"
+  },
+  "Alexandria": {
+    "type": "city",
+    "county": "Alexandria City",
+    "parent_city": null,
+    "character": "historic independent city blending colonial heritage with a vibrant, youthful contemporary culture",
+    "highlights": [
+      "King Street — one of the most celebrated main streets in America",
+      "Old Town waterfront along the Potomac River",
+      "Blue and Yellow Line Metro access at King Street and Braddock Road stations",
+      "nationally recognized restaurant and arts scene",
+      "proximity to DC, National Landing, and Fort Belvoir"
+    ],
+    "commute": "approximately 8–10 miles to DC; direct Blue/Yellow Line Metro",
+    "metro": "King Street-Old Town and Braddock Road (Blue/Yellow Line)",
+    "notable": "Alexandria is consistently ranked among the best places to live in the US, offering a combination of historic character, walkable urbanism, and Metro connectivity unmatched in NoVA"
+  },
+  "Old Town Alexandria": {
+    "type": "neighborhood",
+    "county": "Alexandria City",
+    "parent_city": "Alexandria",
+    "character": "prestigious historic district with cobblestone streets, Federal-style architecture, and Potomac waterfront",
+    "highlights": [
+      "one of the best-preserved colonial historic districts on the East Coast",
+      "King Street corridor with acclaimed restaurants, galleries, and boutiques",
+      "Potomac River waterfront with marinas, parks, and views",
+      "King Street Metro (Blue/Yellow Line) at the top of King Street",
+      "walkable to Amtrak/VRE at Alexandria Union Station"
+    ],
+    "commute": "approximately 8 miles to DC; Blue/Yellow Line Metro; Amtrak and VRE service",
+    "metro": "King Street-Old Town (Blue/Yellow Line)",
+    "notable": "Old Town Alexandria is among the most historically and architecturally significant urban neighborhoods in the US, with property values that reflect its irreplaceable character"
+  },
+  "Del Ray": {
+    "type": "neighborhood",
+    "county": "Alexandria City",
+    "parent_city": "Alexandria",
+    "character": "beloved artsy neighborhood with a small-town main street, strong community bonds, and eclectic charm",
+    "highlights": [
+      "Mount Vernon Avenue 'the Avenue' — beloved local restaurants, shops, and gallery row",
+      "monthly Art on the Avenue festivals",
+      "Braddock Road Metro nearby",
+      "strong block-party and neighborhood association culture",
+      "mix of bungalows, craftsman homes, and new construction"
+    ],
+    "commute": "approximately 6–8 miles to DC; Braddock Road Metro (Blue/Yellow Line)",
+    "metro": "Braddock Road (Blue/Yellow Line)",
+    "notable": "Del Ray is frequently cited as one of the most charming and community-minded neighborhoods in the entire DC area, with consistent buyer demand and limited inventory"
+  },
+  "Belle Haven": {
+    "type": "neighborhood",
+    "county": "Alexandria City",
+    "parent_city": "Alexandria",
+    "character": "quiet, upscale residential neighborhood along the GW Parkway with river views and country club lifestyle",
+    "highlights": [
+      "Belle Haven Country Club with golf, tennis, and marina",
+      "GW Parkway access with scenic Potomac River views",
+      "large wooded lots unusual for Alexandria City",
+      "proximity to Old Town and DC without urban density",
+      "bike path access along the Potomac"
+    ],
+    "commute": "approximately 9–11 miles to DC; car-primary; Huntington Metro nearby",
+    "metro": "Huntington (Yellow Line) — nearby",
+    "notable": "Belle Haven offers some of Alexandria City's most private and upscale residential settings, with country club amenities and river access in a low-density environment"
+  },
+  "Kingstowne": {
+    "type": "community",
+    "county": "Fairfax County",
+    "parent_city": "Springfield",
+    "character": "well-planned suburban community with comprehensive on-site amenities and Metro access",
+    "highlights": [
+      "Kingstowne Town Center — shopping, dining, and services within the community",
+      "Franconia-Springfield Metro nearby",
+      "community pools, fitness centers, and trails",
+      "mix of single-family homes, townhomes, and condos",
+      "convenient to Fort Belvoir, I-95, and I-495"
+    ],
+    "commute": "approximately 16–18 miles to DC; Franconia-Springfield Metro (Blue/Yellow Line)",
+    "metro": "Franconia-Springfield (Blue/Yellow Line) — nearby",
+    "notable": "Kingstowne is one of Fairfax County's most comprehensively planned communities, offering residents retail, recreation, and residential options without leaving the neighborhood"
+  },
+  "Cameron Station": {
+    "type": "community",
+    "county": "Alexandria City",
+    "parent_city": "Alexandria",
+    "character": "contemporary planned community with urban village character and exceptional walkability",
+    "highlights": [
+      "walkable town center with restaurants and retail",
+      "community pool, fitness center, and dog park",
+      "Alexandria City's exceptional park system access",
+      "Braddock Road Metro within walking distance",
+      "mix of townhomes, condos, and single-family homes with HOA amenities"
+    ],
+    "commute": "approximately 7 miles to DC; Braddock Road Metro (Blue/Yellow Line)",
+    "metro": "Braddock Road (Blue/Yellow Line)",
+    "notable": "Cameron Station offers Alexandria City's most comprehensively amenitized neighborhood community, with HOA services, urban-village walkability, and strong Metro access"
+  },
+  "Ashburn": {
+    "type": "community",
+    "county": "Loudoun County",
+    "parent_city": null,
+    "character": "Northern Virginia's fastest-growing technology hub with top schools, amenities, and Silver Line Metro",
+    "highlights": [
+      "Ashburn Metro station — Silver Line terminus, opening 2022",
+      "One Loudoun mixed-use town center with premiere dining and retail",
+      "world's highest concentration of data centers — major tech employment",
+      "top-rated Loudoun County schools",
+      "numerous master-planned communities with resort-style amenities"
+    ],
+    "commute": "approximately 30 miles to DC; direct Silver Line Metro service",
+    "metro": "Ashburn (Silver Line)",
+    "notable": "Ashburn has emerged as one of the DC area's most dynamic growth communities, combining top schools, tech employment, Silver Line access, and aspirational amenities at prices below closer-in NoVA"
+  },
+  "Brambleton": {
+    "type": "community",
+    "county": "Loudoun County",
+    "parent_city": "Ashburn",
+    "character": "award-winning master-planned community with exceptional on-site amenities and top-rated schools",
+    "highlights": [
+      "Brambleton Town Center — walkable retail, dining, and community hub",
+      "multiple community pools, tennis courts, and athletic fields",
+      "extensive trail system connecting to regional parks",
+      "Briar Woods High School — one of Loudoun's highest-rated schools",
+      "active HOA programming and community events"
+    ],
+    "commute": "approximately 30–35 miles to DC; Silver Line Metro at Ashburn accessible",
+    "metro": "Ashburn (Silver Line) — nearby",
+    "notable": "Brambleton consistently earns recognition as one of the best master-planned communities in the Mid-Atlantic for its amenities, schools, and community programming"
+  },
+  "Broadlands": {
+    "type": "community",
+    "county": "Loudoun County",
+    "parent_city": "Ashburn",
+    "character": "established master-planned community with trails, green space, and top-rated school access",
+    "highlights": [
+      "36-hole Lansdowne Resort golf course adjacent",
+      "community pools, fitness facilities, and trails",
+      "Broadlands Regional Medical Center",
+      "Briar Woods HS pyramid — highly regarded",
+      "convenient to Route 7 and Dulles Greenway"
+    ],
+    "commute": "approximately 28–32 miles to DC; Ashburn Metro (Silver Line) accessible",
+    "metro": "Ashburn (Silver Line) — nearby",
+    "notable": "Broadlands offers a mature, amenity-rich community feel with strong schools and the scenic character of established Loudoun County living"
+  },
+  "One Loudoun": {
+    "type": "community",
+    "county": "Loudoun County",
+    "parent_city": "Ashburn",
+    "character": "Loudoun County's premier walkable urban village with live-work-play amenities",
+    "highlights": [
+      "One Loudoun Town Center — Loudoun's most complete walkable retail and dining destination",
+      "farmers market and year-round community events",
+      "Riverside High School district",
+      "luxury townhomes, condos, and single-family homes",
+      "walking distance to dining, entertainment, and fitness"
+    ],
+    "commute": "approximately 28 miles to DC; Ashburn Metro (Silver Line) nearby",
+    "metro": "Ashburn (Silver Line) — nearby",
+    "notable": "One Loudoun is Loudoun County's most successful urban-village concept, creating a walkable lifestyle previously unavailable in the western suburbs"
+  },
+  "South Riding": {
+    "type": "community",
+    "county": "Loudoun County",
+    "parent_city": null,
+    "character": "award-winning master-planned community with comprehensive amenities and a strong neighborhood identity",
+    "highlights": [
+      "four community pools, sport courts, and trails",
+      "South Riding Town Center with shops and dining",
+      "well-regarded Lightridge High School district",
+      "active HOA with extensive programming",
+      "convenient to Route 50 and Dulles Greenway"
+    ],
+    "commute": "approximately 28–32 miles to DC; Route 50 and Dulles Greenway corridors; Silver Line at Dulles accessible",
+    "metro": "Washington Dulles (Silver Line) — nearby",
+    "notable": "South Riding has been recognized as one of the DC area's premier planned communities, consistently delivering strong resale values and community satisfaction scores"
+  },
+  "Lansdowne": {
+    "type": "community",
+    "county": "Loudoun County",
+    "parent_city": "Leesburg",
+    "character": "upscale established community surrounding the Lansdowne Resort with golf and riverfront character",
+    "highlights": [
+      "Lansdowne Resort and Spa — golf, spa, and conference center",
+      "Potomac River frontage and waterfront trail access",
+      "mature tree canopy and established neighborhood feel",
+      "Heritage or Riverside High School district",
+      "convenient to Route 7 and Dulles Greenway"
+    ],
+    "commute": "approximately 30–35 miles to DC; Dulles Greenway to Silver Line",
+    "metro": "Ashburn (Silver Line) — accessible via Dulles Greenway",
+    "notable": "Lansdowne's resort amenities, Potomac River setting, and upscale character make it one of Loudoun County's most prestigious residential addresses"
+  },
+  "Leesburg": {
+    "type": "city",
+    "county": "Loudoun County",
+    "parent_city": null,
+    "character": "charming historic county seat with a vibrant downtown, wine country access, and strong community identity",
+    "highlights": [
+      "historic downtown Leesburg with acclaimed restaurants, boutiques, and seasonal events",
+      "gateway to Loudoun County wine and brewery country",
+      "Ida Lee Recreation Center — award-winning public recreation facility",
+      "proximity to Potomac River and C&O Canal",
+      "Leesburg Premium Outlets"
+    ],
+    "commute": "approximately 35 miles to DC; Dulles Greenway or Route 15; no direct Metro but Ashburn Silver Line accessible",
+    "metro": "Ashburn (Silver Line) — accessible via Dulles Greenway",
+    "notable": "Leesburg offers the rare combination of a genuine historic downtown, winery-country lifestyle, and expanding amenities that have driven consistent growth and appreciation"
+  },
+  "Aldie": {
+    "type": "community",
+    "county": "Loudoun County",
+    "parent_city": "Leesburg",
+    "character": "growing western Loudoun community with wine country adjacency and newer master-planned neighborhoods",
+    "highlights": [
+      "gateway to Loudoun's acclaimed wine and cidery country",
+      "newer master-planned communities with resort-style amenities",
+      "John Champe High School — well-regarded",
+      "rural character with suburban amenities",
+      "scenic Blue Ridge Mountain backdrop"
+    ],
+    "commute": "approximately 35–40 miles to DC; Route 50 or Dulles Greenway corridors",
+    "metro": null,
+    "notable": "Aldie offers buyers seeking wine-country lifestyle and top schools a more affordable entry point into Loudoun County's western communities"
+  },
+  "Purcellville": {
+    "type": "city",
+    "county": "Loudoun County",
+    "parent_city": null,
+    "character": "western Loudoun's growing small city at the heart of Virginia wine and horse country",
+    "highlights": [
+      "W&OD Trail terminus — 45 miles of trail from Arlington",
+      "thriving local restaurant and brewery scene",
+      "Woodgrove High School district",
+      "equestrian properties and rural land available",
+      "Blue Ridge Mountain views and proximity to Shenandoah Valley"
+    ],
+    "commute": "approximately 45 miles to DC; Route 7 or Route 9; no Metro",
+    "metro": null,
+    "notable": "Purcellville has emerged as western Loudoun's premier small-city address, offering a genuine community, trail access, wine country lifestyle, and relief from eastern NoVA density"
+  },
+  "Middleburg": {
+    "type": "city",
+    "county": "Loudoun County",
+    "parent_city": null,
+    "character": "legendary hunt-country village — one of the most exclusive and storied addresses in Virginia",
+    "highlights": [
+      "National Historic District with antebellum and colonial architecture",
+      "premier equestrian and fox-hunting community",
+      "acclaimed dining including The Inn at Little Washington nearby",
+      "Virginia wine country surrounded by world-class vineyards",
+      "Washington DC elite weekend retreat destination"
+    ],
+    "commute": "approximately 45–50 miles to DC; Route 50 or I-66; no Metro",
+    "metro": null,
+    "notable": "Middleburg is one of the most prestigious and internationally recognized addresses in Virginia — a place where the concept of horse country luxury was defined"
+  },
+  "Sterling": {
+    "type": "community",
+    "county": "Loudoun County",
+    "parent_city": null,
+    "character": "diverse, affordable Loudoun County community with growing amenities and Dulles Airport proximity",
+    "highlights": [
+      "more affordable entry point into Loudoun County",
+      "proximity to Dulles International Airport",
+      "One Loudoun and Dulles Town Center retail access",
+      "diverse international community and dining options",
+      "Route 7 and Dulles Toll Road commuter corridor"
+    ],
+    "commute": "approximately 28–30 miles to DC; Route 7 and Dulles Toll Road",
+    "metro": "Innovation Center (Silver Line) — accessible",
+    "notable": "Sterling offers Loudoun County's most accessible price points with strong rental demand driven by Dulles Airport and tech corridor employment"
+  },
+  "Potomac Falls": {
+    "type": "community",
+    "county": "Loudoun County",
+    "parent_city": "Sterling",
+    "character": "established residential community adjacent to the Potomac River with trail access",
+    "highlights": [
+      "Algonkian Regional Park on the Potomac River — golf, cabins, and water park",
+      "Cascades and Potomac Falls community amenities",
+      "Potomac Falls High School district",
+      "convenient to Route 7 and Dulles Greenway",
+      "trail connections to Potomac Heritage Trail"
+    ],
+    "commute": "approximately 28–30 miles to DC; Route 7 corridor",
+    "metro": null,
+    "notable": "Potomac Falls provides Loudoun County living with distinctive Potomac River access and recreational amenities at competitive price points"
+  },
+  "Cascades": {
+    "type": "community",
+    "county": "Loudoun County",
+    "parent_city": "Sterling",
+    "character": "master-planned community with resort-style amenities and active HOA programming",
+    "highlights": [
+      "Cascades Community Center with pools and recreation facilities",
+      "extensive trail network and green space",
+      "Algonkian Regional Park access",
+      "Potomac Falls High School district",
+      "established neighborhood with mature landscaping"
+    ],
+    "commute": "approximately 28–30 miles to DC; Route 7 corridor",
+    "metro": null,
+    "notable": "Cascades is one of Loudoun County's most established and amenity-rich planned communities, with strong HOA management and a loyal long-term resident base"
+  },
+  "Ashburn Village": {
+    "type": "community",
+    "county": "Loudoun County",
+    "parent_city": "Ashburn",
+    "character": "Ashburn's original planned community with lakefront amenities and a sports-focused lifestyle",
+    "highlights": [
+      "Ashburn Village Sports Pavilion and multiple community lakes",
+      "waterfront trails and recreational boating",
+      "Stone Bridge High School district",
+      "one of Loudoun's most established HOA communities",
+      "convenient to Route 7, Dulles Greenway, and Silver Line"
+    ],
+    "commute": "approximately 28–30 miles to DC; Ashburn Metro (Silver Line) accessible",
+    "metro": "Ashburn (Silver Line) — accessible",
+    "notable": "Ashburn Village pioneered the master-planned community concept in Loudoun County and remains one of its most beloved and sought-after residential addresses"
+  },
+  "Gainesville": {
+    "type": "community",
+    "county": "Prince William County",
+    "parent_city": null,
+    "character": "fastest-growing western Prince William community with newer construction and wine-country adjacency",
+    "highlights": [
+      "Jiffy Lube Live amphitheater — major regional concert venue",
+      "Gainesville Marketplace and growing retail corridor",
+      "Patriot High School district — among Prince William's best",
+      "proximity to I-66 for commuter access",
+      "newer construction communities with modern floor plans"
+    ],
+    "commute": "approximately 30–35 miles to DC; I-66 commuter corridor; OmniRide express bus service",
+    "metro": null,
+    "notable": "Gainesville leads Prince William County's growth story, attracting buyers seeking newer homes, quality schools, and wine-country proximity at suburban price points"
+  },
+  "Haymarket": {
+    "type": "community",
+    "county": "Prince William County",
+    "parent_city": null,
+    "character": "upscale western Prince William community with equestrian character and excellent highway access",
+    "highlights": [
+      "proximity to Loudoun wine country and scenic Catoctin Mountain views",
+      "Dominion Valley Country Club community",
+      "newer construction at more accessible price points than Loudoun",
+      "Gateway Commerce Center employment hub",
+      "direct I-66 access"
+    ],
+    "commute": "approximately 35–40 miles to DC; I-66 direct",
+    "metro": null,
+    "notable": "Haymarket offers buyers a western NoVA lifestyle with country-adjacent character, newer housing stock, and meaningful savings compared to equivalent Loudoun properties"
+  },
+  "Woodbridge": {
+    "type": "community",
+    "county": "Prince William County",
+    "parent_city": null,
+    "character": "large, diverse Prince William community with Potomac River access and major retail hub",
+    "highlights": [
+      "Potomac Mills — one of the largest outlet malls on the East Coast",
+      "Occoquan Bay National Wildlife Refuge and Potomac River waterfront",
+      "VRE Woodbridge station for commuter rail access",
+      "Leesylvania State Park for outdoor recreation",
+      "broad range of housing options at competitive prices"
+    ],
+    "commute": "approximately 22–25 miles to DC; I-95 commuter corridor; VRE Woodbridge station",
+    "metro": null,
+    "notable": "Woodbridge is Prince William County's largest community, offering Potomac waterfront access, outlet shopping, and commuter rail at price points significantly below inner NoVA suburbs"
+  },
+  "Lake Ridge": {
+    "type": "community",
+    "county": "Prince William County",
+    "parent_city": "Woodbridge",
+    "character": "established planned community with Occoquan River access and active recreational amenities",
+    "highlights": [
+      "Lake Ridge Community Park with athletic fields and facilities",
+      "Occoquan River access for boating and water recreation",
+      "multiple community pools and trails",
+      "historic Town of Occoquan adjacent for dining and shopping",
+      "VRE Woodbridge station for DC commute access"
+    ],
+    "commute": "approximately 22–25 miles to DC; I-95 and VRE",
+    "metro": null,
+    "notable": "Lake Ridge offers established community character, recreational amenities, and Occoquan River access at some of the most competitive prices in the DC metro area"
+  },
+  "Manassas": {
+    "type": "city",
+    "county": "Prince William County",
+    "parent_city": null,
+    "character": "independent historic city with a revitalized Old Town and significant Civil War heritage",
+    "highlights": [
+      "Old Town Manassas — growing restaurant and arts district",
+      "Manassas National Battlefield Park — two Civil War battle sites",
+      "VRE Manassas Line for DC commuter rail access",
+      "Jiffy Lube Live and regional entertainment venues",
+      "most affordable home prices in NoVA with independent city schools"
+    ],
+    "commute": "approximately 30–35 miles to DC; VRE Manassas Line to Union Station",
+    "metro": null,
+    "notable": "Manassas is one of the most affordable independent cities in NoVA with genuine historic character, active arts scene, and rail access — offering exceptional value for buyers"
+  },
+  "Dumfries": {
+    "type": "community",
+    "county": "Prince William County",
+    "parent_city": null,
+    "character": "growing southern Prince William community with historic roots and Quantico proximity",
+    "highlights": [
+      "one of the oldest towns in continuous existence in Virginia (est. 1749)",
+      "Quantico Marine Corps Base proximity",
+      "Prince William Forest Park for hiking and outdoor recreation",
+      "OmniRide express bus service to Pentagon",
+      "some of the most affordable single-family homes in NoVA"
+    ],
+    "commute": "approximately 28–30 miles to DC; I-95 corridor; OmniRide express bus to Pentagon",
+    "metro": null,
+    "notable": "Dumfries offers historical character, outdoor recreation, and proximity to Quantico at price points that make homeownership highly accessible in the DC market"
+  },
+  "Occoquan": {
+    "type": "community",
+    "county": "Prince William County",
+    "parent_city": null,
+    "character": "charming historic mill town on the Occoquan River with galleries, antiques, and waterfront dining",
+    "highlights": [
+      "National Register of Historic Places — preserved Victorian mill town",
+      "Occoquan River waterfront with boat access",
+      "acclaimed arts and antiques district",
+      "seasonal festivals and farmers markets",
+      "proximity to Lake Ridge and Woodbridge amenities"
+    ],
+    "commute": "approximately 22–25 miles to DC; I-95 corridor",
+    "metro": null,
+    "notable": "Occoquan is one of Northern Virginia's most distinctive small communities — offering genuine historic character, waterfront access, and arts community at remarkable price points"
+  },
+  "Falls Church City": {
+    "type": "city",
+    "county": "Falls Church City",
+    "parent_city": null,
+    "character": "small progressive independent city with top-ranked schools, walkable character, and DC proximity",
+    "highlights": [
+      "Falls Church City Public Schools — among the top-ranked in Virginia for decades",
+      "East Falls Church Metro on Orange and Silver Lines",
+      "vibrant mixed-use downtown along Washington Street",
+      "W&OD Trail access",
+      "unique small-city government with high per-capita investment in services and schools"
+    ],
+    "commute": "approximately 8 miles to DC; Orange and Silver Line Metro",
+    "metro": "East Falls Church (Orange/Silver Line)",
+    "notable": "Falls Church City punches far above its size — its independent school system consistently ranks #1 in Virginia, and its Metro-accessible, walkable character creates extraordinary demand in a very limited housing market"
+  },
+  "Lovettsville": {
+    "type": "city",
+    "county": "Loudoun County",
+    "parent_city": null,
+    "character": "quiet historic town in the rolling hills of western Loudoun with a strong small-community identity",
+    "highlights": [
+      "Lovettsville Historical Society and preserved town square",
+      "proximity to scenic Potomac River",
+      "horse and agricultural properties",
+      "Woodgrove High School district",
+      "gateway to Appalachian Trail and Blue Ridge Mountains"
+    ],
+    "commute": "approximately 50 miles to DC; Route 287; no rail access",
+    "metro": null,
+    "notable": "Lovettsville offers buyers a genuine rural Virginia lifestyle with historic character, mountain views, and western Loudoun's beloved community feel at the most accessible Loudoun price points"
+  },
+  "Bristow": {
+    "type": "community",
+    "county": "Prince William County",
+    "parent_city": null,
+    "character": "growing suburban community with newer construction and strong community identity",
+    "highlights": [
+      "Jiffy Lube Live amphitheater nearby",
+      "newer construction communities with modern amenities",
+      "active HOA communities with pools and recreational facilities",
+      "convenient to I-66 and Route 28",
+      "proximity to wine country via Nokesville and Fauquier"
+    ],
+    "commute": "approximately 30–35 miles to DC; I-66 and OmniRide commuter service",
+    "metro": null,
+    "notable": "Bristow offers some of Prince William County's newest housing stock at competitive prices, attracting families seeking more space and modern homes with reasonable DC commute access"
+  },
+  "Triangle": {
+    "type": "community",
+    "county": "Prince William County",
+    "parent_city": "Dumfries",
+    "character": "small community adjacent to Quantico Marine Corps Base",
+    "highlights": [
+      "Quantico Marine Corps Base — major employment center",
+      "Prince William Forest Park for hiking and outdoor recreation",
+      "affordable price points in the DC metro area",
+      "I-95 commuter access",
+      "historical connections to marine corps history"
+    ],
+    "commute": "approximately 28–32 miles to DC; I-95 corridor",
+    "metro": null,
+    "notable": "Triangle's proximity to Quantico and I-95 makes it a practical choice for military and government contractor families seeking affordable homeownership in the DC metro area"
+  },
+  "Dale City": {
+    "type": "community",
+    "county": "Prince William County",
+    "parent_city": "Woodbridge",
+    "character": "established Prince William suburb with a large, diverse community and competitive home prices",
+    "highlights": [
+      "Veterans Memorial Park and recreational facilities",
+      "diverse community with broad range of dining and cultural options",
+      "Potomac Mills outlet mall nearby",
+      "VRE and OmniRide commuter access",
+      "broad range of housing types at accessible price points"
+    ],
+    "commute": "approximately 23–26 miles to DC; I-95 corridor and VRE",
+    "metro": null,
+    "notable": "Dale City is one of Prince William County's most established and populous communities, offering diverse housing, good amenities, and commuter rail access at competitive prices"
+  }
+}

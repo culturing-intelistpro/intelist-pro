@@ -1,0 +1,975 @@
+{
+  "McLean": {
+    "rating": "A+",
+    "highlight": true,
+    "phrase": "within the highly regarded Churchill Road–Cooper–Langley school pyramid",
+    "schools": {
+      "elementary": "Churchill Road or Kent Gardens Elementary",
+      "middle": "Cooper Middle School",
+      "high": "Langley High School"
+    }
+  },
+  "Great Falls": {
+    "rating": "A+",
+    "highlight": true,
+    "phrase": "served by the top-rated Langley High School pyramid",
+    "schools": {
+      "elementary": "Forestville or Spring Hill Elementary",
+      "middle": "Cooper Middle School",
+      "high": "Langley High School"
+    }
+  },
+  "Wolf Trap": {
+    "rating": "A+",
+    "highlight": true,
+    "phrase": "within the highly regarded Cooper–Langley school pyramid",
+    "schools": {
+      "elementary": "Spring Hill Elementary",
+      "middle": "Cooper Middle School",
+      "high": "Langley High School"
+    }
+  },
+  "Vienna": {
+    "rating": "A",
+    "highlight": true,
+    "phrase": "within the highly regarded Madison High School district",
+    "schools": {
+      "elementary": "Flint Hill or Mosaic Elementary",
+      "middle": "Thoreau Middle School",
+      "high": "Madison High School"
+    }
+  },
+  "Oakton": {
+    "rating": "A",
+    "highlight": true,
+    "phrase": "within the well-regarded Oakton High School district",
+    "schools": {
+      "elementary": "Oakton or Waples Mill Elementary",
+      "middle": "Thoreau Middle School",
+      "high": "Oakton High School"
+    }
+  },
+  "Chantilly": {
+    "rating": "A",
+    "highlight": true,
+    "phrase": "within the highly regarded Chantilly High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Franklin Middle School",
+      "high": "Chantilly High School"
+    }
+  },
+  "Tysons": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "served by the well-regarded Marshall High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Kilmer Middle School",
+      "high": "Marshall High School"
+    }
+  },
+  "Dunn Loring": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "served by the well-regarded Marshall High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Kilmer Middle School",
+      "high": "Marshall High School"
+    }
+  },
+  "Merrifield": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "served by the well-regarded Marshall High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Kilmer Middle School",
+      "high": "Marshall High School"
+    }
+  },
+  "Reston": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "served by the well-regarded South Lakes High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Hughes Middle School",
+      "high": "South Lakes High School"
+    }
+  },
+  "Fairfax": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "served by Fairfax County's well-regarded public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Fairfax or Robinson High School"
+    }
+  },
+  "Centreville": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "within the well-regarded Centreville High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Liberty Middle School",
+      "high": "Centreville High School"
+    }
+  },
+  "Clifton": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "within the well-regarded Robinson school pyramid",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Robinson Secondary School (7–12)",
+      "high": "Robinson Secondary School"
+    }
+  },
+  "Burke": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "within the well-regarded Lake Braddock school pyramid",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Lake Braddock Secondary School (7–12)",
+      "high": "Lake Braddock Secondary School"
+    }
+  },
+  "West Springfield": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "within the well-regarded West Springfield High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Irving Middle School",
+      "high": "West Springfield High School"
+    }
+  },
+  "Herndon": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Herndon High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Herndon Middle School",
+      "high": "Herndon High School"
+    }
+  },
+  "Springfield": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Fairfax County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Irving Middle School",
+      "high": "West Springfield or Lee High School"
+    }
+  },
+  "Annandale": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Fairfax County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Holmes Middle School",
+      "high": "Annandale High School"
+    }
+  },
+  "Falls Church": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Falls Church High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Jackson Middle School",
+      "high": "Falls Church High School"
+    }
+  },
+  "Lorton": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "served by South County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "South County Middle School",
+      "high": "South County High School"
+    }
+  },
+  "Bailey's Crossroads": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Fairfax County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Glasgow Middle School",
+      "high": "Justice High School"
+    }
+  },
+  "Seven Corners": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Fairfax County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Glasgow Middle School",
+      "high": "Justice High School"
+    }
+  },
+  "Franconia": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Fairfax County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Twain Middle School",
+      "high": "Edison High School"
+    }
+  },
+  "Arlington": {
+    "rating": "A",
+    "highlight": true,
+    "phrase": "served by Arlington County's highly regarded public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Washington-Liberty, Yorktown, or Wakefield High School"
+    }
+  },
+  "North Arlington": {
+    "rating": "A",
+    "highlight": true,
+    "phrase": "within North Arlington's highly regarded school district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Dorothy Hamm or Williamsburg Middle School",
+      "high": "Washington-Liberty or Yorktown High School"
+    }
+  },
+  "South Arlington": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "served by Arlington County's well-regarded public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Gunston Middle School",
+      "high": "Wakefield High School"
+    }
+  },
+  "Clarendon": {
+    "rating": "A",
+    "highlight": true,
+    "phrase": "served by Arlington County's top-rated public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Dorothy Hamm Middle School",
+      "high": "Washington-Liberty High School"
+    }
+  },
+  "Ballston": {
+    "rating": "A",
+    "highlight": true,
+    "phrase": "served by Arlington County's top-rated public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Dorothy Hamm Middle School",
+      "high": "Washington-Liberty High School"
+    }
+  },
+  "Pentagon City": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "served by Arlington County's well-regarded public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Gunston Middle School",
+      "high": "Wakefield High School"
+    }
+  },
+  "Crystal City": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "served by Arlington County's well-regarded public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Gunston Middle School",
+      "high": "Wakefield High School"
+    }
+  },
+  "Alexandria": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Alexandria City public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "George Washington or Francis Hammond Middle School",
+      "high": "Alexandria City High School"
+    }
+  },
+  "Old Town Alexandria": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Alexandria City public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "George Washington Middle School",
+      "high": "Alexandria City High School"
+    }
+  },
+  "Del Ray": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Alexandria City public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "George Washington Middle School",
+      "high": "Alexandria City High School"
+    }
+  },
+  "Belle Haven": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Alexandria City public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "George Washington Middle School",
+      "high": "Alexandria City High School"
+    }
+  },
+  "Kingstowne": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Fairfax County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Twain Middle School",
+      "high": "Edison High School"
+    }
+  },
+  "Cameron Station": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Alexandria City public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "George Washington Middle School",
+      "high": "Alexandria City High School"
+    }
+  },
+  "Ashburn": {
+    "rating": "A",
+    "highlight": true,
+    "phrase": "within Loudoun County's top-rated school district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Trailside or Stone Hill Middle School",
+      "high": "Stone Bridge or Briar Woods High School"
+    }
+  },
+  "Brambleton": {
+    "rating": "A",
+    "highlight": true,
+    "phrase": "within the highly regarded Briar Woods High School district",
+    "schools": {
+      "elementary": "Brambleton or Waxpool Elementary",
+      "middle": "Stone Hill Middle School",
+      "high": "Briar Woods High School"
+    }
+  },
+  "Broadlands": {
+    "rating": "A",
+    "highlight": true,
+    "phrase": "within the highly regarded Briar Woods High School district",
+    "schools": {
+      "elementary": "Broadlands Elementary",
+      "middle": "Trailside Middle School",
+      "high": "Briar Woods High School"
+    }
+  },
+  "One Loudoun": {
+    "rating": "A",
+    "highlight": true,
+    "phrase": "within the well-regarded Riverside High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Farmwell Station Middle School",
+      "high": "Riverside High School"
+    }
+  },
+  "Leesburg": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "served by Loudoun County's well-regarded public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Smart's Mill or Harper Park Middle School",
+      "high": "Loudoun County or Heritage High School"
+    }
+  },
+  "South Riding": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "within the well-regarded Lightridge High School district",
+    "schools": {
+      "elementary": "Cardinal Ridge Elementary",
+      "middle": "Stone Hill Middle School",
+      "high": "Lightridge High School"
+    }
+  },
+  "Lansdowne": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "served by Loudoun County's well-regarded public schools",
+    "schools": {
+      "elementary": "Lansdowne Elementary",
+      "middle": "River Bend Middle School",
+      "high": "Heritage or Riverside High School"
+    }
+  },
+  "Aldie": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "within the well-regarded John Champe High School district",
+    "schools": {
+      "elementary": "Aldie Elementary",
+      "middle": "Mercer Middle School",
+      "high": "John Champe High School"
+    }
+  },
+  "Loudoun Valley Estates": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "served by Loudoun County's well-regarded public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Loudoun Valley High School"
+    }
+  },
+  "Purcellville": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "within the well-regarded Woodgrove High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Blue Ridge Middle School",
+      "high": "Woodgrove High School"
+    }
+  },
+  "Middleburg": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "served by the well-regarded Woodgrove High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Blue Ridge Middle School",
+      "high": "Woodgrove High School"
+    }
+  },
+  "Lovettsville": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "served by Loudoun County public schools",
+    "schools": {
+      "elementary": "Lovettsville Elementary",
+      "middle": "Blue Ridge Middle School",
+      "high": "Woodgrove High School"
+    }
+  },
+  "Waterford": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "served by Loudoun County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Blue Ridge Middle School",
+      "high": "Woodgrove High School"
+    }
+  },
+  "Sterling": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Loudoun County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Sterling Middle School",
+      "high": "Park View or Potomac Falls High School"
+    }
+  },
+  "Potomac Falls": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Loudoun County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "River Bend Middle School",
+      "high": "Potomac Falls High School"
+    }
+  },
+  "Cascades": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Loudoun County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "River Bend Middle School",
+      "high": "Potomac Falls High School"
+    }
+  },
+  "Dulles": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Loudoun County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "varies by location"
+    }
+  },
+  "Gainesville": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "within the well-regarded Patriot High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Benton Middle School",
+      "high": "Patriot High School"
+    }
+  },
+  "Haymarket": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "served by Prince William County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Bull Run Middle School",
+      "high": "Gainesville or Patriot High School"
+    }
+  },
+  "Bristow": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "served by Prince William County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Patriot or Brentsville District High School"
+    }
+  },
+  "Manassas": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Prince William County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Osbourn High School"
+    }
+  },
+  "Manassas Park": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Manassas Park City schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Manassas Park High School"
+    }
+  },
+  "Woodbridge": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Prince William County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Gar-Field or Woodbridge High School"
+    }
+  },
+  "Dale City": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Prince William County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Gar-Field or Potomac High School"
+    }
+  },
+  "Lake Ridge": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Prince William County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Gar-Field High School"
+    }
+  },
+  "Nokesville": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Prince William County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Brentsville District High School"
+    }
+  },
+  "Dumfries": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Prince William County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Potomac High School"
+    }
+  },
+  "Triangle": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Prince William County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Potomac High School"
+    }
+  },
+  "Occoquan": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Prince William County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Woodbridge High School"
+    }
+  },
+  "Falls Church City": {
+    "rating": "A+",
+    "highlight": true,
+    "phrase": "within Falls Church City's top-rated independent school system",
+    "schools": {
+      "elementary": "Oak Street or Thomas Jefferson Elementary",
+      "middle": "Mary Ellen Henderson Middle School",
+      "high": "George Mason High School"
+    }
+  },
+
+  "Round Hill": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "within the well-regarded Woodgrove High School district in western Loudoun County",
+    "schools": {
+      "elementary": "Round Hill Elementary",
+      "middle": "Blue Ridge Middle School",
+      "high": "Woodgrove High School"
+    }
+  },
+  "Hamilton": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "within the well-regarded Woodgrove High School district in western Loudoun County",
+    "schools": {
+      "elementary": "Hamilton Elementary",
+      "middle": "Blue Ridge Middle School",
+      "high": "Woodgrove High School"
+    }
+  },
+  "Hillsboro": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "within Loudoun County's scenic western school district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Blue Ridge Middle School",
+      "high": "Loudoun Valley High School"
+    }
+  },
+  "Bluemont": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "within Loudoun County's scenic western school district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Blue Ridge Middle School",
+      "high": "Loudoun Valley High School"
+    }
+  },
+  "Paeonian Springs": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "within Loudoun County's scenic western school district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Blue Ridge Middle School",
+      "high": "Loudoun Valley High School"
+    }
+  },
+  "Lucketts": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "within Loudoun County's scenic western school district",
+    "schools": {
+      "elementary": "Lucketts Elementary",
+      "middle": "Harper Park Middle School",
+      "high": "Loudoun County High School"
+    }
+  },
+  "Lincoln": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "within Loudoun County's scenic western school district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Blue Ridge Middle School",
+      "high": "Loudoun Valley High School"
+    }
+  },
+  "Unison": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "within Loudoun County's scenic western school district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Blue Ridge Middle School",
+      "high": "Loudoun Valley High School"
+    }
+  },
+  "Philomont": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "within Loudoun County's scenic western school district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "Blue Ridge Middle School",
+      "high": "Loudoun Valley High School"
+    }
+  },
+
+  "Warrenton": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Fauquier County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Fauquier High School"
+    }
+  },
+  "Bealeton": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "within Fauquier County's Liberty High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Liberty High School"
+    }
+  },
+  "Catlett": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "within Fauquier County's Liberty High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Liberty High School"
+    }
+  },
+  "Marshall": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Fauquier County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "James G. Kolb High School"
+    }
+  },
+  "Midland": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "within Fauquier County's Liberty High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Liberty High School"
+    }
+  },
+  "Remington": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Fauquier County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Fauquier High School"
+    }
+  },
+  "Opal": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Fauquier County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Fauquier High School"
+    }
+  },
+  "The Plains": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Fauquier County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Fauquier High School"
+    }
+  },
+  "Orlean": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Fauquier County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Fauquier High School"
+    }
+  },
+  "Hume": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Fauquier County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Fauquier High School"
+    }
+  },
+  "Upperville": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Fauquier County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Fauquier High School"
+    }
+  },
+  "Sumerduck": {
+    "rating": "B",
+    "highlight": false,
+    "phrase": "convenient to Fauquier County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Fauquier High School"
+    }
+  },
+
+  "Stafford": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Stafford County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Stafford or Colonial Forge High School"
+    }
+  },
+  "Aquia Harbour": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Stafford County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Stafford High School"
+    }
+  },
+  "Embrey Mill": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "within the well-regarded Colonial Forge High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Colonial Forge High School"
+    }
+  },
+  "Augustine": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "within the well-regarded Colonial Forge High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Colonial Forge High School"
+    }
+  },
+  "Winding Creek": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "within the well-regarded Colonial Forge High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Colonial Forge High School"
+    }
+  },
+  "Colonial Forge": {
+    "rating": "A-",
+    "highlight": true,
+    "phrase": "within the well-regarded Colonial Forge High School district",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Colonial Forge High School"
+    }
+  },
+  "Brooke": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Stafford County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Brooke Point High School"
+    }
+  },
+  "Falmouth": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Stafford County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Stafford High School"
+    }
+  },
+  "Garrisonville": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Stafford County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Stafford or North Stafford High School"
+    }
+  },
+  "Mountain View": {
+    "rating": "B+",
+    "highlight": false,
+    "phrase": "convenient to Stafford County public schools",
+    "schools": {
+      "elementary": "varies by location",
+      "middle": "varies by location",
+      "high": "Mountain View High School"
+    }
+  }
+}

@@ -1,0 +1,497 @@
+/* ── Layout ─────────────────────────────────────────────────────────────────── */
+.page {
+  min-height: 100vh;
+  background: #F5F5F7;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  color: #1D1D1F;
+}
+
+.centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 16px;
+  background: #F5F5F7;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid #E5E5E5;
+  border-top-color: #D94035;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.denied {
+  font-size: 17px;
+  color: #6E6E73;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 56px;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #E5E5E5;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: #1D1D1F;
+}
+
+.brandAccent {
+  color: #D94035;
+}
+
+.adminBadge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #D94035;
+  background: rgba(232, 96, 76, 0.1);
+  border: 1px solid rgba(232, 96, 76, 0.25);
+  border-radius: 4px;
+  padding: 2px 7px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.backLink {
+  font-size: 13px;
+  color: #6E6E73;
+  text-decoration: none;
+  transition: color 0.12s;
+}
+.backLink:hover { color: #1D1D1F; }
+
+.signOut {
+  font-size: 13px;
+  color: #6E6E73;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.12s;
+}
+.signOut:hover { color: #1D1D1F; }
+
+/* ── Tab nav ─────────────────────────────────────────────────────────────────── */
+.tabNav {
+  display: flex;
+  gap: 2px;
+  padding: 0 32px;
+  background: #fff;
+  border-bottom: 1px solid #E5E5E5;
+}
+
+.tabBtn {
+  padding: 14px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6E6E73;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+}
+.tabBtn:hover { color: #1D1D1F; }
+.tabBtnActive {
+  color: #D94035;
+  border-bottom-color: #D94035;
+}
+
+/* ── Main content ────────────────────────────────────────────────────────────── */
+.main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 32px 64px;
+}
+
+.sectionTitle {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: #1D1D1F;
+  margin: 0 0 24px;
+}
+
+/* ── KPI row ─────────────────────────────────────────────────────────────────── */
+.kpiRow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.kpiCard {
+  background: #fff;
+  border: 1px solid #E5E5E5;
+  border-radius: 14px;
+  padding: 20px 20px 18px;
+}
+
+.kpiLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: #86868B;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 8px;
+}
+
+.kpiValue {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  color: #1D1D1F;
+  margin: 0 0 4px;
+  line-height: 1;
+}
+
+.kpiSub {
+  font-size: 11px;
+  color: #86868B;
+  margin: 0;
+}
+
+/* ── Chart row ───────────────────────────────────────────────────────────────── */
+.chartRow {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.chartCard {
+  background: #fff;
+  border: 1px solid #E5E5E5;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.chartCardHalf {
+  margin-bottom: 0;
+}
+
+.chartTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1D1D1F;
+  margin: 0 0 20px;
+}
+
+/* ── Tooltip ─────────────────────────────────────────────────────────────────── */
+.tooltip {
+  background: #fff;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.tooltipLabel {
+  font-weight: 600;
+  color: #1D1D1F;
+  margin: 0 0 4px;
+}
+
+/* ── Table ───────────────────────────────────────────────────────────────────── */
+.tableHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.tableHeader .chartTitle {
+  margin: 0;
+}
+
+.tableActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.searchInput {
+  height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  background: #fff;
+  color: #1D1D1F;
+  width: 260px;
+  outline: none;
+  transition: border-color 0.12s;
+}
+.searchInput:focus { border-color: #D94035; }
+.searchInput::placeholder { color: #86868B; }
+
+.csvBtn {
+  height: 36px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  background: #1D1D1F;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.csvBtn:hover { background: #3A3A3C; }
+
+.tableWrap {
+  background: #fff;
+  border: 1px solid #E5E5E5;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table thead tr {
+  background: #F5F5F7;
+}
+
+.table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: #86868B;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-bottom: 1px solid #E5E5E5;
+}
+
+.table td {
+  padding: 12px 16px;
+  color: #1D1D1F;
+  border-bottom: 1px solid #F5F5F7;
+}
+
+.table tbody tr:last-child td { border-bottom: none; }
+.table tbody tr:hover td { background: #FAFAFA; }
+
+.rankCell  { color: #86868B; font-variant-numeric: tabular-nums; width: 40px; }
+.nameCell  { font-weight: 500; }
+.emailCell { color: #6E6E73; }
+.countCell { font-weight: 600; color: #D94035; text-align: center; }
+
+.emptyRow {
+  text-align: center;
+  color: #86868B;
+  padding: 32px !important;
+}
+
+/* ── Time filter ─────────────────────────────────────────────────────────────── */
+.timeFilterRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 32px;
+  background: #fff;
+  border-bottom: 1px solid #E5E5E5;
+  flex-wrap: wrap;
+}
+
+.timePill {
+  height: 30px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6E6E73;
+  background: #F5F5F7;
+  border: 1px solid transparent;
+  border-radius: 980px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  font-family: inherit;
+}
+.timePill:hover { background: #EBEBED; color: #1D1D1F; }
+.timePillActive {
+  background: #1D1D1F;
+  color: #fff;
+}
+
+/* ── KPI row — 6-col ─────────────────────────────────────────────────────────── */
+.kpiRow {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+
+/* ── User filters ────────────────────────────────────────────────────────────── */
+.userFiltersRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.filterSelect {
+  height: 36px;
+  padding: 0 10px;
+  font-size: 13px;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  background: #fff;
+  color: #1D1D1F;
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.12s;
+}
+.filterSelect:focus { border-color: #D94035; }
+
+.filterDateInput {
+  height: 36px;
+  padding: 0 10px;
+  font-size: 13px;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  background: #fff;
+  color: #1D1D1F;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.12s;
+}
+.filterDateInput:focus { border-color: #D94035; }
+
+.filterDateSep { font-size: 13px; color: #86868B; }
+
+.activityBtns {
+  display: flex;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.activityBtn {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6E6E73;
+  background: #fff;
+  border: none;
+  border-right: 1px solid #E5E5E5;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s, color 0.12s;
+}
+.activityBtn:last-child { border-right: none; }
+.activityBtn:hover { background: #F5F5F7; color: #1D1D1F; }
+.activityBtnActive { background: #1D1D1F; color: #fff; }
+.activityBtnActive:hover { background: #1D1D1F; color: #fff; }
+
+.clearFiltersBtn {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #D94035;
+  background: none;
+  border: 1px solid #FFD0D0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+.clearFiltersBtn:hover { background: #FFF5F5; }
+
+/* ── Empty state ─────────────────────────────────────────────────────────────── */
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  background: #fff;
+  border: 1px solid #E5E5E5;
+  border-radius: 14px;
+  margin-bottom: 16px;
+}
+
+.emptyStateText {
+  font-size: 14px;
+  color: #86868B;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ── Session note ────────────────────────────────────────────────────────────── */
+.sessionNote {
+  font-size: 13px;
+  color: #86868B;
+  background: #F5F5F7;
+  border: 1px solid #E5E5E5;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+.sessionNote code {
+  background: #EBEBED;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 12px;
+  color: #1D1D1F;
+}
+
+/* ── Prompt cell ─────────────────────────────────────────────────────────────── */
+.promptCell {
+  font-size: 13px;
+  color: #1D1D1F;
+  max-width: 480px;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .kpiRow { grid-template-columns: repeat(2, 1fr); }
+  .chartRow { grid-template-columns: 1fr; }
+  .header, .tabNav, .timeFilterRow, .main { padding-left: 16px; padding-right: 16px; }
+  .searchInput { width: 180px; }
+}
+
+@media (max-width: 600px) {
+  .kpiRow { grid-template-columns: 1fr; }
+  .kpiValue { font-size: 22px; }
+  .userFiltersRow { flex-direction: column; align-items: stretch; }
+  .filterSelect, .filterDateInput { width: 100%; }
+}

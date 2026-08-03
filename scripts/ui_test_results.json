@@ -1,0 +1,345 @@
+[
+  {
+    "id": "UI-01",
+    "address": "1800 Old Meadow Rd #713, McLean, VA 22102",
+    "mlsText": "Generated just now",
+    "zillowText": "Generated just now",
+    "instagramText": "Generated just now",
+    "screenshotFile": "UI-01-1800_Old_Meadow_Rd__713__McLean__VA_2210.png",
+    "error": null,
+    "evaluation": {
+      "scores": {
+        "c1_banned": 10,
+        "c2_starters": 10,
+        "c3_anchor": 3,
+        "c4_tier": 6,
+        "c5_regional": 7,
+        "c6_community": 10,
+        "c7_mls_format": 5,
+        "c8_zillow_structure": 3,
+        "c9_hashtags": 0,
+        "c10_fabrication": 10
+      },
+      "notes": {
+        "c1_banned": "PASS",
+        "c2_starters": "PASS",
+        "c3_anchor": "0/0 paragraphs anchored",
+        "c4_tier": "T1 location missing luxury signals",
+        "c5_regional": "Regional flavor may be weak",
+        "c6_community": "PASS",
+        "c7_mls_format": "First sentence format issue: \"Generated just now\"",
+        "c8_zillow_structure": "0 paragraphs found",
+        "c9_hashtags": "0 hashtags: ",
+        "c10_fabrication": "PASS"
+      },
+      "total": 64,
+      "maxTotal": 100
+    }
+  },
+  {
+    "id": "UI-02",
+    "address": "1438 Brookhaven Dr, McLean, VA 22101",
+    "mlsText": "Generated just now",
+    "zillowText": "Generated just now",
+    "instagramText": "Generated just now",
+    "screenshotFile": "UI-02-1438_Brookhaven_Dr__McLean__VA_22101.png",
+    "error": null,
+    "evaluation": {
+      "scores": {
+        "c1_banned": 10,
+        "c2_starters": 10,
+        "c3_anchor": 3,
+        "c4_tier": 6,
+        "c5_regional": 7,
+        "c6_community": 10,
+        "c7_mls_format": 5,
+        "c8_zillow_structure": 3,
+        "c9_hashtags": 0,
+        "c10_fabrication": 10
+      },
+      "notes": {
+        "c1_banned": "PASS",
+        "c2_starters": "PASS",
+        "c3_anchor": "0/0 paragraphs anchored",
+        "c4_tier": "T1 location missing luxury signals",
+        "c5_regional": "Regional flavor may be weak",
+        "c6_community": "PASS",
+        "c7_mls_format": "First sentence format issue: \"Generated just now\"",
+        "c8_zillow_structure": "0 paragraphs found",
+        "c9_hashtags": "0 hashtags: ",
+        "c10_fabrication": "PASS"
+      },
+      "total": 64,
+      "maxTotal": 100
+    }
+  },
+  {
+    "id": "UI-03",
+    "address": "745 Potomac River Rd, McLean, VA 22102",
+    "mlsText": "Generated just now",
+    "zillowText": "Generated just now",
+    "instagramText": "Generated just now",
+    "screenshotFile": "UI-03-745_Potomac_River_Rd__McLean__VA_22102.png",
+    "error": null,
+    "evaluation": {
+      "scores": {
+        "c1_banned": 10,
+        "c2_starters": 10,
+        "c3_anchor": 3,
+        "c4_tier": 6,
+        "c5_regional": 7,
+        "c6_community": 10,
+        "c7_mls_format": 5,
+        "c8_zillow_structure": 3,
+        "c9_hashtags": 0,
+        "c10_fabrication": 10
+      },
+      "notes": {
+        "c1_banned": "PASS",
+        "c2_starters": "PASS",
+        "c3_anchor": "0/0 paragraphs anchored",
+        "c4_tier": "T1 location missing luxury signals",
+        "c5_regional": "Regional flavor may be weak",
+        "c6_community": "PASS",
+        "c7_mls_format": "First sentence format issue: \"Generated just now\"",
+        "c8_zillow_structure": "0 paragraphs found",
+        "c9_hashtags": "0 hashtags: ",
+        "c10_fabrication": "PASS"
+      },
+      "total": 64,
+      "maxTotal": 100
+    }
+  },
+  {
+    "id": "UI-04",
+    "address": "1307 Tulip Poplar Ln, Vienna, VA 22182",
+    "mlsText": "Generated just now",
+    "zillowText": "Generated just now",
+    "instagramText": "Generated just now",
+    "screenshotFile": "UI-04-1307_Tulip_Poplar_Ln__Vienna__VA_22182.png",
+    "error": null,
+    "evaluation": {
+      "scores": {
+        "c1_banned": 10,
+        "c2_starters": 10,
+        "c3_anchor": 3,
+        "c4_tier": 10,
+        "c5_regional": 7,
+        "c6_community": 10,
+        "c7_mls_format": 5,
+        "c8_zillow_structure": 3,
+        "c9_hashtags": 0,
+        "c10_fabrication": 10
+      },
+      "notes": {
+        "c1_banned": "PASS",
+        "c2_starters": "PASS",
+        "c3_anchor": "0/0 paragraphs anchored",
+        "c4_tier": "PASS",
+        "c5_regional": "Regional flavor may be weak",
+        "c6_community": "PASS",
+        "c7_mls_format": "First sentence format issue: \"Generated just now\"",
+        "c8_zillow_structure": "0 paragraphs found",
+        "c9_hashtags": "0 hashtags: ",
+        "c10_fabrication": "PASS"
+      },
+      "total": 68,
+      "maxTotal": 100
+    }
+  },
+  {
+    "id": "UI-05",
+    "address": "1401 N Rhodes St #603, Arlington, VA 22209",
+    "mlsText": "Generated just now",
+    "zillowText": "Generated just now",
+    "instagramText": "Generated just now",
+    "screenshotFile": "UI-05-1401_N_Rhodes_St__603__Arlington__VA_222.png",
+    "error": null,
+    "evaluation": {
+      "scores": {
+        "c1_banned": 10,
+        "c2_starters": 10,
+        "c3_anchor": 3,
+        "c4_tier": 10,
+        "c5_regional": 7,
+        "c6_community": 10,
+        "c7_mls_format": 5,
+        "c8_zillow_structure": 3,
+        "c9_hashtags": 0,
+        "c10_fabrication": 10
+      },
+      "notes": {
+        "c1_banned": "PASS",
+        "c2_starters": "PASS",
+        "c3_anchor": "0/0 paragraphs anchored",
+        "c4_tier": "PASS",
+        "c5_regional": "Regional flavor may be weak",
+        "c6_community": "PASS",
+        "c7_mls_format": "First sentence format issue: \"Generated just now\"",
+        "c8_zillow_structure": "0 paragraphs found",
+        "c9_hashtags": "0 hashtags: ",
+        "c10_fabrication": "PASS"
+      },
+      "total": 68,
+      "maxTotal": 100
+    }
+  },
+  {
+    "id": "UI-06",
+    "address": "12000 Market St #445, Reston, VA 20190",
+    "mlsText": "Generated just now",
+    "zillowText": "Generated just now",
+    "instagramText": "Generated just now",
+    "screenshotFile": "UI-06-12000_Market_St__445__Reston__VA_20190.png",
+    "error": null,
+    "evaluation": {
+      "scores": {
+        "c1_banned": 10,
+        "c2_starters": 10,
+        "c3_anchor": 3,
+        "c4_tier": 10,
+        "c5_regional": 7,
+        "c6_community": 10,
+        "c7_mls_format": 5,
+        "c8_zillow_structure": 3,
+        "c9_hashtags": 0,
+        "c10_fabrication": 10
+      },
+      "notes": {
+        "c1_banned": "PASS",
+        "c2_starters": "PASS",
+        "c3_anchor": "0/0 paragraphs anchored",
+        "c4_tier": "PASS",
+        "c5_regional": "Regional flavor may be weak",
+        "c6_community": "PASS",
+        "c7_mls_format": "First sentence format issue: \"Generated just now\"",
+        "c8_zillow_structure": "0 paragraphs found",
+        "c9_hashtags": "0 hashtags: ",
+        "c10_fabrication": "PASS"
+      },
+      "total": 68,
+      "maxTotal": 100
+    }
+  },
+  {
+    "id": "UI-07",
+    "address": "11852 St Trinians Ct, Reston, VA 20191",
+    "mlsText": "Generated just now",
+    "zillowText": "Generated just now",
+    "instagramText": "Generated just now",
+    "screenshotFile": "UI-07-11852_St_Trinians_Ct__Reston__VA_20191.png",
+    "error": null,
+    "evaluation": {
+      "scores": {
+        "c1_banned": 10,
+        "c2_starters": 10,
+        "c3_anchor": 3,
+        "c4_tier": 10,
+        "c5_regional": 7,
+        "c6_community": 10,
+        "c7_mls_format": 5,
+        "c8_zillow_structure": 3,
+        "c9_hashtags": 0,
+        "c10_fabrication": 10
+      },
+      "notes": {
+        "c1_banned": "PASS",
+        "c2_starters": "PASS",
+        "c3_anchor": "0/0 paragraphs anchored",
+        "c4_tier": "PASS",
+        "c5_regional": "Regional flavor may be weak",
+        "c6_community": "PASS",
+        "c7_mls_format": "First sentence format issue: \"Generated just now\"",
+        "c8_zillow_structure": "0 paragraphs found",
+        "c9_hashtags": "0 hashtags: ",
+        "c10_fabrication": "PASS"
+      },
+      "total": 68,
+      "maxTotal": 100
+    }
+  },
+  {
+    "id": "UI-08",
+    "address": "2254 Gunsmith Sq, Reston, VA 20191",
+    "mlsText": "Generated just now",
+    "zillowText": "Generated just now",
+    "instagramText": "Generated just now",
+    "screenshotFile": "UI-08-2254_Gunsmith_Sq__Reston__VA_20191.png",
+    "error": null,
+    "evaluation": {
+      "scores": {
+        "c1_banned": 10,
+        "c2_starters": 10,
+        "c3_anchor": 3,
+        "c4_tier": 10,
+        "c5_regional": 7,
+        "c6_community": 10,
+        "c7_mls_format": 5,
+        "c8_zillow_structure": 3,
+        "c9_hashtags": 0,
+        "c10_fabrication": 10
+      },
+      "notes": {
+        "c1_banned": "PASS",
+        "c2_starters": "PASS",
+        "c3_anchor": "0/0 paragraphs anchored",
+        "c4_tier": "PASS",
+        "c5_regional": "Regional flavor may be weak",
+        "c6_community": "PASS",
+        "c7_mls_format": "First sentence format issue: \"Generated just now\"",
+        "c8_zillow_structure": "0 paragraphs found",
+        "c9_hashtags": "0 hashtags: ",
+        "c10_fabrication": "PASS"
+      },
+      "total": 68,
+      "maxTotal": 100
+    }
+  },
+  {
+    "id": "UI-09",
+    "address": "42671 Leaflet Ln, Chantilly, VA 20152",
+    "mlsText": "Generated just now",
+    "zillowText": "Generated just now",
+    "instagramText": "Generated just now",
+    "screenshotFile": "UI-09-42671_Leaflet_Ln__Chantilly__VA_20152.png",
+    "error": null,
+    "evaluation": {
+      "scores": {
+        "c1_banned": 10,
+        "c2_starters": 10,
+        "c3_anchor": 3,
+        "c4_tier": 10,
+        "c5_regional": 7,
+        "c6_community": 10,
+        "c7_mls_format": 5,
+        "c8_zillow_structure": 3,
+        "c9_hashtags": 0,
+        "c10_fabrication": 10
+      },
+      "notes": {
+        "c1_banned": "PASS",
+        "c2_starters": "PASS",
+        "c3_anchor": "0/0 paragraphs anchored",
+        "c4_tier": "PASS",
+        "c5_regional": "Regional flavor may be weak",
+        "c6_community": "PASS",
+        "c7_mls_format": "First sentence format issue: \"Generated just now\"",
+        "c8_zillow_structure": "0 paragraphs found",
+        "c9_hashtags": "0 hashtags: ",
+        "c10_fabrication": "PASS"
+      },
+      "total": 68,
+      "maxTotal": 100
+    }
+  },
+  {
+    "id": "UI-10",
+    "address": "43728 Transit Sq, Ashburn, VA 20147",
+    "mlsText": "",
+    "zillowText": "",
+    "instagramText": "",
+    "screenshotFile": null,
+    "error": "page.goto: Target page, context or browser has been closed",
+    "evaluation": null
+  }
+]
