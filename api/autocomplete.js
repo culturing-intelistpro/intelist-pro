@@ -27,6 +27,6 @@ export default async function handler(req, res) {
     return res.status(googleRes.status).json(data)
   } catch (err) {
     console.error('[api/autocomplete] Google Places error:', err)
-    return res.status(502).json({ error: 'Upstream error' })
+    return res.status(502).json({ error: 'Upstream error', debug: `${err.name}: ${err.message}` })
   }
 }
