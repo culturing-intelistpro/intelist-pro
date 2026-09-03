@@ -539,14 +539,10 @@ export default function App() {
       const controller = new AbortController()
       suggestAbortRef.current = controller
       try {
-        const res = await fetch('/api/places:autocomplete', {
+        const res = await fetch('/api/autocomplete', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Goog-Api-Key': import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-            'X-Goog-FieldMask': 'suggestions.placePrediction.text',
-          },
-          body: JSON.stringify({ input: value, includedRegionCodes: ['us'], languageCode: 'en' }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ input: value }),
           signal: controller.signal,
         })
         const data = await res.json()
