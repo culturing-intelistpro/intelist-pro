@@ -2,7 +2,7 @@
  * Intelist Pro — Prompt Test Runner
  * Usage: node scripts/test_runner.js
  *
- * Reads VITE_ANTHROPIC_API_KEY from .env
+ * Reads ANTHROPIC_API_KEY from .env
  * Calls claude-opus-4-6 for each test case
  * Waits 3 s between calls (rate-limit safety)
  * Writes scripts/test_results_final.json
@@ -37,9 +37,9 @@ function loadEnv(envPath) {
 }
 
 const env = loadEnv(path.join(ROOT, '.env'))
-const API_KEY = env.VITE_ANTHROPIC_API_KEY
+const API_KEY = env.ANTHROPIC_API_KEY
 if (!API_KEY) {
-  console.error('❌ VITE_ANTHROPIC_API_KEY not found in .env')
+  console.error('❌ ANTHROPIC_API_KEY not found in .env')
   process.exit(1)
 }
 

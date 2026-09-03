@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import Anthropic from '@anthropic-ai/sdk'
 import mammoth from 'mammoth'
 import { MapPin, PenLine, Mic, Image, FileText, Upload, X, Plus, ArrowRight } from 'lucide-react'
 import styles from './App.module.css'
@@ -8,6 +7,7 @@ import communitiesData from './data/communities.json'
 import { supabase } from './supabase'
 import AuthModal from './AuthModal'
 import masterPromptRules from './masterPromptRules'
+import { callClaude } from './anthropicClient'
 
 // ─── Listing metadata helpers ──────────────────────────────────────────────────
 function detectTier(addr) {
@@ -275,7 +275,7 @@ function useRelativeTime(timestamp) {
 }
 
 // ─── Result card ───────────────────────────────────────────────────────────────
-function ResultCard({ tag, sublabel, content, apiKey, onChange, listingId, sectionKey, initialVerb = 'Generated', revisingAll = false }) {
+function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, initialVerb = 'Generated', revisingAll = false }) {
   const [text, setText]                   = useState(content)
   const [original]                        = useState(content)
   const [isEditing, setIsEditing]         = useState(false)
@@ -327,12 +327,11 @@ function ResultCard({ tag, sublabel, content, apiKey, onChange, listingId, secti
   const undo = () => commitText(original, 'Restored')
 
   const revise = async () => {
-    if (!reviseInput.trim() || !apiKey) return
+    if (!reviseInput.trim()) return
     setIsRevising(true)
     const prompt = reviseInput
     try {
-      const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true })
-      const msg = await client.messages.create({
+      const msg = await callClaude({
         model: 'claude-opus-4-6',
         max_tokens: 700,
         messages: [{
@@ -688,9 +687,9 @@ export default function App() {
   useEffect(() => () => images.forEach((img) => { if (!img.isPDF && img.preview) URL.revokeObjectURL(img.preview) }), []) // eslint-disable-line
 
   // ── Fetch Zillow data via Claude web_search ─────────────────────────────────
-  const fetchZillowData = async (addr, client, signal) => {
+  const fetchZillowData = async (addr, signal) => {
     try {
-      const msg = await client.messages.create({
+      const msg = await callClaude({
         model: 'claude-opus-4-6',
         max_tokens: 1000,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
@@ -774,13 +773,8 @@ Use only data found on Zillow. Set any unfound field to null.`,
     sessionStartRef.current   = Date.now()
     generationTimeRef.current = null
     try {
-      const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
-      if (!apiKey) throw new Error('VITE_ANTHROPIC_API_KEY is not set in .env')
-
-      const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true })
-
       // Step 1: Fetch Zillow data
-      const zillow = await fetchZillowData(address, client, abortController.signal)
+      const zillow = await fetchZillowData(address, abortController.signal)
       setZillowData(zillow)
       setLoadingStep('generating')
 
@@ -1130,7 +1124,7 @@ Each section must bring new information or perspective — not restate what anot
         { type: 'text', text: prompt },
       ]
 
-      const msg = await client.messages.create({
+      const msg = await callClaude({
         model: 'claude-opus-4-6',
         max_tokens: 2400,
         messages: [{ role: 'user', content }],
@@ -1171,10 +1165,8 @@ Each section must bring new information or perspective — not restate what anot
     if (!reviseAllInput.trim() || revisingAll) return
     setRevisingAll(true)
     const prompt = reviseAllInput
-    const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
     try {
-      const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true })
-      const reviseSection = (text, isInstagram = false) => client.messages.create({
+      const reviseSection = (text, isInstagram = false) => callClaude({
         model: 'claude-opus-4-6',
         max_tokens: 700,
         messages: [{ role: 'user', content: `${masterPromptRules}\n\n---\nYou are now REVISING an existing section.\nDo not regenerate from scratch.\n\nORIGINAL TEXT TO REVISE:\n${text}\n\nREVISION REQUEST: ${prompt}\n\nApply the revision request while strictly following ALL rules in the master prompt above.\nThe tier, tone, and compliance rules cannot be changed by the revision request.${isInstagram ? '\nHashtags (5-7) must always be included. Never remove hashtags when revising Instagram caption.' : ''}\nOutput only the revised section in English.` }],
@@ -1497,7 +1489,6 @@ Each section must bring new information or perspective — not restate what anot
 
   // ── Results ─────────────────────────────────────────────────────────────────
   const displayAddress = results.address || address
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
   const allText = `MLS DESCRIPTION\n${'─'.repeat(48)}\n${results.mls}\n\nZILLOW · WHAT'S SPECIAL\n${'─'.repeat(48)}\n${results.marketing}\n\nINSTAGRAM CAPTION\n${'─'.repeat(48)}\n${results.social}`
 
   return (
@@ -1537,9 +1528,9 @@ Each section must bring new information or perspective — not restate what anot
         </div>
 
         <div className={styles.cards}>
-          <ResultCard key={`mls-${reviseAllCount}`}       tag="MLS Description"         sublabel="Short description · 200–300 words" content={results.mls}       apiKey={apiKey} onChange={(t) => setResults((r) => ({ ...r, mls: t }))}       listingId={listingId} sectionKey="mls"       initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
-          <ResultCard key={`zillow-${reviseAllCount}`}    tag="Zillow · What's Special" sublabel="Long form · 300–400 words"          content={results.marketing} apiKey={apiKey} onChange={(t) => setResults((r) => ({ ...r, marketing: t }))} listingId={listingId} sectionKey="zillow"    initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
-          <ResultCard key={`instagram-${reviseAllCount}`} tag="Instagram Caption"        sublabel="Instagram / Facebook caption"       content={results.social}    apiKey={apiKey} onChange={(t) => setResults((r) => ({ ...r, social: t }))}    listingId={listingId} sectionKey="instagram" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
+          <ResultCard key={`mls-${reviseAllCount}`}       tag="MLS Description"         sublabel="Short description · 200–300 words" content={results.mls}       onChange={(t) => setResults((r) => ({ ...r, mls: t }))}       listingId={listingId} sectionKey="mls"       initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
+          <ResultCard key={`zillow-${reviseAllCount}`}    tag="Zillow · What's Special" sublabel="Long form · 300–400 words"          content={results.marketing} onChange={(t) => setResults((r) => ({ ...r, marketing: t }))} listingId={listingId} sectionKey="zillow"    initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
+          <ResultCard key={`instagram-${reviseAllCount}`} tag="Instagram Caption"        sublabel="Instagram / Facebook caption"       content={results.social}    onChange={(t) => setResults((r) => ({ ...r, social: t }))}    listingId={listingId} sectionKey="instagram" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
         </div>
         <div className={styles.copyAllRow} style={{ marginTop: 16 }}>
           <CopyButton text={allText} label="Copy all three" className={styles.copyAllBtn} />

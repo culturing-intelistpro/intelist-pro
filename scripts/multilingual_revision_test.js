@@ -1,11 +1,37 @@
 import Anthropic from '@anthropic-ai/sdk'
 import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
 // ── Load master prompt rules (same as App.jsx) ─────────────────────────────
 // Inline the content since we can't use .js ESM imports easily from scripts
 import masterPromptRules from '../src/masterPromptRules.js'
 
-const API_KEY = process.env.VITE_ANTHROPIC_API_KEY || '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'
+// ── Load API key from .env ──────────────────────────────────────────────────
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+function loadEnv(envPath) {
+  const raw = fs.readFileSync(envPath, 'utf8')
+  const env = {}
+  for (const line of raw.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const eq = trimmed.indexOf('=')
+    if (eq === -1) continue
+    const key = trimmed.slice(0, eq).trim()
+    let val = trimmed.slice(eq + 1).trim()
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1)
+    }
+    env[key] = val
+  }
+  return env
+}
+
+const API_KEY = process.env.ANTHROPIC_API_KEY || loadEnv(path.resolve(__dirname, '..', '.env')).ANTHROPIC_API_KEY
+if (!API_KEY) {
+  console.error('❌ ANTHROPIC_API_KEY not found in environment or .env')
+  process.exit(1)
+}
 
 // ── Sample: Sterling Lowes Island MLS text ─────────────────────────────────
 const SAMPLE_MLS = `4-bedroom, 3.5-bath single-family home in Lowes Island, Sterling, VA. 2,840 square feet of finished living space listed at $749,000. HOA fee of $85 per month covers common area maintenance and tot lot upkeep.
