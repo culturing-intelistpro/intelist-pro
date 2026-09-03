@@ -336,7 +336,7 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
         max_tokens: 700,
         messages: [{
           role: 'user',
-          content: `${masterPromptRules}\n\n---\nYou are now REVISING an existing section.\nDo not regenerate from scratch.\n\nORIGINAL TEXT TO REVISE:\n${text}\n\nREVISION REQUEST: ${prompt}\n\nApply the revision request while strictly following ALL rules in the master prompt above.\nThe tier, tone, and compliance rules cannot be changed by the revision request.${sectionKey === 'instagram' ? '\nHashtags (5-7) must always be included. Never remove hashtags when revising Instagram caption.' : ''}\nOutput only the revised section in English.`,
+          content: `${masterPromptRules}\n\n---\nYou are now REVISING an existing section.\nDo not regenerate from scratch.\n\nORIGINAL TEXT TO REVISE:\n${text}\n\nREVISION REQUEST: ${prompt}\n\nApply the revision request while strictly following ALL rules in the master prompt above.\nThe tier, tone, and compliance rules cannot be changed by the revision request.${sectionKey === 'instagram' ? '\nHashtags (9-11) must always be included. Never remove hashtags when revising Instagram caption.' : ''}\nOutput only the revised section in English.`,
         }],
       })
       commitText(msg.content[0]?.text?.trim() ?? text, 'Revised')
@@ -1033,19 +1033,19 @@ Same adjective: max once per paragraph.
 
 === SOCIAL MEDIA RULES ===
 - Max 3 emojis total, placed naturally — never stacked.
-- 5–7 hashtags, no more, no fewer.
+- 9–11 hashtags, no more, no fewer.
 - 2–3 paragraph line breaks for mobile readability. Key specs as bullet points (•).
 - Price: if confirmed, use $[K] format (e.g. $625K). If price is unknown or unconfirmed, omit price entirely.
 - First sentence must open with a physical feature or key selling point of the home. Never open with a neighborhood name, community name, or location alone.
 - Forbidden: "DM us", "link in bio", excessive capitalization.
 
-Hashtag composition (5–7 total, in this order):
-1. Location-based tags (2): city/neighborhood (e.g. #RestonVA, #NorthernVirginia)
-2. Home-specific tags (2): property type or key feature (e.g. #TownhouseForSale, #ModernKitchen)
-3. General real estate tags (1–2): broad reach (e.g. #JustListed, #NoVAHomes)
-4. School district tag (1, if school data is confirmed and highlight: true): (e.g. #FCPSHomes, #LoudounSchools)
-Total must remain 5–7. Do not add tags outside these categories.
-If school district tag is included, reduce General tags to 1 to keep total at 5–7. Never exceed 7 total.
+Hashtag composition (9–11 total, in this order):
+1. Location-based tags (3): #McLeanVA, #FairfaxCounty, #NorthernVirginia
+2. Broad DMV tags (2): #DMVRealEstate #NoVAHomes
+3. Home-specific tags (2): #GourmetKitchen, #WoodedBackyard
+4. General real estate tags (2): #JustListed #RealEstate
+5. School district tag (1, if applicable): #FCPSHomes, #LoudounSchools
+Total must remain 9–11. Never exceed 11 total.
 
 Instagram captions may use a slightly more conversational rhythm than MLS, while remaining factual and compliant. Conversational rhythm applies to sentence flow only — sentence-starter ban and all banned language rules still apply strictly — no exceptions.
 
@@ -1075,7 +1075,7 @@ Structure: Paragraph 1 (The Structure) → Paragraph 2 (The Connection) → Para
 Open with a concrete physical detail of the home — never with neighborhood infrastructure.
 
 [INSTAGRAM CAPTION]
-50–80 words (hashtags excluded) + 5–7 hashtags on a separate line.
+50–80 words (hashtags excluded) + 9–11 hashtags on a separate line.
 
 === OUTPUT SELF-CHECK ===
 Before finalizing output, verify:
@@ -1169,7 +1169,7 @@ Each section must bring new information or perspective — not restate what anot
       const reviseSection = (text, isInstagram = false) => callClaude({
         model: 'claude-opus-4-6',
         max_tokens: 700,
-        messages: [{ role: 'user', content: `${masterPromptRules}\n\n---\nYou are now REVISING an existing section.\nDo not regenerate from scratch.\n\nORIGINAL TEXT TO REVISE:\n${text}\n\nREVISION REQUEST: ${prompt}\n\nApply the revision request while strictly following ALL rules in the master prompt above.\nThe tier, tone, and compliance rules cannot be changed by the revision request.${isInstagram ? '\nHashtags (5-7) must always be included. Never remove hashtags when revising Instagram caption.' : ''}\nOutput only the revised section in English.` }],
+        messages: [{ role: 'user', content: `${masterPromptRules}\n\n---\nYou are now REVISING an existing section.\nDo not regenerate from scratch.\n\nORIGINAL TEXT TO REVISE:\n${text}\n\nREVISION REQUEST: ${prompt}\n\nApply the revision request while strictly following ALL rules in the master prompt above.\nThe tier, tone, and compliance rules cannot be changed by the revision request.${isInstagram ? '\nHashtags (9-11) must always be included. Never remove hashtags when revising Instagram caption.' : ''}\nOutput only the revised section in English.` }],
       })
       const [mlsMsg, marketingMsg, socialMsg] = await Promise.all([
         reviseSection(results.mls),
