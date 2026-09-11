@@ -269,6 +269,108 @@ function GenerateTimeline({ loadingStep }) {
   )
 }
 
+
+// ─── Generation countdown timer ──────────────────────────────────────────────
+const GEN_TIMES_KEY = 'intelist_gen_times'
+
+function getAverageGenTime() {
+  try {
+    const raw = localStorage.getItem(GEN_TIMES_KEY)
+    if (!raw) return null
+    const times = JSON.parse(raw)
+    if (!Array.isArray(times) || times.length === 0) return null
+    return Math.round(times.reduce((a, b) => a + b, 0) / times.length)
+  } catch { return null }
+}
+
+function saveGenTime(ms) {
+  try {
+    const raw = localStorage.getItem(GEN_TIMES_KEY)
+    const times = raw ? JSON.parse(raw) : []
+    times.push(ms)
+    localStorage.setItem(GEN_TIMES_KEY, JSON.stringify(times))
+  } catch {}
+}
+
+function GenerateCountdown({ loading, startTimeRef }) {
+  const avgMs   = getAverageGenTime()
+  const avgSecs = avgMs ? Math.round(avgMs / 1000) : null
+  const [secs, setSecs]   = useState(avgSecs)
+  const [phase, setPhase] = useState('counting') // 'counting' | 'done' | 'over'
+
+  useEffect(() => {
+    if (!loading) return
+    if (avgSecs === null) return  // no history yet — skip countdown
+    setSecs(avgSecs)
+    setPhase('counting')
+    const interval = setInterval(() => {
+      setSecs(prev => {
+        if (prev === null) return null
+        if (prev <= 1) {
+          setPhase('over')
+          clearInterval(interval)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [loading])
+
+  // When loading goes false while still counting — flash early-finish message
+  useEffect(() => {
+    if (!loading && phase === 'counting' && secs !== null && secs > 0) {
+      setPhase('done')
+    }
+  }, [loading])
+
+  if (avgSecs === null) return null  // first few runs — existing spinner handles it
+
+  if (phase === 'over') {
+    return (
+      <p style={{
+        marginTop: 16,
+        fontSize: 13,
+        color: '#8a8a8e',
+        textAlign: 'center',
+        lineHeight: 1.5,
+      }}>
+        거의 완료됐습니다.<br/>조금만 더 기다려주세요 😊
+      </p>
+    )
+  }
+
+  if (phase === 'done') {
+    return (
+      <p style={{
+        marginTop: 16,
+        fontSize: 13,
+        color: '#34c759',
+        textAlign: 'center',
+        fontWeight: 500,
+      }}>
+        예상보다 빠르게 완료됐어요 ✓
+      </p>
+    )
+  }
+
+  // counting phase
+  return (
+    <div style={{ marginTop: 16, textAlign: 'center' }}>
+      <span style={{
+        fontVariantNumeric: 'tabular-nums',
+        fontSize: 28,
+        fontWeight: 600,
+        color: '#1c1c1e',
+        letterSpacing: '-0.5px',
+      }}>
+        {secs}
+      </span>
+      <span style={{ fontSize: 13, color: '#8a8a8e', marginLeft: 4 }}>초</span>
+    </div>
+  )
+}
+
 // ─── Revise All input ──────────────────────────────────────────────────────────
 const REVISE_ALL_PHS = [
   "Revise all three… (e.g. 'Make everything more concise')",
@@ -1316,6 +1418,7 @@ Each section must bring new information or perspective — not restate what anot
 
       const parsed = parseResults(msg.content[0]?.text ?? '')
       generationTimeRef.current = Date.now()
+      saveGenTime(Date.now() - sessionStartRef.current)
       setResults(parsed)
       setReviseAllCount(0)
       // Track listing in Supabase (best-effort)
@@ -1414,6 +1517,7 @@ Each section must bring new information or perspective — not restate what anot
           <div className={styles.loadingOverlay}>
             <div className={styles.loadingCard}>
               <GenerateTimeline loadingStep={loadingStep} />
+              <GenerateCountdown loading={loading} startTimeRef={sessionStartRef} />
               <p className={styles.loadingSub}>Saving you time on every listing</p>
               <button className={styles.cancelGenerateBtn} onClick={cancelGenerate}>Cancel</button>
             </div>
