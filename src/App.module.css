@@ -586,37 +586,84 @@
   background: var(--bg);
   border: 1px solid var(--border-light);
   border-radius: 16px;
-  padding: 32px 48px;
+  padding: 32px 40px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-}
-
-.loadingSpinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(232, 96, 76, 0.2);
-  border-top-color: var(--icon);
-  border-radius: 50%;
-  animation: spin 0.75s linear infinite;
+  gap: 20px;
+  min-width: 300px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-
-.loadingTitle {
-  font-size: 17px;
-  font-weight: 500;
-  color: var(--text-1);
-  text-align: center;
-}
 
 .loadingSub {
   font-size: 13px;
   color: var(--text-3);
   text-align: center;
-  margin-top: -8px;
 }
+
+/* ── Generate timeline ────────────────────────────────────────────────────────── */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+}
+
+.timelineStep {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.timelineIconCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timelineIcon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.timelineIconDone    { background: #34C759; }
+.timelineIconActive  { background: rgba(232, 96, 76, 0.12); }
+.timelineIconPending { background: transparent; border: 2px solid var(--border); }
+
+.timelineSpinner {
+  width: 11px;
+  height: 11px;
+  border: 2px solid rgba(232, 96, 76, 0.25);
+  border-top-color: var(--icon);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+.timelineConnector {
+  width: 2px;
+  flex: 1;
+  min-height: 18px;
+  background: var(--border-light);
+  margin: 2px 0;
+  transition: background 0.2s ease;
+}
+.timelineConnectorDone { background: #34C759; }
+
+.timelineLabel {
+  font-size: 14.5px;
+  line-height: 20px;
+  padding-bottom: 18px;
+  transition: color 0.2s ease;
+}
+.timelineLabelDone    { color: var(--text-1); font-weight: 600; }
+.timelineLabelActive  { color: var(--text-1); font-weight: 500; }
+.timelineLabelPending { color: var(--text-3); font-weight: 400; }
 
 .cancelGenerateBtn {
   background: #ffffff;

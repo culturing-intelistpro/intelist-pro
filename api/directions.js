@@ -26,29 +26,89 @@ function getMajorRoad(text) {
   return match ? match.road : DEFAULT_ROAD
 }
 
-// Google's html_instructions often embed a small-print sub-note right after the
-// main instruction with no separating whitespace, e.g.:
-//   "...High Occupancy Toll<div style="font-size:0.9em">Toll road</div>"
-//   "Turn left onto Tulip Poplar Ln<div style="font-size:0.9em">Destination will be on the right</div>"
-// Naively stripping tags concatenates these into broken words ("TollToll road").
-// Keep the actionable "Destination will be on the..." note as a trailing sentence;
-// drop other sub-notes (toll/restricted-road labels) — they read as noise in prose.
-function stripHtml(html) {
-  const destMatch = html.match(/<div[^>]*>\s*(Destination[^<]*)<\/div>/i)
-  let text = html.replace(/<div[^>]*>[\s\S]*?<\/div>/gi, '')
-  text = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').replace(/\s*\/\s*/g, '/').trim()
-  if (destMatch) text += `. ${destMatch[1].trim()}`
-  return text
+// Strip all HTML, including small-print sub-notes Google embeds right after the
+// main instruction (toll/restricted-road labels, "Destination will be on the
+// right"). Sub-notes are dropped here — the destination side is pulled out
+// separately by destinationSideFromHtml() before this runs.
+function plainInstruction(html) {
+  return html
+    .replace(/<div[^>]*>[\s\S]*?<\/div>/gi, '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*\/\s*/g, '/')
+    .trim()
 }
 
-// Format raw Directions API steps into a single MLS-style "Directions" paragraph.
+function destinationSideFromHtml(html) {
+  const m = html.match(/<div[^>]*>\s*Destination will be on the (left|right)/i)
+  return m ? m[1].toLowerCase() : null
+}
+
+// Street-type abbreviations for compact agent-style shorthand.
+const STREET_ABBREVIATIONS = [
+  [/\bBoulevard\b/gi, 'Blvd'],
+  [/\bStreet\b/gi,    'St'],
+  [/\bAvenue\b/gi,    'Ave'],
+  [/\bDrive\b/gi,     'Dr'],
+  [/\bRoad\b/gi,      'Rd'],
+  [/\bParkway\b/gi,   'Pkwy'],
+  [/\bSquare\b/gi,    'Sq'],
+  [/\bCourt\b/gi,     'Ct'],
+  [/\bLane\b/gi,      'Ln'],
+  [/\bPlace\b/gi,     'Pl'],
+  [/\bTerrace\b/gi,   'Ter'],
+]
+
+function abbreviateStreetType(name) {
+  return STREET_ABBREVIATIONS.reduce((s, [re, abbr]) => s.replace(re, abbr), name)
+}
+
+// Google lists slash-separated aliases from most-general to most-local, e.g.
+// "State Rte 6220 N/Algonkian Pkwy" — the local street name is always last.
+function extractRoadName(raw) {
+  const parts = raw.split('/').map((p) => p.trim()).filter(Boolean)
+  const name = (parts[parts.length - 1] || raw).replace(/\.$/, '').trim()
+  return abbreviateStreetType(name)
+}
+
+// A bare numbered route with no proper street name ("VA-286 N", "State Rte
+// 6220") is a transient ramp/connector inside an interchange, not something an
+// agent would call out in quick directions — only named streets survive.
+const BARE_ROUTE_RE = /^(?:VA|US|I)-?\d+\s*[NSEW]{0,2}$|^State Rte\.?\s*\d+\s*[NSEW]{0,2}$/i
+
+function isBareRoute(name) {
+  return BARE_ROUTE_RE.test(name)
+}
+
+// Convert Google's step-by-step instructions into MLS-agent shorthand:
+// "From VA-7 (Leesburg Pike), R on Algonkian Pkwy, L on Dunkirk Sq, home on right."
+// Only explicit "Turn left/right onto X" steps become turns — Head/Continue/
+// Keep-to-stay-on/ramp-only maneuvers are connective tissue an agent skips.
 function formatMlsDirections(steps, originLabel) {
-  const parts = steps.map((step) => {
-    let instruction = stripHtml(step.html_instructions || '')
-    if (!/[.!?]$/.test(instruction)) instruction += '.'
-    return step.distance?.text ? `${instruction} (${step.distance.text})` : instruction
-  })
-  return `From ${originLabel}, ${parts.join(' ')}`
+  const turns = []
+  let destinationSide = null
+
+  for (const step of steps) {
+    const html = step.html_instructions || ''
+
+    const side = destinationSideFromHtml(html)
+    if (side) destinationSide = side
+
+    const text = plainInstruction(html)
+    const turnMatch = text.match(/^Turn (right|left) onto (?:the ramp (?:to|onto) )?(.+)$/i)
+    if (!turnMatch) continue
+
+    const [, dir, rawRoad] = turnMatch
+    const road = extractRoadName(rawRoad)
+    if (isBareRoute(road)) continue // transient connector, not a real turn to call out
+
+    turns.push(`${dir[0].toUpperCase()} on ${road}`)
+  }
+
+  const tokens = [...turns]
+  if (destinationSide) tokens.push(`home on ${destinationSide}`)
+
+  return `From ${originLabel}, ${tokens.join(', ')}.`
 }
 
 async function geocode(query, apiKey) {

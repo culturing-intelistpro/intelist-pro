@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import mammoth from 'mammoth'
-import { MapPin, PenLine, Mic, Image, FileText, Upload, X, Plus, ArrowRight } from 'lucide-react'
+import { MapPin, PenLine, Mic, Image, FileText, Upload, X, Plus, ArrowRight, Check } from 'lucide-react'
 import styles from './App.module.css'
 import schoolsData from './data/schools.json'
 import communitiesData from './data/communities.json'
@@ -87,17 +87,58 @@ const getSchoolInfo    = (addr) => lookupByAddress(schoolsData, addr)
 const getCommunityInfo = (addr) => lookupByAddress(communitiesData, addr)
 
 // ─── Prompt builders ───────────────────────────────────────────────────────────
-function buildSchoolBlock(school) {
-  if (!school) return ''
-  const { phrase, highlight, schools } = school
-  const named = Object.entries(schools)
-    .filter(([, v]) => v !== 'varies by location')
-    .map(([lvl, name]) => `${lvl.charAt(0).toUpperCase() + lvl.slice(1)}: ${name}`)
-    .join(', ')
-  if (highlight) {
-    return `School district: This property is ${phrase}${named ? ` (${named})` : ''}. Emphasize the school district as a key selling point in all three descriptions.`
+
+// Builds a "Schools" Nearby & Commute category from the same local school data
+// used in the MLS prompt — this is a district lookup, not a drive-time query,
+// so it doesn't go through the Google Distance Matrix API in api/nearby.js.
+function buildSchoolsCategory(school) {
+  if (!school) return null
+  const items = Object.entries(school.schools || {})
+    .filter(([, name]) => name && name !== 'varies by location')
+    .map(([level, name]) => `${level.charAt(0).toUpperCase() + level.slice(1)}: ${name}`)
+  if (!items.length) return null
+  return { label: 'Schools', items }
+}
+
+// ─── School district site lookup (source-restricted school web_search) ────────
+// Manassas Park / Manassas City are independent cities with their own school
+// divisions — check them before the broader Prince William County pattern.
+const SCHOOL_DISTRICT_SITES = [
+  { pattern: /manassas park/i, site: 'mpschools.org',           name: 'Manassas Park City Schools' },
+  { pattern: /\bmanassas\b/i,  site: 'manassascityschools.org', name: 'Manassas City Public Schools' },
+  { pattern: /falls church city|\b22046\b/i, site: 'fccps.org', name: 'Falls Church City Public Schools' },
+  { pattern: /alexandria/i,    site: 'acps.k12.va.us',          name: 'Alexandria City Public Schools' },
+  { pattern: /arlington/i,     site: 'apsva.us',                name: 'Arlington Public Schools' },
+  { pattern: /loudoun|ashburn|leesburg|purcellville|middleburg|sterling|south riding|brambleton|aldie|broadlands|one loudoun|lansdowne|potomac falls|cascades|lovettsville/i,
+    site: 'lcps.org', name: 'Loudoun County Public Schools' },
+  { pattern: /prince william|woodbridge|gainesville|haymarket|dumfries|occoquan|bristow|triangle|dale city|lake ridge/i,
+    site: 'pwcs.edu', name: 'Prince William County Public Schools' },
+  { pattern: /fairfax|mclean|great falls|vienna|oakton|centreville|chantilly|reston|herndon|springfield|burke|annandale|falls church|lorton|clifton|dunn loring|merrifield|tysons|wolf trap|franconia|kingstowne/i,
+    site: 'fcps.edu', name: 'Fairfax County Public Schools' },
+]
+
+function detectSchoolDistrictSite(address) {
+  return SCHOOL_DISTRICT_SITES.find(({ pattern }) => pattern.test(address)) ?? null
+}
+
+const SCHOOL_UNAVAILABLE_LINE = 'School information unavailable — please verify with county school locator.'
+const SCHOOL_DISCLAIMER       = 'School assignments based on official county data — verify exact boundaries with your local school board.'
+
+// Turns a fetchSchoolData() result into the block injected into the generation
+// prompt — either confirmed school names + the required disclaimer, or an
+// explicit instruction to output the fallback line verbatim (never silently
+// omitted, never guessed).
+function buildSchoolPromptBlock(schoolData) {
+  if (!schoolData?.found) {
+    return `School information: Not confirmed via official school division website. Wherever school info would appear, output this exact line verbatim: "${SCHOOL_UNAVAILABLE_LINE}"`
   }
-  return `School district: ${phrase}${named ? ` (${named})` : ''}. Mention school name(s) briefly; do not emphasize.`
+  const { elementary, middle, high, district } = schoolData
+  const named = [
+    elementary ? `Elementary: ${elementary}` : '',
+    middle     ? `Middle: ${middle}`         : '',
+    high       ? `High: ${high}`             : '',
+  ].filter(Boolean).join(', ')
+  return `School district — confirmed via ${district.name} (${district.site}): ${named}. Include this disclaimer sentence once, verbatim, wherever school info appears: "${SCHOOL_DISCLAIMER}"`
 }
 
 function buildCommunityBlock(community) {
@@ -184,6 +225,48 @@ function parseResults(text) {
     marketing: text.match(/\[ZILLOW · WHAT'S SPECIAL\]([\s\S]*?)(?=\[INSTAGRAM CAPTION\]|$)/)?.[1]?.trim() ?? '',
     social:    text.match(/\[INSTAGRAM CAPTION\]([\s\S]*?)$/)?.[1]?.trim() ?? '',
   }
+}
+
+// ─── Generate loading timeline ──────────────────────────────────────────────────
+const GENERATE_STEPS = [
+  { key: 'address',    label: 'Address confirmed' },
+  { key: 'zillow',     label: 'Looking up property data…' },
+  { key: 'generating', label: 'Crafting your listing…' },
+]
+const GENERATE_STEP_INDEX = { zillow: 1, generating: 2 }
+
+function GenerateTimeline({ loadingStep }) {
+  const currentIndex = GENERATE_STEP_INDEX[loadingStep] ?? 0
+  return (
+    <div className={styles.timeline}>
+      {GENERATE_STEPS.map((step, i) => {
+        const status = i < currentIndex ? 'done' : i === currentIndex ? 'active' : 'pending'
+        const isLast = i === GENERATE_STEPS.length - 1
+        return (
+          <div key={step.key} className={styles.timelineStep}>
+            <div className={styles.timelineIconCol}>
+              <span className={`${styles.timelineIcon} ${
+                status === 'done' ? styles.timelineIconDone :
+                status === 'active' ? styles.timelineIconActive : styles.timelineIconPending
+              }`}>
+                {status === 'done' && <Check size={12} strokeWidth={3} />}
+                {status === 'active' && <span className={styles.timelineSpinner} />}
+              </span>
+              {!isLast && (
+                <span className={`${styles.timelineConnector} ${status === 'done' ? styles.timelineConnectorDone : ''}`} />
+              )}
+            </div>
+            <span className={`${styles.timelineLabel} ${
+              status === 'done' ? styles.timelineLabelDone :
+              status === 'active' ? styles.timelineLabelActive : styles.timelineLabelPending
+            }`}>
+              {step.label}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 // ─── Revise All input ──────────────────────────────────────────────────────────
@@ -710,14 +793,18 @@ Use only data found on Zillow. Set any unfound field to null.`,
         }],
       }, { signal })
 
-      // Extract text from response (may be after tool_use blocks)
-      const textBlock = msg.content.find((b) => b.type === 'text')
-      if (!textBlock) return null
+      // web_search runs multiple search rounds, so Claude's reply often comes back
+      // as several text blocks interleaved with tool-use blocks — the final JSON
+      // is typically in the LAST text block, not the first (which is often just
+      // "searching for..." commentary). Concatenate every text block and take the
+      // last JSON object found, so multi-round searches don't silently lose data.
+      const allText = msg.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n')
+      if (!allText) return null
 
-      const jsonMatch = textBlock.text.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) return null
+      const jsonMatches = allText.match(/\{[^{}]*\}/g)
+      if (!jsonMatches || !jsonMatches.length) return null
 
-      return JSON.parse(jsonMatch[0])
+      return JSON.parse(jsonMatches[jsonMatches.length - 1])
     } catch (err) {
       console.error('[Intelist Pro] Zillow fetch error:', err)
       console.error('[Intelist Pro] Zillow error details:', {
@@ -726,6 +813,45 @@ Use only data found on Zillow. Set any unfound field to null.`,
         error: err.error,
       })
       return null // Zillow fetch is best-effort; never block generation
+    }
+  }
+
+  // ── Fetch school assignment via web_search restricted to the official county/
+  //    city school division website — never GreatSchools, Zillow, Niche, etc.
+  const fetchSchoolData = async (addr, signal) => {
+    const district = detectSchoolDistrictSite(addr)
+    if (!district) return { found: false }
+    try {
+      const msg = await callClaude({
+        model: 'claude-opus-4-6',
+        max_tokens: 1500,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{
+          role: 'user',
+          content: `Search site:${district.site} to find the elementary, middle, and high school that serve the property at this exact address: "${addr}". Use ONLY results from site:${district.site} — do not use Zillow, GreatSchools, Niche, or any other site as a source. Keep your reasoning brief. Return ONLY a JSON object at the very end (no markdown, no explanation) with these fields:
+{
+  "elementary": string or null,
+  "middle": string or null,
+  "high": string or null
+}
+If you cannot confirm a school from site:${district.site} for this exact address, set all three fields to null. Do not guess or infer from nearby addresses.`,
+        }],
+      }, { signal })
+
+      // Same multi-block extraction as fetchZillowData — web_search replies often
+      // span several text blocks, and the final JSON is usually in the last one.
+      const allText = msg.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n')
+      if (!allText) return { found: false, district }
+
+      const jsonMatches = allText.match(/\{[^{}]*\}/g)
+      if (!jsonMatches || !jsonMatches.length) return { found: false, district }
+
+      const parsed = JSON.parse(jsonMatches[jsonMatches.length - 1])
+      const found = Boolean(parsed.elementary || parsed.middle || parsed.high)
+      return { found, district, ...parsed }
+    } catch (err) {
+      if (err.name !== 'AbortError') console.error('[Intelist Pro] School fetch error:', err)
+      return { found: false, district } // best-effort; never block generation
     }
   }
 
@@ -809,18 +935,26 @@ Use only data found on Zillow. Set any unfound field to null.`,
     sessionStartRef.current   = Date.now()
     generationTimeRef.current = null
     try {
-      // Step 1: Fetch Zillow data + driving directions + nearby places in parallel (all best-effort)
-      const [zillow, directionsResult, nearbyResult] = await Promise.all([
+      // Step 1: Fetch Zillow data + driving directions + nearby places + school
+      // assignment in parallel (all best-effort)
+      const [zillow, directionsResult, nearbyResult, schoolData] = await Promise.all([
         fetchZillowData(address, abortController.signal),
         fetchDirections(address, abortController.signal),
         fetchNearby(address, abortController.signal),
+        fetchSchoolData(address, abortController.signal),
       ])
       setZillowData(zillow)
       setDirections(directionsResult)
-      setNearby(nearbyResult)
+
+      // Nearby & Commute's "Schools" category uses the local schools.json lookup
+      // (fast, no API cost) — separate from schoolBlock below, which uses the new
+      // official-site-restricted web_search result for the generated copy.
+      const schoolsCategory = buildSchoolsCategory(getSchoolInfo(address))
+      const mergedNearby = schoolsCategory ? { schools: schoolsCategory, ...(nearbyResult || {}) } : nearbyResult
+      setNearby(mergedNearby)
       setLoadingStep('generating')
 
-      const schoolBlock    = buildSchoolBlock(getSchoolInfo(address))
+      const schoolBlock    = buildSchoolPromptBlock(schoolData)
       const communityBlock = buildCommunityBlock(getCommunityInfo(address))
 
       const combinedNotes = [notes.trim(), transcript.trim()].filter(Boolean).join('\n\n')
@@ -958,7 +1092,7 @@ Even at $1.5M+, a Sterling address is written as Sterling — never as McLean.
 === SPECIAL ZONES ===
 Note: Special Zones are AXIS 1 Regional Flavor accents and apply independently of AXIS 2 Tone Intensity. They are always reflected regardless of price tier.
 
-Falls Church City (independent city, ZIP 22046) ➔ Always mention: "Falls Church City Schools — one of Virginia's top-rated independent school systems." Mention once in MLS DESCRIPTION. Reference naturally in ZILLOW if space allows. Do not force into Instagram. Do NOT confuse with general Falls Church (Fairfax County, ZIP 22041–22044), which falls under FCPS and does not carry independent city school status.
+Falls Church City (independent city, ZIP 22046) ➔ This is an independent city with its own school division (Falls Church City Public Schools), separate from Fairfax County Public Schools. Use the confirmed school names and disclaimer from the School district block per SCHOOL DISTRICT RULES — do not add rating language ("top-rated" or similar); factually noting the independent-city school division once in MLS DESCRIPTION is sufficient. Do NOT confuse with general Falls Church (Fairfax County, ZIP 22041–22044), which falls under FCPS and does not carry independent city school status.
 Old Town Alexandria ➔ Emphasize: historic character, waterfront, boutique walkability.
 Loudoun Tech Corridor ➔ Emphasize: technology employment corridor, data center economy, master-planned amenities, regional connectivity.
 Western Loudoun (Purcellville, Round Hill, Middleburg) ➔ Horse country, Blue Ridge views, rural Virginia lifestyle.
@@ -1017,14 +1151,20 @@ Paragraph 3 (The Ongoing Value) must also contain a physical anchor — referenc
 Never guess or invent missing information. Omit any field that is not confirmed.
 - Missing beds/baths/sqft/price: Start MLS with "[home type] in [community], [City], [State]." and include only confirmed specs.
 - Missing community name: omit it entirely — use "[home type] in [City], [State]" only. Never invent community names.
-- Missing school data: Omit schools entirely.
+- Missing school data: Do not omit silently — output the exact fallback line provided in the School district block above verbatim, wherever school info would appear.
 - Missing HOA data: Omit HOA entirely.
 
 === MLS DESCRIPTION RULES ===
-MANDATORY FIRST SENTENCE — when beds, baths, sqft, and price are all known:
-"[X]-bedroom, [X]-bath [home type] in [community], [City], [State]. [sqft] square feet of finished living space listed at $[price]."
-Example: "3-bedroom, 2.5-bath townhome in Deepwood, Reston, VA. 1,705 square feet of finished living space listed at $625,000."
+MANDATORY FIRST SENTENCE — when beds, baths, and sqft are all known:
+"[X]-bedroom, [X]-bath [home type] in [community], [City], [State]. [sqft] square feet of finished living space."
+Example: "3-bedroom, 2.5-bath townhome in Deepwood, Reston, VA. 1,705 square feet of finished living space."
 When any key spec is missing: "[home type] in [community], [City], [State]." — include only confirmed specs.
+
+PARAGRAPH STRUCTURE — exactly three paragraphs, separated by a line break (blank line) between each:
+Paragraph 1 (Overview): Opens with the MANDATORY FIRST SENTENCE above. Covers beds/baths/sqft/year built and an overall summary of the property or building.
+Paragraph 2 (Interior): Kitchen, bedrooms, bathrooms, and other key interior features and finishes.
+Paragraph 3 (Community): Community context, schools, and transportation/commute access.
+If a paragraph would have no confirmed content, shorten it rather than inventing facts — but keep the three-paragraph structure and line breaks.
 
 Sentence-starter ban — NEVER begin any sentence with:
 "Beautifully", "Thoughtfully", "Meticulously", "Gorgeously", "Lovingly", "Immaculate", "Charming", "Spacious", "Perfectly", "Exquisitely", "Elegantly", "Tastefully", "Wonderfully", "Exceptionally", "Nestled", "Discover", "Welcome", "Rarely".
@@ -1034,7 +1174,7 @@ Adjective rule: Adjectives before nouns require a specific fact. "Kitchen renova
 
 HOA: Only use HOA data confirmed in agent notes or an uploaded MLS sheet/document — never Zillow lookup data, never web search, never an estimate or a typical fee for the area. If confirmed via agent notes or an MLS sheet, include: "HOA fee of $[amount] [frequency] covers [items]." If not confirmed through either of those two sources, omit HOA entirely — do not mention an HOA at all, even generically.
 
-Price format: $[full number] (e.g. $625,000).
+Price: Never mention price anywhere in the MLS DESCRIPTION body — no list price, price per square foot, or any $ amount. Price is a separate MLS field, not part of the narrative copy.
 
 Absolute bans: exclamation marks, hashtags, ALL CAPS words, first-person (I/we/our/us), photo references, urgency phrases.
 
@@ -1063,10 +1203,10 @@ CONDITIONAL — Reston (20191, 20194): Wiehle-Reston East and Reston Town Center
 CONDITIONAL — Herndon (20170, 20171): Herndon Metro may be mentioned ONLY if agent notes explicitly state the distance. If no distance provided, omit entirely.
 
 === SCHOOL DISTRICT RULES ===
-Only use schools confirmed in the provided school data. "highlight: true" districts only get emphasis.
-- "top-rated": A-grade or higher only
-- "well-regarded": A− or B+ only
-- "convenient to": B or lower only
+School data comes from a web search restricted to the official county/city school division website (see the School district block above) — never from Zillow, GreatSchools, Niche, or any other third-party source, and never a rating/grade site.
+Never use rating or grade language for schools ("top-rated", "well-regarded", "A-grade", etc.) — the official school division source does not include ratings, only assignment.
+If schools were confirmed: state the school names factually (e.g., "served by [Elementary], [Middle], and [High]") and include the disclaimer sentence from the School district block, verbatim, exactly once in the output.
+If schools were not confirmed: do not guess, infer, or silently omit — output the fallback line from the School district block, verbatim, wherever school info would appear.
 
 === ADJECTIVE DISCIPLINE ===
 Same adjective: max once per paragraph.
@@ -1075,8 +1215,8 @@ Same adjective: max once per paragraph.
 === SOCIAL MEDIA RULES ===
 - Max 3 emojis total, placed naturally — never stacked.
 - 9–11 hashtags, no more, no fewer.
-- 2–3 paragraph line breaks for mobile readability. Key specs as bullet points (•).
-- Price: if confirmed, use $[K] format (e.g. $625K). If price is unknown or unconfirmed, omit price entirely.
+- 2–3 paragraph line breaks for mobile readability.
+- Spec line: when beds, baths, and/or sqft are confirmed, include one bullet line in this exact pipe-separated format: "• [X] Bed | [X] Bath | [sqft] SF | $[price in K]" (e.g. "• 3 Bed | 3.5 Bath | 2,272 SF | $650K"). Include only the fields that are confirmed, keeping the "|" separators between whatever fields are present. This spec line is the ONLY place price may appear in this section — never mention price anywhere in the caption body text itself.
 - First sentence must open with a physical feature or key selling point of the home. Never open with a neighborhood name, community name, or location alone.
 - Forbidden: "DM us", "link in bio", excessive capitalization.
 
@@ -1107,7 +1247,7 @@ OUTPUT FORMAT — output ONLY these four sections, no preamble, no commentary
 Normalized address on a single line.
 
 [MLS DESCRIPTION]
-200–300 words. MLS-ready. Factual, keyword-rich, professional tone.
+200–250 words — do not exceed 250 words. MLS-ready. Factual, keyword-rich, professional tone. Three paragraphs separated by line breaks per PARAGRAPH STRUCTURE above: (1) specs + overview, (2) interior features, (3) community/schools/transportation. Keep beds/baths/sqft/year built, key features, and community/school context — cut redundant or filler sentences to stay within the limit rather than dropping core facts.
 
 [ZILLOW · WHAT'S SPECIAL]
 300–400 words. If data is insufficient, shorten to avoid hallucination — minimum word count does not apply when factual content is limited.
@@ -1121,6 +1261,9 @@ Open with a concrete physical detail of the home — never with neighborhood inf
 === OUTPUT SELF-CHECK ===
 Before finalizing output, verify:
 - No banned language in any section, including Instagram caption
+- No price or $ amount anywhere in the MLS DESCRIPTION body
+- MLS DESCRIPTION is 250 words or fewer, in three line-break-separated paragraphs
+- Price in the social media caption appears only in the spec line, never in the body text
 - All location/distance claims are from agent notes only
 - No unsupported amenities implied
 - Paragraph structure compliance for Zillow section
@@ -1270,10 +1413,7 @@ Each section must bring new information or perspective — not restate what anot
         {loading && (
           <div className={styles.loadingOverlay}>
             <div className={styles.loadingCard}>
-              <div className={styles.loadingSpinner} />
-              <p className={styles.loadingTitle}>
-                {loadingStep === 'zillow' ? 'Looking up property data & directions…' : 'Crafting your listing copy…'}
-              </p>
+              <GenerateTimeline loadingStep={loadingStep} />
               <p className={styles.loadingSub}>Saving you time on every listing</p>
               <button className={styles.cancelGenerateBtn} onClick={cancelGenerate}>Cancel</button>
             </div>
@@ -1598,7 +1738,7 @@ Each section must bring new information or perspective — not restate what anot
           {/* MLS / Zillow / Instagram stay mounted (so edits, drafts, and undo state
               survive tab switches) — only their visibility toggles. */}
           <div style={{ display: activeTab === 'mls' ? 'block' : 'none' }}>
-            <ResultCard key={`mls-${reviseAllCount}`} tag="MLS Description" sublabel="Short description · 200–300 words" content={results.mls} onChange={(t) => setResults((r) => ({ ...r, mls: t }))} listingId={listingId} sectionKey="mls" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
+            <ResultCard key={`mls-${reviseAllCount}`} tag="MLS Description" sublabel="Short description · 200–250 words" content={results.mls} onChange={(t) => setResults((r) => ({ ...r, mls: t }))} listingId={listingId} sectionKey="mls" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
           </div>
           <div style={{ display: activeTab === 'zillow' ? 'block' : 'none' }}>
             <ResultCard key={`zillow-${reviseAllCount}`} tag="Zillow · What's Special" sublabel="Long form · 300–400 words" content={results.marketing} onChange={(t) => setResults((r) => ({ ...r, marketing: t }))} listingId={listingId} sectionKey="zillow" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
@@ -1650,3 +1790,4 @@ Each section must bring new information or perspective — not restate what anot
     </div>
   )
 }
+

@@ -29,7 +29,7 @@ const CATEGORIES = {
     { name: 'King Street', lat: 38.80717, lng: -77.06009, line: 'Blue' },
   ] },
   employment: { label: 'Employment & Downtown', thresholdMin: 30, places: [
-    { name: 'Washington DC', lat: 38.90729, lng: -77.03693 },
+    { name: 'DC Downtown', lat: 38.90729, lng: -77.03693 },
     { name: 'Tysons Corner', lat: 38.91872, lng: -77.23109 },
     { name: 'Reston Town Center', lat: 38.95891, lng: -77.36146 },
     { name: 'Amazon HQ2 (Arlington)', lat: 38.85829, lng: -77.04937 },
@@ -170,11 +170,23 @@ export default async function handler(req, res) {
     }).filter(Boolean)
 
     // Step 3: Filter by category threshold (on normal time) and format for display.
+    // Airports and Metro always show at least the single nearest option, even if it
+    // falls outside the normal threshold — every listing should surface "nearest
+    // Metro station" and "drive time to the nearest airport" rather than showing
+    // nothing when the closest one happens to be a few minutes over the cutoff.
+    const ALWAYS_SHOW_NEAREST = new Set(['airports', 'metro'])
     const result = {}
     for (const [categoryKey, cat] of Object.entries(CATEGORIES)) {
-      const inRange = computed
-        .filter((p) => p.categoryKey === categoryKey && p.normalMin <= cat.thresholdMin)
+      const byCategory = computed
+        .filter((p) => p.categoryKey === categoryKey)
         .sort((a, b) => a.normalMin - b.normalMin)
+
+      let inRange = byCategory.filter((p) => p.normalMin <= cat.thresholdMin)
+      let isFallback = false
+      if (!inRange.length && ALWAYS_SHOW_NEAREST.has(categoryKey) && byCategory.length) {
+        inRange = [byCategory[0]]
+        isFallback = true
+      }
 
       if (!inRange.length) continue
 
@@ -182,6 +194,9 @@ export default async function handler(req, res) {
         label: cat.label,
         items: inRange.map((p) => {
           if (categoryKey === 'metro') {
+            // Fallback (beyond the normal 15-min threshold): state the real drive
+            // time rather than "Minutes to"/"Convenient to", which imply proximity.
+            if (isFallback) return `Nearest Metro: ${p.name} (${p.normalMin} min drive)`
             return p.normalMin <= 10
               ? `Minutes to ${p.name} Metro`
               : `Convenient to ${p.name} Metro`
