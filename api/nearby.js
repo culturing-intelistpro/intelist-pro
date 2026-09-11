@@ -1,8 +1,10 @@
 // Server-only key — never prefixed with VITE_, so Vite never inlines it into the client bundle.
-const GEOCODE_URL = 'https://maps.googleapis.com/maps/api/geocode/json'
-const MATRIX_URL   = 'https://maps.googleapis.com/maps/api/distancematrix/json'
+const GEOCODE_URL      = 'https://maps.googleapis.com/maps/api/geocode/json'
+const MATRIX_URL       = 'https://maps.googleapis.com/maps/api/distancematrix/json'
+const TEXT_SEARCH_URL  = 'https://places.googleapis.com/v1/places:searchText'
 const MAX_ADDRESS_LENGTH = 200
 const MAX_DESTINATIONS_PER_REQUEST = 25 // Google Distance Matrix API limit
+const WALK_MAX_METERS = 804.672 // 0.5 mi
 
 // Coordinates were pre-geocoded once (not re-geocoded per request) — these are
 // fixed landmarks, so re-resolving them on every listing would just burn quota.
@@ -34,18 +36,6 @@ const CATEGORIES = {
     { name: 'Reston Town Center', lat: 38.95891, lng: -77.36146 },
     { name: 'Amazon HQ2 (Arlington)', lat: 38.85829, lng: -77.04937 },
   ] },
-  shopping: { label: 'Shopping & Amenities', thresholdMin: 15, places: [
-    { name: 'Tysons Corner', lat: 38.91702, lng: -77.22284 },
-    { name: 'Reston Town Center', lat: 38.95891, lng: -77.36146 },
-    { name: 'Dulles Town Center', lat: 39.03237, lng: -77.42394 },
-    { name: 'One Loudoun', lat: 39.05285, lng: -77.45586 },
-    { name: 'Fair Oaks Mall', lat: 38.86469, lng: -77.35746 },
-    { name: 'Mosaic District', lat: 38.87278, lng: -77.22943 },
-    { name: 'Springfield Town Center', lat: 38.7748, lng: -77.17521 },
-    { name: 'Leesburg Premium Outlets', lat: 39.10555, lng: -77.53913 },
-    { name: 'Pentagon City Mall', lat: 38.86323, lng: -77.06094 },
-    { name: 'Old Town Alexandria', lat: 38.80672, lng: -77.04205 },
-  ] },
   parks: { label: 'Parks & Trails', thresholdMin: 15, places: [
     { name: 'W&OD Trail', lat: 38.90109, lng: -77.25944 },
     { name: 'Bull Run Occoquan Trail', lat: 38.72521, lng: -77.33095 },
@@ -64,11 +54,79 @@ const CATEGORIES = {
   ] },
 }
 
-// Every place across all categories, in a fixed flat order — index into this
-// array is how Distance Matrix results get mapped back to their place.
+// Malls/town centers only make the Shopping category if genuinely walkable
+// (see WALK_MAX_METERS below) — otherwise they're just noise next to the
+// priority grocery/retail chains.
+const MALL_PLACES = [
+  { name: 'Tysons Corner', lat: 38.91702, lng: -77.22284 },
+  { name: 'Reston Town Center', lat: 38.95891, lng: -77.36146 },
+  { name: 'Dulles Town Center', lat: 39.03237, lng: -77.42394 },
+  { name: 'One Loudoun', lat: 39.05285, lng: -77.45586 },
+  { name: 'Fair Oaks Mall', lat: 38.86469, lng: -77.35746 },
+  { name: 'Mosaic District', lat: 38.87278, lng: -77.22943 },
+  { name: 'Springfield Town Center', lat: 38.7748, lng: -77.17521 },
+  { name: 'Leesburg Premium Outlets', lat: 39.10555, lng: -77.53913 },
+  { name: 'Pentagon City Mall', lat: 38.86323, lng: -77.06094 },
+  { name: 'Old Town Alexandria', lat: 38.80672, lng: -77.04205 },
+]
+
+// Priority grocery/retail chains for the Shopping category — unlike other
+// categories, these have many branches, so there's no fixed coordinate per
+// chain. `query` is what's sent to Places Text Search; `variants` are the
+// exact (lowercased) display names that count as the real store — Places
+// Text Search also returns sub-departments at the same address (pharmacy,
+// bakery, deli, floral, gas station, optical, etc.) that must be filtered out.
+const SHOPPING_CHAINS = [
+  { name: 'Whole Foods',         query: 'Whole Foods Market',  variants: ['whole foods market'] },
+  { name: 'Wegmans',             query: 'Wegmans',             variants: ['wegmans'] },
+  { name: "Trader Joe's",        query: "Trader Joe's",        variants: ["trader joe's", 'trader joes'] },
+  { name: 'Harris Teeter',       query: 'Harris Teeter',       variants: ['harris teeter'] },
+  { name: 'Safeway',             query: 'Safeway',             variants: ['safeway'] },
+  { name: 'Giant',               query: 'Giant Food',          variants: ['giant food', 'giant'] },
+  { name: 'Costco',              query: 'Costco Wholesale',    variants: ['costco wholesale', 'costco'] },
+  { name: "BJ's Wholesale Club", query: "BJ's Wholesale Club", variants: ["bj's wholesale club", 'bjs wholesale club'] },
+  { name: "Sam's Club",          query: "Sam's Club",          variants: ["sam's club", 'sams club'] },
+  { name: 'Walmart',             query: 'Walmart Supercenter', variants: ['walmart supercenter', 'walmart'] },
+  { name: 'Target',              query: 'Target',              variants: ['target'] },
+]
+
+// Every place across the fixed-coordinate categories, in a fixed flat order —
+// index into this array is how Distance Matrix results get mapped back.
+// Shopping is excluded here — it's resolved dynamically per-request below.
 const ALL_PLACES = Object.entries(CATEGORIES).flatMap(([categoryKey, cat]) =>
   cat.places.map((p) => ({ ...p, categoryKey }))
 )
+
+// For each priority chain, find the nearest real branch (by name, not just
+// keyword match) near the property using Places Text Search, ranked by
+// distance from the property. Best-effort per chain — one missing chain in a
+// given area shouldn't fail the whole lookup.
+async function findNearestChainBranches(lat, lng) {
+  const bias = { circle: { center: { latitude: lat, longitude: lng }, radius: 40000 } } // ~25 mi
+  const found = await Promise.all(SHOPPING_CHAINS.map(async (chain) => {
+    try {
+      const res = await fetch(TEXT_SEARCH_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': process.env.GOOGLE_MAPS_API_KEY,
+          'X-Goog-FieldMask': 'places.displayName,places.location',
+        },
+        body: JSON.stringify({ textQuery: chain.query, locationBias: bias, rankPreference: 'DISTANCE' }),
+      })
+      const data = await res.json()
+      const match = (data.places || []).find((p) =>
+        chain.variants.includes((p.displayName?.text || '').trim().toLowerCase())
+      )
+      if (!match) return null
+      return { name: chain.name, lat: match.location.latitude, lng: match.location.longitude }
+    } catch (err) {
+      console.error(`[api/nearby] chain search failed for ${chain.name}:`, err)
+      return null
+    }
+  }))
+  return found.filter(Boolean)
+}
 
 function chunk(arr, size) {
   const out = []
@@ -99,7 +157,8 @@ function nextWeekdayRushHourEpoch(hour = 8) {
   return Math.floor((target.getTime() - offsetMs) / 1000)
 }
 
-async function fetchDurations(originLat, originLng, places, departureTime) {
+async function fetchDurations(originLat, originLng, places, departureTime, mode = 'driving') {
+  if (!places.length) return []
   const results = new Array(places.length).fill(null)
   const batches = chunk(places, MAX_DESTINATIONS_PER_REQUEST)
   let offset = 0
@@ -108,7 +167,7 @@ async function fetchDurations(originLat, originLng, places, departureTime) {
     const params = new URLSearchParams({
       origins: `${originLat},${originLng}`,
       destinations,
-      mode: 'driving',
+      mode,
       units: 'imperial',
       key: process.env.GOOGLE_MAPS_API_KEY,
     })
@@ -151,12 +210,26 @@ export default async function handler(req, res) {
 
     // Step 2: Driving duration to every landmark, without traffic (normal) and
     // with traffic at next weekday 8am ET (rush hour) — used to decide inclusion
-    // and to show both figures.
+    // and to show both figures. In parallel: find the nearest branch of each
+    // priority shopping chain, and check walking distance to the malls/town
+    // centers (Shopping is resolved separately below, not through `computed`).
     const rushDepartureTime = nextWeekdayRushHourEpoch(8)
-    const [normalEls, rushEls] = await Promise.all([
+    const [normalEls, rushEls, chainBranches, mallWalkEls] = await Promise.all([
       fetchDurations(lat, lng, ALL_PLACES, null),
       fetchDurations(lat, lng, ALL_PLACES, rushDepartureTime),
+      findNearestChainBranches(lat, lng).catch((err) => {
+        console.error('[api/nearby] chain branch lookup failed:', err)
+        return []
+      }),
+      fetchDurations(lat, lng, MALL_PLACES, null, 'walking').catch((err) => {
+        console.error('[api/nearby] mall walk-distance lookup failed:', err)
+        return []
+      }),
     ])
+    const chainEls = await fetchDurations(lat, lng, chainBranches, null).catch((err) => {
+      console.error('[api/nearby] chain distance lookup failed:', err)
+      return []
+    })
 
     const computed = ALL_PLACES.map((place, i) => {
       const normalEl = normalEls[i]
@@ -204,6 +277,33 @@ export default async function handler(req, res) {
           return `${p.name}: ${p.normalMin} min (rush hour: ${p.rushMin} min)`
         }),
       }
+    }
+
+    // Step 4: Shopping — top 3 nearest priority chains by driving distance,
+    // plus any mall/town center that's genuinely within a 0.5 mi walk.
+    const chainResults = chainBranches
+      .map((branch, i) => {
+        const el = chainEls[i]
+        if (!el || el.status !== 'OK') return null
+        return { name: branch.name, distanceMeters: el.distance.value, distanceText: el.distance.text, mins: formatMinutes(el.duration.value) }
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.distanceMeters - b.distanceMeters)
+      .slice(0, 3)
+
+    const walkableMalls = MALL_PLACES
+      .map((mall, i) => {
+        const el = mallWalkEls[i]
+        if (!el || el.status !== 'OK' || el.distance.value > WALK_MAX_METERS) return null
+        return { name: mall.name, distanceText: el.distance.text, mins: formatMinutes(el.duration.value) }
+      })
+      .filter(Boolean)
+
+    const shoppingItems = [...chainResults, ...walkableMalls]
+      .map((p) => `${p.name} — ${p.distanceText} · ${p.mins} min`)
+
+    if (shoppingItems.length) {
+      result.shopping = { label: 'Shopping', items: shoppingItems }
     }
 
     return res.status(200).json({ categories: result })
