@@ -480,7 +480,10 @@ export default function App() {
   const [loading, setLoading]             = useState(false)
   const [loadingStep, setLoadingStep]     = useState('') // 'zillow'|'generating'
   const [zillowData, setZillowData]       = useState(null)
+  const [directions, setDirections]       = useState(null)
+  const [nearby, setNearby]               = useState(null)
   const [results, setResults]             = useState(null)
+  const [activeTab, setActiveTab]         = useState('mls')
   const [error, setError]                 = useState(null)
   const [activePanel, setActivePanel]     = useState(null) // 'notes'|'record'|'photos'|'style'|null
   const [styleFiles, setStyleFiles]       = useState([])
@@ -700,7 +703,6 @@ export default function App() {
   "propertyType": string or null,
   "yearBuilt": number or null,
   "lotSize": string or null,
-  "hoa": string or null,
   "highlights": string or null,
   "existingDescription": string or null
 }
@@ -724,6 +726,41 @@ Use only data found on Zillow. Set any unfound field to null.`,
         error: err.error,
       })
       return null // Zillow fetch is best-effort; never block generation
+    }
+  }
+
+  // ── Fetch driving directions (Google Directions + Geocoding APIs) ───────────
+  const fetchDirections = async (addr, signal) => {
+    try {
+      const res = await fetch('/api/directions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: addr }),
+        signal,
+      })
+      if (!res.ok) return null
+      return await res.json()
+    } catch (err) {
+      if (err.name !== 'AbortError') console.error('[Intelist Pro] Directions fetch error:', err)
+      return null // directions are best-effort; never block generation
+    }
+  }
+
+  // ── Fetch nearby places & commute times (Distance Matrix + Geocoding APIs) ──
+  const fetchNearby = async (addr, signal) => {
+    try {
+      const res = await fetch('/api/nearby', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: addr }),
+        signal,
+      })
+      if (!res.ok) return null
+      const data = await res.json()
+      return data.categories ?? null
+    } catch (err) {
+      if (err.name !== 'AbortError') console.error('[Intelist Pro] Nearby fetch error:', err)
+      return null // best-effort; never block generation
     }
   }
 
@@ -764,14 +801,23 @@ Use only data found on Zillow. Set any unfound field to null.`,
     setError(null)
     setResults(null)
     setZillowData(null)
+    setDirections(null)
+    setNearby(null)
+    setActiveTab('mls')
     setLoading(true)
     setLoadingStep('zillow')
     sessionStartRef.current   = Date.now()
     generationTimeRef.current = null
     try {
-      // Step 1: Fetch Zillow data
-      const zillow = await fetchZillowData(address, abortController.signal)
+      // Step 1: Fetch Zillow data + driving directions + nearby places in parallel (all best-effort)
+      const [zillow, directionsResult, nearbyResult] = await Promise.all([
+        fetchZillowData(address, abortController.signal),
+        fetchDirections(address, abortController.signal),
+        fetchNearby(address, abortController.signal),
+      ])
       setZillowData(zillow)
+      setDirections(directionsResult)
+      setNearby(nearbyResult)
       setLoadingStep('generating')
 
       const schoolBlock    = buildSchoolBlock(getSchoolInfo(address))
@@ -796,7 +842,6 @@ Use only data found on Zillow. Set any unfound field to null.`,
         if (zillow.propertyType)        lines.push(`  Property type: ${zillow.propertyType}`)
         if (zillow.yearBuilt)           lines.push(`  Year built: ${zillow.yearBuilt}`)
         if (zillow.lotSize)             lines.push(`  Lot size: ${zillow.lotSize}`)
-        if (zillow.hoa)                 lines.push(`  HOA: ${zillow.hoa}`)
         if (zillow.price)               lines.push(`  List price: ${zillow.price}`)
         if (zillow.highlights)          lines.push(`  Key features: ${zillow.highlights}`)
         if (zillow.existingDescription) lines.push(`  Existing listing notes: ${zillow.existingDescription}`)
@@ -987,7 +1032,7 @@ Default: every sentence begins with a noun, number, or article (The, A, An). Avo
 
 Adjective rule: Adjectives before nouns require a specific fact. "Kitchen renovated in 2023" ✓. "Beautifully renovated kitchen" ✗.
 
-HOA: If HOA data is confirmed, include: "HOA fee of $[amount] [frequency] covers [items]." If not confirmed, omit entirely.
+HOA: Only use HOA data confirmed in agent notes or an uploaded MLS sheet/document — never Zillow lookup data, never web search, never an estimate or a typical fee for the area. If confirmed via agent notes or an MLS sheet, include: "HOA fee of $[amount] [frequency] covers [items]." If not confirmed through either of those two sources, omit HOA entirely — do not mention an HOA at all, even generically.
 
 Price format: $[full number] (e.g. $625,000).
 
@@ -1192,7 +1237,8 @@ Each section must bring new information or perspective — not restate what anot
     setNotes(''); setTranscript(''); setPrevListing('')
     setActivePanel(null); setStyleFiles([])
     images.forEach((img) => URL.revokeObjectURL(img.preview))
-    setImages([]); setListingId(null)
+    setImages([]); setListingId(null); setZillowData(null); setDirections(null); setNearby(null)
+    setActiveTab('mls')
   }
 
   // ── Opt button class helper ─────────────────────────────────────────────────
@@ -1226,7 +1272,7 @@ Each section must bring new information or perspective — not restate what anot
             <div className={styles.loadingCard}>
               <div className={styles.loadingSpinner} />
               <p className={styles.loadingTitle}>
-                {loadingStep === 'zillow' ? 'Looking up property data…' : 'Crafting your listing copy…'}
+                {loadingStep === 'zillow' ? 'Looking up property data & directions…' : 'Crafting your listing copy…'}
               </p>
               <p className={styles.loadingSub}>Saving you time on every listing</p>
               <button className={styles.cancelGenerateBtn} onClick={cancelGenerate}>Cancel</button>
@@ -1485,7 +1531,17 @@ Each section must bring new information or perspective — not restate what anot
 
   // ── Results ─────────────────────────────────────────────────────────────────
   const displayAddress = results.address || address
-  const allText = `MLS DESCRIPTION\n${'─'.repeat(48)}\n${results.mls}\n\nZILLOW · WHAT'S SPECIAL\n${'─'.repeat(48)}\n${results.marketing}\n\nINSTAGRAM CAPTION\n${'─'.repeat(48)}\n${results.social}`
+  const allText = `MLS DESCRIPTION\n${'─'.repeat(48)}\n${results.mls}\n\nZILLOW · WHAT'S SPECIAL\n${'─'.repeat(48)}\n${results.marketing}\n\nSOCIAL MEDIA CAPTION\n${'─'.repeat(48)}\n${results.social}`
+
+  const hasDirections = Boolean(directions?.text)
+  const hasNearby     = Boolean(nearby && Object.keys(nearby).length > 0)
+  const tabs = [
+    { key: 'mls',       label: 'MLS' },
+    { key: 'zillow',    label: 'Zillow' },
+    { key: 'instagram', label: 'Social Media' },
+    ...(hasDirections ? [{ key: 'directions', label: 'Directions' }] : []),
+    ...(hasNearby     ? [{ key: 'nearby',     label: 'Nearby & Commute' }] : []),
+  ]
 
   return (
     <div className={styles.page}>
@@ -1523,13 +1579,72 @@ Each section must bring new information or perspective — not restate what anot
           />
         </div>
 
-        <div className={styles.cards}>
-          <ResultCard key={`mls-${reviseAllCount}`}       tag="MLS Description"         sublabel="Short description · 200–300 words" content={results.mls}       onChange={(t) => setResults((r) => ({ ...r, mls: t }))}       listingId={listingId} sectionKey="mls"       initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
-          <ResultCard key={`zillow-${reviseAllCount}`}    tag="Zillow · What's Special" sublabel="Long form · 300–400 words"          content={results.marketing} onChange={(t) => setResults((r) => ({ ...r, marketing: t }))} listingId={listingId} sectionKey="zillow"    initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
-          <ResultCard key={`instagram-${reviseAllCount}`} tag="Instagram Caption"        sublabel="Instagram / Facebook caption"       content={results.social}    onChange={(t) => setResults((r) => ({ ...r, social: t }))}    listingId={listingId} sectionKey="instagram" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
+        {/* ── Tabs ── */}
+        <div className={styles.tabBar} role="tablist">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={activeTab === t.key}
+              className={`${styles.tabBtn} ${activeTab === t.key ? styles.tabBtnActive : ''}`}
+              onClick={() => setActiveTab(t.key)}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
-        <div className={styles.copyAllRow} style={{ marginTop: 16 }}>
-          <CopyButton text={allText} label="Copy all three" className={styles.copyAllBtn} />
+
+        <div className={styles.cards}>
+          {/* MLS / Zillow / Instagram stay mounted (so edits, drafts, and undo state
+              survive tab switches) — only their visibility toggles. */}
+          <div style={{ display: activeTab === 'mls' ? 'block' : 'none' }}>
+            <ResultCard key={`mls-${reviseAllCount}`} tag="MLS Description" sublabel="Short description · 200–300 words" content={results.mls} onChange={(t) => setResults((r) => ({ ...r, mls: t }))} listingId={listingId} sectionKey="mls" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
+          </div>
+          <div style={{ display: activeTab === 'zillow' ? 'block' : 'none' }}>
+            <ResultCard key={`zillow-${reviseAllCount}`} tag="Zillow · What's Special" sublabel="Long form · 300–400 words" content={results.marketing} onChange={(t) => setResults((r) => ({ ...r, marketing: t }))} listingId={listingId} sectionKey="zillow" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
+          </div>
+          <div style={{ display: activeTab === 'instagram' ? 'block' : 'none' }}>
+            <ResultCard key={`instagram-${reviseAllCount}`} tag="Social Media Caption" sublabel="Instagram / Facebook caption" content={results.social} onChange={(t) => setResults((r) => ({ ...r, social: t }))} listingId={listingId} sectionKey="instagram" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
+          </div>
+
+          {activeTab === 'directions' && hasDirections && (
+            <div className={styles.card}>
+              <div className={styles.cardTop}>
+                <div>
+                  <span className={styles.cardTag}>Driving Directions</span>
+                  <p className={styles.cardSub}>
+                    From nearest major road{directions.distance ? ` · ${directions.distance}` : ''}{directions.duration ? ` · ${directions.duration}` : ''}
+                  </p>
+                </div>
+                <CopyButton text={directions.text} />
+              </div>
+              <p className={styles.cardText}>{directions.text}</p>
+            </div>
+          )}
+
+          {activeTab === 'nearby' && hasNearby && (
+            <div className={styles.card}>
+              <div className={styles.cardTop}>
+                <div>
+                  <span className={styles.cardTag}>Nearby & Commute</span>
+                  <p className={styles.cardSub}>Drive times from this address</p>
+                </div>
+                <CopyButton text={
+                  Object.values(nearby).map((c) => `${c.label}\n${c.items.map((i) => `• ${i}`).join('\n')}`).join('\n\n')
+                } />
+              </div>
+              <div className={styles.nearbyGroups}>
+                {Object.entries(nearby).map(([key, cat]) => (
+                  <div key={key} className={styles.nearbyGroup}>
+                    <p className={styles.nearbyGroupLabel}>{cat.label}</p>
+                    <ul className={styles.nearbyList}>
+                      {cat.items.map((item, i) => <li key={i}>{item}</li>)}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
