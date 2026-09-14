@@ -99,6 +99,7 @@ function buildSchoolsCategory(school) {
     .filter(([, name]) => name && name !== 'varies by location')
     .map(([level, name]) => `${level.charAt(0).toUpperCase() + level.slice(1)}: ${name}`)
   if (!items.length) return null
+  if (src.approximate) items.push('※ 근처 학교 기준 — 학군 정보 확인 필요')
   return { label: 'Schools', items }
 }
 
