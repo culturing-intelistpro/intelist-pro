@@ -100,8 +100,8 @@ function buildSchoolsCategory(school) {
     .filter(([, name]) => name && name !== 'varies by location')
     .map(([level, name]) => {
       const info = driveTimes[level]
-      const timeStr = info != null ? ` · ${info.dist} · ${info.mins} min` : ''
-      return `${level.charAt(0).toUpperCase() + level.slice(1)}: ${name}${timeStr}`
+      const timeStr = info != null ? ` — ${info.dist} · ${info.mins} min` : ''
+      return `${level.charAt(0).toUpperCase() + level.slice(1)} — ${name}${timeStr}`
     })
   if (!items.length) return null
   if (src.approximate) items.push('※ 근처 학교 기준 — 학군 정보 확인 필요')

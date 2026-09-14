@@ -269,12 +269,12 @@ export default async function handler(req, res) {
           if (categoryKey === 'metro') {
             // Fallback (beyond the normal 15-min threshold): state the real drive
             // time rather than "Minutes to"/"Convenient to", which imply proximity.
-            if (isFallback) return `Nearest Metro: ${p.name} (${p.normalMin} min drive)`
+            if (isFallback) return `Nearest Metro — ${p.name} (${p.normalMin} min drive)`
             return p.normalMin <= 10
               ? `Minutes to ${p.name} Metro`
               : `Convenient to ${p.name} Metro`
           }
-          return `${p.name}: ${p.normalMin} min (rush hour: ${p.rushMin} min)`
+          return `${p.name} — ${p.normalMin} min (rush hour: ${p.rushMin} min)`
         }),
       }
     }
