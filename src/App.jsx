@@ -94,10 +94,15 @@ function buildSchoolsCategory(school) {
   // Support both local lookup format ({ schools: { elementary, middle, high } })
   // and GIS API format ({ elementary, middle, high, found, district, ... })
   const src = school.schools ?? school
+  const driveTimes = src.driveTimes ?? {}
   const items = ['elementary', 'middle', 'high']
     .map((level) => [level, src[level]])
     .filter(([, name]) => name && name !== 'varies by location')
-    .map(([level, name]) => `${level.charAt(0).toUpperCase() + level.slice(1)}: ${name}`)
+    .map(([level, name]) => {
+      const mins = driveTimes[level]
+      const timeStr = mins != null ? ` · ${mins} min` : ''
+      return `${level.charAt(0).toUpperCase() + level.slice(1)}: ${name}${timeStr}`
+    })
   if (!items.length) return null
   if (src.approximate) items.push('※ 근처 학교 기준 — 학군 정보 확인 필요')
   return { label: 'Schools', items }

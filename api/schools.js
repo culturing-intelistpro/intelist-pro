@@ -246,6 +246,33 @@ async function getFauquierSchools(lat, lng) {
   return { elementary, middle, high, district: { name: 'Fauquier County Public Schools', site: 'fauquiercounty.gov/schools' } }
 }
 
+const MATRIX_URL = 'https://maps.googleapis.com/maps/api/distancematrix/json'
+
+async function getSchoolDriveTimes(originLat, originLng, schools) {
+  const levels = ['elementary', 'middle', 'high']
+  const entries = levels.map((l) => [l, schools[l]]).filter(([, name]) => name)
+  if (!entries.length) return {}
+  const destinations = entries.map(([, name]) => `${name}, Virginia`).join('|')
+  const params = new URLSearchParams({
+    origins: `${originLat},${originLng}`,
+    destinations,
+    mode: 'driving',
+    units: 'imperial',
+    key: GOOGLE_API_KEY,
+  })
+  try {
+    const res  = await fetch(`${MATRIX_URL}?${params}`, { signal: AbortSignal.timeout(6000) })
+    const data = await res.json()
+    if (data.status !== 'OK' || !data.rows?.[0]) return {}
+    const result = {}
+    entries.forEach(([level], i) => {
+      const el = data.rows[0].elements[i]
+      if (el?.status === 'OK') result[level] = Math.round(el.duration.value / 60)
+    })
+    return result
+  } catch { return {} }
+}
+
 function detectCounty(components) {
   let county = '', locality = ''
   for (const c of components) {
@@ -295,5 +322,7 @@ export default async function handler(req, res) {
 
   if (!schools) return res.status(200).json({ found: false, county })
 
-  return res.status(200).json({ found: true, county, ...schools })
+  const driveTimes = await getSchoolDriveTimes(lat, lng, schools).catch(() => ({}))
+
+  return res.status(200).json({ found: true, county, ...schools, driveTimes })
 }
