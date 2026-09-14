@@ -1058,7 +1058,20 @@ If you cannot confirm a school from site:${district.site} for this exact address
       setNearby(mergedNearby)
       setLoadingStep('generating')
 
-      const schoolBlock    = buildSchoolPromptBlock(schoolData)
+      // If web_search school lookup failed, fall back to local schools.json data
+      const localSchoolInfo = getSchoolInfo(address)
+      const effectiveSchoolData = (schoolData?.found)
+        ? schoolData
+        : (localSchoolInfo
+            ? {
+                found: true,
+                elementary: localSchoolInfo.schools?.elementary || null,
+                middle:     localSchoolInfo.schools?.middle     || null,
+                high:       localSchoolInfo.schools?.high       || null,
+                district:   { name: 'local district data', site: 'county school locator' },
+              }
+            : schoolData)
+      const schoolBlock    = buildSchoolPromptBlock(effectiveSchoolData)
       const communityBlock = buildCommunityBlock(getCommunityInfo(address))
 
       const combinedNotes = [notes.trim(), transcript.trim()].filter(Boolean).join('\n\n')
