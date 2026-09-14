@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import mammoth from 'mammoth'
 import { MapPin, PenLine, Mic, Image, FileText, Upload, X, Plus, ArrowRight, Check } from 'lucide-react'
 import styles from './App.module.css'
-import schoolsData from './data/schools.json'
 import communitiesData from './data/communities.json'
 import { supabase } from './supabase'
 import AuthModal from './AuthModal'
@@ -83,13 +82,12 @@ function lookupByAddress(data, address) {
   return matched ? { city: matched, ...data[matched] } : null
 }
 
-const getSchoolInfo    = (addr) => lookupByAddress(schoolsData, addr)
 const getCommunityInfo = (addr) => lookupByAddress(communitiesData, addr)
 
 // ─── Prompt builders ───────────────────────────────────────────────────────────
 
-// Builds a "Schools" Nearby & Commute category from the same local school data
-// used in the MLS prompt — this is a district lookup, not a drive-time query,
+// Builds a "Schools" Nearby & Commute category from the GIS API result.
+// School assignment is a district boundary lookup, not a drive-time query,
 // so it doesn't go through the Google Distance Matrix API in api/nearby.js.
 function buildSchoolsCategory(school) {
   if (!school) return null
@@ -102,27 +100,6 @@ function buildSchoolsCategory(school) {
     .map(([level, name]) => `${level.charAt(0).toUpperCase() + level.slice(1)}: ${name}`)
   if (!items.length) return null
   return { label: 'Schools', items }
-}
-
-// ─── School district site lookup (source-restricted school web_search) ────────
-// Manassas Park / Manassas City are independent cities with their own school
-// divisions — check them before the broader Prince William County pattern.
-const SCHOOL_DISTRICT_SITES = [
-  { pattern: /manassas park/i, site: 'mpschools.org',           name: 'Manassas Park City Schools' },
-  { pattern: /\bmanassas\b/i,  site: 'manassascityschools.org', name: 'Manassas City Public Schools' },
-  { pattern: /falls church city|\b22046\b/i, site: 'fccps.org', name: 'Falls Church City Public Schools' },
-  { pattern: /alexandria/i,    site: 'acps.k12.va.us',          name: 'Alexandria City Public Schools' },
-  { pattern: /arlington/i,     site: 'apsva.us',                name: 'Arlington Public Schools' },
-  { pattern: /loudoun|ashburn|leesburg|purcellville|middleburg|sterling|south riding|brambleton|aldie|broadlands|one loudoun|lansdowne|potomac falls|cascades|lovettsville/i,
-    site: 'lcps.org', name: 'Loudoun County Public Schools' },
-  { pattern: /prince william|woodbridge|gainesville|haymarket|dumfries|occoquan|bristow|triangle|dale city|lake ridge/i,
-    site: 'pwcs.edu', name: 'Prince William County Public Schools' },
-  { pattern: /fairfax|mclean|great falls|vienna|oakton|centreville|chantilly|reston|herndon|springfield|burke|annandale|falls church|lorton|clifton|dunn loring|merrifield|tysons|wolf trap|franconia|kingstowne/i,
-    site: 'fcps.edu', name: 'Fairfax County Public Schools' },
-]
-
-function detectSchoolDistrictSite(address) {
-  return SCHOOL_DISTRICT_SITES.find(({ pattern }) => pattern.test(address)) ?? null
 }
 
 const SCHOOL_UNAVAILABLE_LINE = 'School information unavailable — please verify with county school locator.'
