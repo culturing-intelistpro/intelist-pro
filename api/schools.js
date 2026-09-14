@@ -1,0 +1,161 @@
+// api/schools.js - Official county GIS boundary lookup
+
+const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_API_KEY
+
+const LCPS_ES = {
+  MSE:'Moorefield Station Elementary', CTY:'Countryside Elementary',
+  HUT:'Hutchison Farm Elementary',     BUF:'Buffalo Trail Elementary',
+  LIN:'Lincoln Elementary',            HLS:'Hillside Elementary',
+  ALG:'Algonkian Elementary',          LIB:'Liberty Elementary',
+  EME:'Emerick Elementary',            CSP:'Cool Spring Elementary',
+  BAL:"Ball's Bluff Elementary",       CAT:'Catoctin Elementary',
+  LEE:'Leesburg Elementary',           EVE:'Evergreen Mill Elementary',
+  SEL:'Seldens Landing Elementary',    CED:'Cedar Lane Elementary',
+  WAT:'Waterford Elementary',          HAM:'Hamilton Elementary',
+  SYC:'Sycolin Creek Elementary',      PNB:'Pinebrook Elementary',
+  ASH:'Ashburn Elementary',            TOL:'John W. Tolbert Jr. Elementary',
+  ARC:'Arcola Elementary',             BAN:'Banneker Elementary',
+  RHL:'Round Hill Elementary',         ALD:'Aldie Elementary',
+  MIL:'Mill Run Elementary',           LIT:'Little River Elementary',
+  MTV:'Mountain View Elementary',      BST:'Belmont Station Elementary',
+  HRZ:'Horizon Elementary',            LOW:'Lowes Island Elementary',
+  PMK:'Potowmack Elementary',          MEA:'Meadowland Elementary',
+  DOM:'Dominion Trail Elementary',     SUG:'Sugarland Elementary',
+  KWC:'Kenneth W. Culbert Elementary', STE:'Sterling Elementary',
+  RRD:'Rolling Ridge Elementary',      SAN:'Sanders Corner Elementary',
+  GUI:'Guilford Elementary',           SUL:'Sully Elementary',
+  FOR:'Forest Grove Elementary',       LEG:'Legacy Elementary',
+  LOV:'Lovettsville Elementary',       LUC:'Lucketts Elementary',
+  RML:'Richard and Mildred Loving Elementary',
+  NLE:'Newton-Lee Elementary',         RLC:'Rosa Lee Carter Elementary',
+  CCE:"Creighton's Corner Elementary", STU:'Steuart W. Weller Elementary',
+  ETE:'Elaine E. Thompson Elementary', DIS:'Discovery Elementary',
+  CRE:'Cardinal Ridge Elementary',     GPE:'Goshen Post Elementary',
+  FDE:'Frederick Douglass Elementary', MTE:"Madison's Trust Elementary",
+  HOV:'Hovatter Elementary',           WES:'Waxpool Elementary',
+  HEN:'Henrietta Lacks Elementary',
+}
+const LCPS_MS = {
+  RBM:'River Bend Middle',        SRM:'Seneca Ridge Middle',
+  JLS:'J. Lupton Simpson Middle', BAM:'Brambleton Middle',
+  BRM:'Blue Ridge Middle',        BEM:'Belmont Ridge Middle',
+  GMS:'Gum Spring Middle',        HPM:'Harper Park Middle',
+  ERM:'Eagle Ridge Middle',       FWS:'Farmwell Station Middle',
+  HRM:'Harmony Middle',           STM:'Sterling Middle',
+  JML:'J. Michael Lunsford Middle', SMM:"Smart's Mill Middle",
+  SHM:'Stone Hill Middle',        TMS:'Trailside Middle',
+  WMS:'Willard Middle',           WMM:'Watson Mountain Middle',
+}
+const LCPS_HS = {
+  LCH:'Loudoun County High',  DMH:'Dominion High',
+  BWH:'Briar Woods High',     PFH:'Potomac Falls High',
+  WHS:'Woodgrove High',       SBH:'Stone Bridge High',
+  HTH:'Heritage High',        BRH:'Broad Run High',
+  PVH:'Park View High',       LVH:'Loudoun Valley High',
+  FHS:'Freedom High',         RRH:'Rock Ridge High',
+  THS:'Tuscarora High',       JCH:'John Champe High',
+  RVH:'Riverside High',       IHS:'Independence High',
+  LRH:'Lightridge High',      WOR:'William Obediah Robey High',
+  'HS-14':'Thornton Summit High',
+}
+
+async function arcgisQuery(layerUrl, lat, lng, field) {
+  const params = new URLSearchParams({
+    geometryType: 'esriGeometryPoint',
+    geometry: `${lng},${lat}`,
+    inSR: '4326',
+    spatialRel: 'esriSpatialRelIntersects',
+    outFields: field,
+    returnGeometry: 'false',
+    f: 'json',
+  })
+  try {
+    const res = await fetch(`${layerUrl}/query?${params}`, { signal: AbortSignal.timeout(8000) })
+    const data = await res.json()
+    return data.features?.[0]?.attributes?.[field] ?? null
+  } catch { return null }
+}
+
+async function getFairfaxSchools(lat, lng) {
+  const BASE = 'https://services1.arcgis.com/ioennV6PpG5Xodq0/arcgis/rest/services'
+  const [elementary, middle, high] = await Promise.all([
+    arcgisQuery(`${BASE}/Elementary_School_Attendance_Areas/FeatureServer/0`, lat, lng, 'SCHOOL_NAME'),
+    arcgisQuery(`${BASE}/Middle_School_Attendance_Areas/FeatureServer/0`,    lat, lng, 'SCHOOL_NAME'),
+    arcgisQuery(`${BASE}/High_School_Attendance_Areas/FeatureServer/0`,      lat, lng, 'SCHOOL_NAME'),
+  ])
+  return { elementary, middle, high, district: { name: 'Fairfax County Public Schools', site: 'fcps.edu' } }
+}
+
+async function getLoudounSchools(lat, lng) {
+  const BASE = 'https://logis.loudoun.gov/gis/rest/services/COL/Schools/MapServer'
+  const [esCode, msCode, hsCode] = await Promise.all([
+    arcgisQuery(`${BASE}/1`, lat, lng, 'ES_SCH_CODE'),
+    arcgisQuery(`${BASE}/2`, lat, lng, 'MS_SCH_CODE'),
+    arcgisQuery(`${BASE}/3`, lat, lng, 'HS_SCH_CODE'),
+  ])
+  return {
+    elementary: esCode ? (LCPS_ES[esCode] ?? esCode) : null,
+    middle:     msCode ? (LCPS_MS[msCode] ?? msCode) : null,
+    high:       hsCode ? (LCPS_HS[hsCode] ?? hsCode) : null,
+    district: { name: 'Loudoun County Public Schools', site: 'lcps.org' },
+  }
+}
+
+async function getPrinceWilliamSchools(lat, lng) {
+  const BASE = 'https://gisweb.pwcva.gov/arcgis/rest/services/GTS/Education/MapServer'
+  const [elementary, middle, high] = await Promise.all([
+    arcgisQuery(`${BASE}/0`, lat, lng, 'SchoolName'),
+    arcgisQuery(`${BASE}/1`, lat, lng, 'SchoolName'),
+    arcgisQuery(`${BASE}/3`, lat, lng, 'SchoolName'),
+  ])
+  return { elementary, middle, high, district: { name: 'Prince William County Public Schools', site: 'pwcs.edu' } }
+}
+
+async function getArlingtonSchools(lat, lng) {
+  const BASE = 'https://arlgis.arlingtonva.us/arcgis/rest/services/Open_Data/od_School_Boundaries_Polygons/MapServer'
+  const [elementary, middle, high] = await Promise.all([
+    arcgisQuery(`${BASE}/0`, lat, lng, 'ES_Name'),
+    arcgisQuery(`${BASE}/1`, lat, lng, 'MS_Name'),
+    arcgisQuery(`${BASE}/2`, lat, lng, 'HS_Name'),
+  ])
+  return { elementary, middle, high, district: { name: 'Arlington Public Schools', site: 'apsva.us' } }
+}
+
+function detectCounty(components) {
+  let county = '', locality = ''
+  for (const c of components) {
+    if (c.types.includes('administrative_area_level_2')) county = c.long_name.toLowerCase()
+    if (c.types.includes('locality'))                   locality = c.long_name.toLowerCase()
+  }
+  if (county.includes('loudoun'))        return 'loudoun'
+  if (county.includes('fairfax'))        return 'fairfax'
+  if (county.includes('prince william')) return 'prince_william'
+  if (county.includes('arlington'))      return 'arlington'
+  if (locality === 'alexandria')         return 'alexandria'
+  if (locality === 'falls church')       return 'falls_church'
+  return null
+}
+
+export default async function handler(req, res) {
+  const { address } = req.query
+  if (!address) return res.status(400).json({ error: 'address required' })
+
+  const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_API_KEY}`
+  const geoRes  = await fetch(geoUrl)
+  const geoData = await geoRes.json()
+  const result  = geoData.results?.[0]
+  if (!result) return res.status(404).json({ error: 'Address not found' })
+
+  const { lat, lng } = result.geometry.location
+  const county = detectCounty(result.address_components)
+
+  let schools = null
+  if      (county === 'loudoun')        schools = await getLoudounSchools(lat, lng)
+  else if (county === 'fairfax')        schools = await getFairfaxSchools(lat, lng)
+  else if (county === 'prince_william') schools = await getPrinceWilliamSchools(lat, lng)
+  else if (county === 'arlington')      schools = await getArlingtonSchools(lat, lng)
+
+  if (!schools) return res.status(200).json({ found: false, county })
+
+  return res.status(200).json({ found: true, county, ...schools })
+}

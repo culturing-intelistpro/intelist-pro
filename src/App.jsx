@@ -93,7 +93,11 @@ const getCommunityInfo = (addr) => lookupByAddress(communitiesData, addr)
 // so it doesn't go through the Google Distance Matrix API in api/nearby.js.
 function buildSchoolsCategory(school) {
   if (!school) return null
-  const items = Object.entries(school.schools || {})
+  // Support both local lookup format ({ schools: { elementary, middle, high } })
+  // and GIS API format ({ elementary, middle, high, found, district, ... })
+  const src = school.schools ?? school
+  const items = ['elementary', 'middle', 'high']
+    .map((level) => [level, src[level]])
     .filter(([, name]) => name && name !== 'varies by location')
     .map(([level, name]) => `${level.charAt(0).toUpperCase() + level.slice(1)}: ${name}`)
   if (!items.length) return null
@@ -335,7 +339,7 @@ function GenerateCountdown({ loading, startTimeRef }) {
         textAlign: 'center',
         lineHeight: 1.5,
       }}>
-        거의 완료됐습니다.<br/>조금만 더 기다려주세요 😊
+        Almost there…<br/>Just a little longer 😊
       </p>
     )
   }
@@ -349,7 +353,7 @@ function GenerateCountdown({ loading, startTimeRef }) {
         textAlign: 'center',
         fontWeight: 500,
       }}>
-        예상보다 빠르게 완료됐어요 ✓
+        Done faster than expected ✓
       </p>
     )
   }
@@ -918,42 +922,15 @@ Use only data found on Zillow. Set any unfound field to null.`,
     }
   }
 
-  // ── Fetch school assignment via web_search restricted to the official county/
-  //    city school division website — never GreatSchools, Zillow, Niche, etc.
+  // ── Fetch school assignment via official county GIS boundary lookup ──────────
   const fetchSchoolData = async (addr, signal) => {
-    const district = detectSchoolDistrictSite(addr)
-    if (!district) return { found: false }
     try {
-      const msg = await callClaude({
-        model: 'claude-opus-4-6',
-        max_tokens: 1500,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        messages: [{
-          role: 'user',
-          content: `Search site:${district.site} to find the elementary, middle, and high school that serve the property at this exact address: "${addr}". Use ONLY results from site:${district.site} — do not use Zillow, GreatSchools, Niche, or any other site as a source. Keep your reasoning brief. Return ONLY a JSON object at the very end (no markdown, no explanation) with these fields:
-{
-  "elementary": string or null,
-  "middle": string or null,
-  "high": string or null
-}
-If you cannot confirm a school from site:${district.site} for this exact address, set all three fields to null. Do not guess or infer from nearby addresses.`,
-        }],
-      }, { signal })
-
-      // Same multi-block extraction as fetchZillowData — web_search replies often
-      // span several text blocks, and the final JSON is usually in the last one.
-      const allText = msg.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n')
-      if (!allText) return { found: false, district }
-
-      const jsonMatches = allText.match(/\{[^{}]*\}/g)
-      if (!jsonMatches || !jsonMatches.length) return { found: false, district }
-
-      const parsed = JSON.parse(jsonMatches[jsonMatches.length - 1])
-      const found = Boolean(parsed.elementary || parsed.middle || parsed.high)
-      return { found, district, ...parsed }
+      const res = await fetch(`/api/schools?address=${encodeURIComponent(addr)}`, { signal })
+      if (!res.ok) return { found: false }
+      return await res.json()
     } catch (err) {
       if (err.name !== 'AbortError') console.error('[Intelist Pro] School fetch error:', err)
-      return { found: false, district } // best-effort; never block generation
+      return { found: false }
     }
   }
 
@@ -1050,27 +1027,15 @@ If you cannot confirm a school from site:${district.site} for this exact address
       setZillowData(zillow)
       setDirections(directionsResult)
 
-      // Nearby & Commute's "Schools" category uses the local schools.json lookup
-      // (fast, no API cost) — separate from schoolBlock below, which uses the new
-      // official-site-restricted web_search result for the generated copy.
-      const schoolsCategory = buildSchoolsCategory(getSchoolInfo(address))
+      // Nearby & Commute's "Schools" category now uses the same GIS result as the
+      // generated copy — one accurate source for both.
+      const schoolsCategory = buildSchoolsCategory(schoolData?.found ? schoolData : null)
       const mergedNearby = schoolsCategory ? { schools: schoolsCategory, ...(nearbyResult || {}) } : nearbyResult
       setNearby(mergedNearby)
       setLoadingStep('generating')
 
-      // If web_search school lookup failed, fall back to local schools.json data
-      const localSchoolInfo = getSchoolInfo(address)
-      const effectiveSchoolData = (schoolData?.found)
-        ? schoolData
-        : (localSchoolInfo
-            ? {
-                found: true,
-                elementary: localSchoolInfo.schools?.elementary || null,
-                middle:     localSchoolInfo.schools?.middle     || null,
-                high:       localSchoolInfo.schools?.high       || null,
-                district:   { name: 'local district data', site: 'county school locator' },
-              }
-            : schoolData)
+      // GIS boundary lookup is the authoritative source — no local fallback needed
+      const effectiveSchoolData = schoolData
       const schoolBlock    = buildSchoolPromptBlock(effectiveSchoolData)
       const communityBlock = buildCommunityBlock(getCommunityInfo(address))
 
