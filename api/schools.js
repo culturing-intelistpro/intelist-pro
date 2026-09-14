@@ -59,6 +59,24 @@ const LCPS_HS = {
   'HS-14':'Thornton Summit High',
 }
 
+async function getNearbySchool(lat, lng, keyword) {
+  const params = new URLSearchParams({
+    location: `${lat},${lng}`,
+    rankby:   'distance',
+    keyword,
+    type:     'school',
+    key:      GOOGLE_API_KEY,
+  })
+  try {
+    const res  = await fetch(
+      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?${params}`,
+      { signal: AbortSignal.timeout(6000) }
+    )
+    const data = await res.json()
+    return data.results?.[0]?.name ?? null
+  } catch { return null }
+}
+
 async function arcgisQuery(layerUrl, lat, lng, field) {
   const params = new URLSearchParams({
     geometryType: 'esriGeometryPoint',
@@ -137,45 +155,55 @@ async function getAlexandriaSchools(lat, lng) {
 }
 
 // Falls Church City: one MS and one HS; two ES zones but no public ArcGIS
-// boundary layer — MS/HS confirmed, ES requires FCCPS verification.
-function getFallsChurchSchools() {
+// boundary layer — ES approximated via Google Places nearest school.
+async function getFallsChurchSchools(lat, lng) {
+  const elementary = await getNearbySchool(lat, lng, 'elementary school')
   return {
-    elementary: null,
+    elementary,
     middle: 'Mary Ellen Henderson Middle School',
     high:   'Meridian High School',
+    approximate: elementary != null,
     district: { name: 'Falls Church City Public Schools', site: 'fccps.org' },
   }
 }
 
-// Manassas City: one MS (Metz) and one HS (Osbourn); five ES zones but no
-// public ArcGIS boundary service — ES lookup not supported.
-function getManassasCitySchools() {
+// Manassas City: one MS (Metz) and one HS (Osbourn); five ES zones — ES
+// approximated via Google Places nearest school.
+async function getManassasCitySchools(lat, lng) {
+  const elementary = await getNearbySchool(lat, lng, 'elementary school')
   return {
-    elementary: null,
+    elementary,
     middle: 'Grace E. Metz Middle School',
     high:   'Osbourn High School',
+    approximate: elementary != null,
     district: { name: 'Manassas City Public Schools', site: 'mcpsva.org' },
   }
 }
 
-// Manassas Park City: one MS and one HS; two ES zones but no public ArcGIS
-// boundary service — ES lookup not supported.
-function getManassasParkSchools() {
+// Manassas Park City: one MS and one HS; two ES zones — ES approximated via
+// Google Places nearest school.
+async function getManassasParkSchools(lat, lng) {
+  const elementary = await getNearbySchool(lat, lng, 'elementary school')
   return {
-    elementary: null,
+    elementary,
     middle: 'Manassas Park Middle School',
     high:   'Manassas Park High School',
+    approximate: elementary != null,
     district: { name: 'Manassas Park City Schools', site: 'mpark.net' },
   }
 }
 
-// Spotsylvania County: multiple ES/MS/HS zones; no public ArcGIS boundary
-// service found — returns district info only.
-function getSpotsylvaniaSchools() {
+// Spotsylvania County: multiple zones at all levels; no public ArcGIS boundary
+// service — all three levels approximated via Google Places nearest school.
+async function getSpotsylvaniaSchools(lat, lng) {
+  const [elementary, middle, high] = await Promise.all([
+    getNearbySchool(lat, lng, 'elementary school'),
+    getNearbySchool(lat, lng, 'middle school'),
+    getNearbySchool(lat, lng, 'high school'),
+  ])
   return {
-    elementary: null,
-    middle:     null,
-    high:       null,
+    elementary, middle, high,
+    approximate: true,
     district: { name: 'Spotsylvania County Public Schools', site: 'spotsylvania.k12.va.us' },
   }
 }
@@ -258,12 +286,12 @@ export default async function handler(req, res) {
   else if (county === 'prince_william') schools = await getPrinceWilliamSchools(lat, lng)
   else if (county === 'arlington')      schools = await getArlingtonSchools(lat, lng)
   else if (county === 'alexandria')     schools = await getAlexandriaSchools(lat, lng)
-  else if (county === 'falls_church')   schools = getFallsChurchSchools()
+  else if (county === 'falls_church')   schools = await getFallsChurchSchools(lat, lng)
   else if (county === 'stafford')       schools = await getStaffordSchools(lat, lng)
   else if (county === 'fauquier')       schools = await getFauquierSchools(lat, lng)
-  else if (county === 'spotsylvania')   schools = getSpotsylvaniaSchools()
-  else if (county === 'manassas_city')  schools = getManassasCitySchools()
-  else if (county === 'manassas_park')  schools = getManassasParkSchools()
+  else if (county === 'spotsylvania')   schools = await getSpotsylvaniaSchools(lat, lng)
+  else if (county === 'manassas_city')  schools = await getManassasCitySchools(lat, lng)
+  else if (county === 'manassas_park')  schools = await getManassasParkSchools(lat, lng)
 
   if (!schools) return res.status(200).json({ found: false, county })
 
