@@ -306,7 +306,13 @@ export default async function handler(req, res) {
       result.shopping = { label: 'Shopping', items: shoppingItems }
     }
 
-    return res.status(200).json({ categories: result })
+    // Reorder sections by priority: shopping → metro → employment → parks → airports
+    const SECTION_ORDER = ['shopping', 'metro', 'employment', 'parks', 'airports']
+    const ordered = {}
+    for (const key of SECTION_ORDER) {
+      if (result[key]) ordered[key] = result[key]
+    }
+    return res.status(200).json({ categories: ordered })
   } catch (err) {
     console.error('[api/nearby] error:', err)
     return res.status(502).json({ error: 'Upstream error', debug: `${err.name}: ${err.message}` })
