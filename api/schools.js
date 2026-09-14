@@ -121,6 +121,70 @@ async function getArlingtonSchools(lat, lng) {
   return { elementary, middle, high, district: { name: 'Arlington Public Schools', site: 'apsva.us' } }
 }
 
+
+async function getAlexandriaSchools(lat, lng) {
+  const BASE = 'https://geoportal.alexandriava.gov/server/rest/services'
+  const [elementary, middle] = await Promise.all([
+    arcgisQuery(`${BASE}/Elementary_School_Attendance_Boundaries/FeatureServer/0`, lat, lng, 'School_Name'),
+    arcgisQuery(`${BASE}/Middle_School_Attendance_Boundaries/FeatureServer/0`, lat, lng, 'School_Name'),
+  ])
+  return {
+    elementary,
+    middle,
+    high: 'Alexandria City High School',
+    district: { name: 'Alexandria City Public Schools', site: 'acps.k12.va.us' },
+  }
+}
+
+// Falls Church City: one MS and one HS; two ES zones but no public ArcGIS
+// boundary layer — MS/HS confirmed, ES requires FCCPS verification.
+function getFallsChurchSchools() {
+  return {
+    elementary: null,
+    middle: 'Mary Ellen Henderson Middle School',
+    high:   'Meridian High School',
+    district: { name: 'Falls Church City Public Schools', site: 'fccps.org' },
+  }
+}
+
+// Stafford County stores school assignments as attributes on address points.
+async function getStaffordSchools(lat, lng) {
+  const LAYER = 'https://services9.arcgis.com/VEbqiV0jZuocUaxq/arcgis/rest/services/address_points_FYS/FeatureServer/0'
+  const params = new URLSearchParams({
+    geometryType:      'esriGeometryPoint',
+    geometry:          `${lng},${lat}`,
+    inSR:              '4326',
+    distance:          '300',
+    units:             'esriSRUnit_Meter',
+    outFields:         'ESCHLNAME,MSCHLNAME,HSCHLNAME',
+    returnGeometry:    'false',
+    resultRecordCount: '1',
+    f:                 'json',
+  })
+  try {
+    const res = await fetch(`${LAYER}/query?${params}`, { signal: AbortSignal.timeout(8000) })
+    const data = await res.json()
+    const attrs = data.features?.[0]?.attributes
+    if (!attrs) return null
+    return {
+      elementary: attrs.ESCHLNAME || null,
+      middle:     attrs.MSCHLNAME || null,
+      high:       attrs.HSCHLNAME || null,
+      district:   { name: 'Stafford County Public Schools', site: 'staffordschools.net' },
+    }
+  } catch { return null }
+}
+
+async function getFauquierSchools(lat, lng) {
+  const BASE = 'https://services.arcgis.com/oAoeYJ1kqmAwcEC2/arcgis/rest/services/Fauquier_County_School_Districts/FeatureServer'
+  const [elementary, middle, high] = await Promise.all([
+    arcgisQuery(`${BASE}/0`, lat, lng, 'NAME'),
+    arcgisQuery(`${BASE}/1`, lat, lng, 'NAME'),
+    arcgisQuery(`${BASE}/2`, lat, lng, 'NAME'),
+  ])
+  return { elementary, middle, high, district: { name: 'Fauquier County Public Schools', site: 'fauquiercounty.gov/schools' } }
+}
+
 function detectCounty(components) {
   let county = '', locality = ''
   for (const c of components) {
@@ -133,6 +197,8 @@ function detectCounty(components) {
   if (county.includes('arlington'))      return 'arlington'
   if (locality === 'alexandria')         return 'alexandria'
   if (locality === 'falls church')       return 'falls_church'
+  if (county.includes('stafford'))       return 'stafford'
+  if (county.includes('fauquier'))       return 'fauquier'
   return null
 }
 
@@ -154,6 +220,10 @@ export default async function handler(req, res) {
   else if (county === 'fairfax')        schools = await getFairfaxSchools(lat, lng)
   else if (county === 'prince_william') schools = await getPrinceWilliamSchools(lat, lng)
   else if (county === 'arlington')      schools = await getArlingtonSchools(lat, lng)
+  else if (county === 'alexandria')     schools = await getAlexandriaSchools(lat, lng)
+  else if (county === 'falls_church')   schools = getFallsChurchSchools()
+  else if (county === 'stafford')       schools = await getStaffordSchools(lat, lng)
+  else if (county === 'fauquier')       schools = await getFauquierSchools(lat, lng)
 
   if (!schools) return res.status(200).json({ found: false, county })
 
