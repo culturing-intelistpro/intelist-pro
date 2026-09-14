@@ -267,7 +267,10 @@ async function getSchoolDriveTimes(originLat, originLng, schools) {
     const result = {}
     entries.forEach(([level], i) => {
       const el = data.rows[0].elements[i]
-      if (el?.status === 'OK') result[level] = Math.round(el.duration.value / 60)
+      if (el?.status === 'OK') result[level] = {
+        mins: Math.round(el.duration.value / 60),
+        dist: el.distance.text,
+      }
     })
     return result
   } catch { return {} }

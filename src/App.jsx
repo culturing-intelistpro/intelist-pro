@@ -99,8 +99,8 @@ function buildSchoolsCategory(school) {
     .map((level) => [level, src[level]])
     .filter(([, name]) => name && name !== 'varies by location')
     .map(([level, name]) => {
-      const mins = driveTimes[level]
-      const timeStr = mins != null ? ` · ${mins} min` : ''
+      const info = driveTimes[level]
+      const timeStr = info != null ? ` · ${info.dist} · ${info.mins} min` : ''
       return `${level.charAt(0).toUpperCase() + level.slice(1)}: ${name}${timeStr}`
     })
   if (!items.length) return null
