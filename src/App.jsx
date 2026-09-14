@@ -1768,24 +1768,13 @@ Each section must bring new information or perspective — not restate what anot
       <main className={styles.resultsMain}>
         <div className={styles.resultsHero}>
           <p className={styles.resultsTitle}>
-            Your listing copy is ready.
-            {elapsedMs != null && (() => {
+            {elapsedMs != null ? (() => {
               const totalSec = Math.round(elapsedMs / 1000)
               const mins = Math.floor(totalSec / 60)
               const secs = totalSec % 60
               const label = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`
-              return (
-                <span style={{
-                  marginLeft: 10,
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: '#34c759',
-                  verticalAlign: 'middle',
-                }}>
-                  Generated in {label}
-                </span>
-              )
-            })()}
+              return <>Your listing copy is generated in <span style={{ color: '#34c759' }}>{label}</span>.</>
+            })() : 'Your listing copy is ready.'}
           </p>
           <h2 className={styles.resultsAddress}>{displayAddress}</h2>
         </div>
