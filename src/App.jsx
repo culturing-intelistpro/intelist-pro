@@ -1026,6 +1026,8 @@ If you cannot confirm a school from site:${district.site} for this exact address
     const abortController = new AbortController()
     generateAbortRef.current = abortController
 
+    setSuggestions([])
+    setShowSuggestions(false)
     setError(null)
     setResults(null)
     setZillowData(null)
