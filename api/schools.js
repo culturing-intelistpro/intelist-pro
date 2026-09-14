@@ -248,11 +248,19 @@ async function getFauquierSchools(lat, lng) {
 
 const MATRIX_URL = 'https://maps.googleapis.com/maps/api/distancematrix/json'
 
+const SCHOOL_LEVEL_SUFFIX = { elementary: 'Elementary School', middle: 'Middle School', high: 'High School' }
+
 async function getSchoolDriveTimes(originLat, originLng, schools) {
   const levels = ['elementary', 'middle', 'high']
   const entries = levels.map((l) => [l, schools[l]]).filter(([, name]) => name)
   if (!entries.length) return {}
-  const destinations = entries.map(([, name]) => `${name}, Virginia`).join('|')
+  // Bare names ("Longfellow, Virginia") geocode unreliably — Distance Matrix has
+  // no location bias, so an ambiguous short name can resolve hundreds of miles
+  // away. Adding the school-level suffix and county disambiguates it.
+  const countyLabel = (schools.district?.name || '').replace(/ Public Schools$/i, '') || 'Virginia'
+  const destinations = entries
+    .map(([level, name]) => `${name} ${SCHOOL_LEVEL_SUFFIX[level]}, ${countyLabel}, VA`)
+    .join('|')
   const params = new URLSearchParams({
     origins: `${originLat},${originLng}`,
     destinations,
