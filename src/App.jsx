@@ -366,7 +366,7 @@ function GenerateCountdown({ loading, startTimeRef }) {
       }}>
         {secs}
       </span>
-      <span style={{ fontSize: 13, color: '#8a8a8e', marginLeft: 4 }}>초</span>
+      <span style={{ fontSize: 13, color: '#8a8a8e', marginLeft: 4 }}>sec</span>
     </div>
   )
 }
