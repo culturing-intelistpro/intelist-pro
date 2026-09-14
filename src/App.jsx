@@ -664,6 +664,7 @@ export default function App() {
   const [reviseAllInput, setReviseAllInput]   = useState('')
   const [revisingAll,    setRevisingAll]       = useState(false)
   const [reviseAllCount, setReviseAllCount]   = useState(0)
+  const [elapsedMs,      setElapsedMs]         = useState(null)
 
   const fileInputRef         = useRef(null)
   const styleFileInputRef    = useRef(null)
@@ -1376,7 +1377,9 @@ Each section must bring new information or perspective — not restate what anot
 
       const parsed = parseResults(msg.content[0]?.text ?? '')
       generationTimeRef.current = Date.now()
-      saveGenTime(Date.now() - sessionStartRef.current)
+      const elapsed = Date.now() - sessionStartRef.current
+      saveGenTime(elapsed)
+      setElapsedMs(elapsed)
       setResults(parsed)
       setReviseAllCount(0)
       // Track listing in Supabase (best-effort)
@@ -1442,7 +1445,7 @@ Each section must bring new information or perspective — not restate what anot
     setActivePanel(null); setStyleFiles([])
     images.forEach((img) => URL.revokeObjectURL(img.preview))
     setImages([]); setListingId(null); setZillowData(null); setDirections(null); setNearby(null)
-    setActiveTab('mls')
+    setActiveTab('mls'); setElapsedMs(null)
   }
 
   // ── Opt button class helper ─────────────────────────────────────────────────
@@ -1764,7 +1767,26 @@ Each section must bring new information or perspective — not restate what anot
 
       <main className={styles.resultsMain}>
         <div className={styles.resultsHero}>
-          <p className={styles.resultsTitle}>Your listing copy is ready.</p>
+          <p className={styles.resultsTitle}>
+            Your listing copy is ready.
+            {elapsedMs != null && (() => {
+              const totalSec = Math.round(elapsedMs / 1000)
+              const mins = Math.floor(totalSec / 60)
+              const secs = totalSec % 60
+              const label = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`
+              return (
+                <span style={{
+                  marginLeft: 10,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: '#34c759',
+                  verticalAlign: 'middle',
+                }}>
+                  Generated in {label}
+                </span>
+              )
+            })()}
+          </p>
           <h2 className={styles.resultsAddress}>{displayAddress}</h2>
         </div>
         <div className={styles.copyAllRow} style={{ marginBottom: 16 }}>
