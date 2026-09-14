@@ -147,6 +147,39 @@ function getFallsChurchSchools() {
   }
 }
 
+// Manassas City: one MS (Metz) and one HS (Osbourn); five ES zones but no
+// public ArcGIS boundary service — ES lookup not supported.
+function getManassasCitySchools() {
+  return {
+    elementary: null,
+    middle: 'Grace E. Metz Middle School',
+    high:   'Osbourn High School',
+    district: { name: 'Manassas City Public Schools', site: 'mcpsva.org' },
+  }
+}
+
+// Manassas Park City: one MS and one HS; two ES zones but no public ArcGIS
+// boundary service — ES lookup not supported.
+function getManassasParkSchools() {
+  return {
+    elementary: null,
+    middle: 'Manassas Park Middle School',
+    high:   'Manassas Park High School',
+    district: { name: 'Manassas Park City Schools', site: 'mpark.net' },
+  }
+}
+
+// Spotsylvania County: multiple ES/MS/HS zones; no public ArcGIS boundary
+// service found — returns district info only.
+function getSpotsylvaniaSchools() {
+  return {
+    elementary: null,
+    middle:     null,
+    high:       null,
+    district: { name: 'Spotsylvania County Public Schools', site: 'spotsylvania.k12.va.us' },
+  }
+}
+
 // Stafford County stores school assignments as attributes on address points.
 async function getStaffordSchools(lat, lng) {
   const LAYER = 'https://services9.arcgis.com/VEbqiV0jZuocUaxq/arcgis/rest/services/address_points_FYS/FeatureServer/0'
@@ -199,6 +232,10 @@ function detectCounty(components) {
   if (locality === 'falls church')       return 'falls_church'
   if (county.includes('stafford'))       return 'stafford'
   if (county.includes('fauquier'))       return 'fauquier'
+  if (county.includes('spotsylvania'))   return 'spotsylvania'
+  // Manassas City and Manassas Park are independent cities (no county match)
+  if (locality === 'manassas park')      return 'manassas_park'
+  if (locality === 'manassas')           return 'manassas_city'
   return null
 }
 
@@ -224,6 +261,9 @@ export default async function handler(req, res) {
   else if (county === 'falls_church')   schools = getFallsChurchSchools()
   else if (county === 'stafford')       schools = await getStaffordSchools(lat, lng)
   else if (county === 'fauquier')       schools = await getFauquierSchools(lat, lng)
+  else if (county === 'spotsylvania')   schools = getSpotsylvaniaSchools()
+  else if (county === 'manassas_city')  schools = getManassasCitySchools()
+  else if (county === 'manassas_park')  schools = getManassasParkSchools()
 
   if (!schools) return res.status(200).json({ found: false, county })
 
