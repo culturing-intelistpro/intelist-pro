@@ -620,22 +620,66 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
 }
 
 // ─── App ───────────────────────────────────────────────────────────────────────
+const FREE_LIMIT = 1 // free generations before paywall
+
 export default function App() {
   const [user, setUser]                   = useState(null)
   const [authChecked, setAuthChecked]     = useState(false)
   const [showAuth, setShowAuth]           = useState(false)
+  const [isPro, setIsPro]                 = useState(false)
+  const [genCount, setGenCount]           = useState(0)
+  const [showPaywall, setShowPaywall]     = useState(false)
+  const [paywallLoading, setPaywallLoading] = useState(false)
+
+  // ── Subscription / usage check ────────────────────────────────────────────
+  const checkSubscription = useCallback(async (userId) => {
+    try {
+      const { data: sub } = await supabase
+        .from('subscriptions')
+        .select('status, current_period_end')
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      const now    = new Date()
+      const active = sub?.status === 'active' && sub?.current_period_end
+                     && new Date(sub.current_period_end) > now
+      setIsPro(active)
+
+      if (!active) {
+        const { count } = await supabase
+          .from('listings')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId)
+        setGenCount(count ?? 0)
+      }
+    } catch (e) {
+      console.warn('[Intelist Pro] Subscription check error:', e)
+    }
+  }, [])
 
   // Restore session on mount
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setAuthChecked(true)
+      if (session?.user) checkSubscription(session.user.id)
+
+      // Handle return from Stripe Checkout
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('payment') === 'success') {
+        window.history.replaceState({}, '', window.location.pathname)
+        // Give webhook a moment to land, then re-check
+        setTimeout(() => {
+          if (session?.user) checkSubscription(session.user.id)
+        }, 3000)
+      }
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      if (session?.user) checkSubscription(session.user.id)
     })
     return () => subscription.unsubscribe()
-  }, [])
+  }, [checkSubscription])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -982,6 +1026,11 @@ Use only data found on Zillow. Set any unfound field to null.`,
     }
     if (!user) {
       setShowAuth(true)
+      return
+    }
+    // Paywall check — free tier limit
+    if (!isPro && genCount >= FREE_LIMIT) {
+      setShowPaywall(true)
       return
     }
     const abortController = new AbortController()
@@ -1401,6 +1450,7 @@ Each section must bring new information or perspective — not restate what anot
           generation_time:  new Date(generationTimeRef.current).toISOString(),
         }).select('id').single()
         if (newListing) setListingId(newListing.id)
+        setGenCount((c) => c + 1)
       } catch (e) {
         console.warn('[Intelist Pro] Listing tracking error:', e)
       }
@@ -1444,6 +1494,29 @@ Each section must bring new information or perspective — not restate what anot
     }
   }
 
+  // ── Stripe Checkout ────────────────────────────────────────────────────────
+  const startStripeCheckout = async () => {
+    setPaywallLoading(true)
+    try {
+      const res = await fetch('/api/stripe-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, email: user.email }),
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        throw new Error('No checkout URL returned')
+      }
+    } catch (err) {
+      console.error('[Stripe] Checkout error:', err)
+      showToast('결제 창을 열 수 없습니다. 다시 시도해주세요.')
+    } finally {
+      setPaywallLoading(false)
+    }
+  }
+
   const reset = () => {
     setResults(null); setError(null); setAddress('')
     setNotes(''); setTranscript(''); setPrevListing('')
@@ -1478,6 +1551,40 @@ Each section must bring new information or perspective — not restate what anot
           />
         )}
 
+        {/* Paywall modal */}
+        {showPaywall && (
+          <div className={styles.paywallOverlay} onClick={() => setShowPaywall(false)}>
+            <div className={styles.paywallCard} onClick={(e) => e.stopPropagation()}>
+              <button className={styles.paywallClose} onClick={() => setShowPaywall(false)}>
+                <X size={18} />
+              </button>
+              <div className={styles.paywallIcon}>✦</div>
+              <h2 className={styles.paywallTitle}>Upgrade to Pro</h2>
+              <p className={styles.paywallSub}>
+                You've used your free trial listing. Subscribe to keep generating unlimited copy.
+              </p>
+              <div className={styles.paywallPrice}>
+                <span className={styles.paywallAmount}>$29</span>
+                <span className={styles.paywallPeriod}>/month</span>
+              </div>
+              <ul className={styles.paywallFeatures}>
+                <li>Unlimited listing generation</li>
+                <li>MLS, Zillow &amp; Instagram copy</li>
+                <li>School district data</li>
+                <li>Nearby &amp; commute times</li>
+              </ul>
+              <button
+                className={styles.paywallBtn}
+                onClick={startStripeCheckout}
+                disabled={paywallLoading}
+              >
+                {paywallLoading ? 'Loading…' : 'Subscribe — $29/month'}
+              </button>
+              <p className={styles.paywallNote}>Cancel anytime · Instant access</p>
+            </div>
+          </div>
+        )}
+
         {/* Loading overlay */}
         {loading && (
           <div className={styles.loadingOverlay}>
@@ -1494,6 +1601,18 @@ Each section must bring new information or perspective — not restate what anot
           <span className={styles.brand}>Intelist <span className={styles.brandAccent}>Pro</span></span>
           {user ? (
             <div className={styles.headerUser}>
+              {!isPro && (
+                <button
+                  className={styles.usagePill}
+                  onClick={() => { if (genCount >= FREE_LIMIT) setShowPaywall(true) }}
+                  title={genCount >= FREE_LIMIT ? 'Upgrade to Pro' : `Try 1 free listing`}
+                >
+                  {genCount >= FREE_LIMIT
+                    ? 'Upgrade to Pro'
+                    : `1 free trial`}
+                </button>
+              )}
+              {isPro && <span className={styles.proBadge}>Pro ✦</span>}
               <span className={styles.headerName}>
                 {user.user_metadata?.full_name ?? user.email}
               </span>
