@@ -620,7 +620,7 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
 }
 
 // ─── App ───────────────────────────────────────────────────────────────────────
-const FREE_LIMIT = 1 // free generations before paywall
+const FREE_LIMIT = 9999 // free generations before paywall
 
 export default function App() {
   const [user, setUser]                   = useState(null)
