@@ -1,0 +1,91 @@
+.blocker {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: transparent;
+}
+
+.spotlight {
+  position: fixed;
+  z-index: 1000;
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  transition: top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 1001;
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 20px 22px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+}
+
+.arrowTop,
+.arrowBottom {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #FFFFFF;
+  transform: translateX(-50%) rotate(45deg);
+}
+.arrowTop    { top: -8px; box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.04); }
+.arrowBottom { bottom: -8px; box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.04); }
+
+.stepIndicator {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #86868B;
+  margin: 0 0 8px;
+}
+
+.message {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #1D1D1F;
+  margin: 0 0 18px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.skipBtn {
+  background: none;
+  border: none;
+  color: #86868B;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 9px 10px;
+  transition: color 0.12s;
+}
+.skipBtn:hover { color: #1D1D1F; }
+
+.nextBtn,
+.finishBtn {
+  background: #0071E3;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 980px;
+  padding: 9px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.nextBtn:hover,
+.finishBtn:hover { background: #0077ED; }
+
+.finishBtn { width: 100%; }

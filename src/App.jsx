@@ -6,6 +6,7 @@ import communitiesData from './data/communities.json'
 import { supabase } from './supabase'
 import AuthModal from './AuthModal'
 import NotifyModal from './NotifyModal'
+import OnboardingTour from './OnboardingTour'
 import masterPromptRules from './masterPromptRules'
 import { callClaude } from './anthropicClient'
 
@@ -620,7 +621,21 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
   )
 }
 
+// ─── Onboarding tour ────────────────────────────────────────────────────────────
+const ONBOARDING_STEPS = [
+  { targetId: 'address-input',    message: "Start here! Enter the property address — we'll pull up everything we need." },
+  { targetId: 'tour-notes-btn',   message: 'Add any special features or highlights about the property here.' },
+  { targetId: 'tour-record-btn',  message: "Prefer to talk? Record your notes and we'll transcribe them for you." },
+  { targetId: 'tour-photos-btn',  message: "Upload 5–10 listing photos and your MLS sheet. Choose the photos that best showcase this home — what you pick tells us what matters most." },
+  { targetId: 'tour-style-btn',   message: 'Paste your past listing descriptions so we can match your writing style.' },
+  { targetId: 'tour-submit-arrow', message: 'All set! Enter your address and hit the arrow to generate your listing copy.' },
+]
+
 // ─── Coming Soon ────────────────────────────────────────────────────────────────
+// Toggle to false to hide the section without deleting it — flip back to true
+// to bring it back.
+const SHOW_COMING_SOON = false
+
 const COMING_SOON_FEATURES = [
   { key: 'exterior-photo-guide',    title: 'Exterior Photo Guide',    tagline: 'Never miss the perfect angle' },
   { key: 'interior-ar-guide',       title: 'Interior AR Guide',       tagline: "Steve's eye, in your pocket" },
@@ -663,6 +678,36 @@ export default function App() {
   const [genCount, setGenCount]           = useState(0)
   const [showPaywall, setShowPaywall]     = useState(false)
   const [paywallLoading, setPaywallLoading] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [tourStep, setTourStep]           = useState(0)
+
+  // ── Onboarding tour: only for users who haven't completed it ────────────────
+  const checkOnboarding = useCallback(async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('id', userId)
+        .maybeSingle()
+      if (error) console.warn('[Intelist Pro] Onboarding check query error:', error)
+      if (!data?.onboarding_completed) {
+        setShowOnboarding(true)
+        setTourStep(0)
+      }
+    } catch (e) {
+      console.warn('[Intelist Pro] Onboarding check error:', e)
+    }
+  }, [])
+
+  const finishOnboarding = useCallback(async () => {
+    setShowOnboarding(false)
+    if (user) {
+      const { error: upsertError } = await supabase
+        .from('profiles')
+        .upsert({ id: user.id, onboarding_completed: true })
+      if (upsertError) console.warn('[Intelist Pro] Onboarding save error:', upsertError)
+    }
+  }, [user])
 
   // ── Subscription / usage check ────────────────────────────────────────────
   const checkSubscription = useCallback(async (userId) => {
@@ -695,7 +740,7 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setAuthChecked(true)
-      if (session?.user) checkSubscription(session.user.id)
+      if (session?.user) { checkSubscription(session.user.id); checkOnboarding(session.user.id) }
 
       // Handle return from Stripe Checkout
       const params = new URLSearchParams(window.location.search)
@@ -709,10 +754,10 @@ export default function App() {
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
-      if (session?.user) checkSubscription(session.user.id)
+      if (session?.user) { checkSubscription(session.user.id); checkOnboarding(session.user.id) }
     })
     return () => subscription.unsubscribe()
-  }, [checkSubscription])
+  }, [checkSubscription, checkOnboarding])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -1580,7 +1625,18 @@ Each section must bring new information or perspective — not restate what anot
         {showAuth && (
           <AuthModal
             onClose={() => setShowAuth(false)}
-            onSuccess={(u) => { setUser(u); setShowAuth(false) }}
+            onSuccess={(u) => { setUser(u); setShowAuth(false); checkOnboarding(u.id); checkSubscription(u.id) }}
+          />
+        )}
+
+        {/* Onboarding tour — first-time users only, tracked via profiles.onboarding_completed */}
+        {showOnboarding && !showAuth && (
+          <OnboardingTour
+            steps={ONBOARDING_STEPS}
+            step={tourStep}
+            onNext={() => setTourStep((s) => Math.min(s + 1, ONBOARDING_STEPS.length - 1))}
+            onSkip={finishOnboarding}
+            onFinish={finishOnboarding}
           />
         )}
 
@@ -1699,6 +1755,7 @@ Each section must bring new information or perspective — not restate what anot
             />
             <div className={styles.addressControls}>
               <button
+                id="tour-submit-arrow"
                 className={`${styles.submitArrowBtn} ${address.trim() ? styles.submitArrowBtnActive : ''}`}
                 onClick={() => { if (address.trim()) generate() }}
                 disabled={!address.trim()}
@@ -1730,19 +1787,19 @@ Each section must bring new information or perspective — not restate what anot
 
           {/* ── Option grid ── */}
           <div className={styles.optionGrid}>
-            <button className={optClass('notes')} onClick={() => togglePanel('notes')}>
+            <button id="tour-notes-btn" className={optClass('notes')} onClick={() => togglePanel('notes')}>
               <span className={styles.optIcon}><PenLine size={20} /></span>
               <span className={styles.optBtnLabel}>Notes</span>
               <span className={styles.optBtnSub}>What's special</span>
             </button>
 
-            <button className={optClass('record')} onClick={() => togglePanel('record')}>
+            <button id="tour-record-btn" className={optClass('record')} onClick={() => togglePanel('record')}>
               <span className={styles.optIcon}><Mic size={20} /></span>
               <span className={styles.optBtnLabel}>{listening ? 'Recording…' : 'Record'}</span>
               <span className={styles.optBtnSub}>Speak your notes</span>
             </button>
 
-            <button className={optClass('photos')} onClick={() => togglePanel('photos')}>
+            <button id="tour-photos-btn" className={optClass('photos')} onClick={() => togglePanel('photos')}>
               <span className={styles.optIcon}><Image size={20} /></span>
               <span className={styles.optBtnLabel}>
                 {images.length > 0 ? `${images.length} photo${images.length > 1 ? 's' : ''}` : 'Photos'}
@@ -1750,7 +1807,7 @@ Each section must bring new information or perspective — not restate what anot
               <span className={styles.optBtnSub}>Photos, plans & MLS</span>
             </button>
 
-            <button className={optClass('style')} onClick={() => togglePanel('style')}>
+            <button id="tour-style-btn" className={optClass('style')} onClick={() => togglePanel('style')}>
               <span className={styles.optIcon}><FileText size={20} /></span>
               <span className={styles.optBtnLabel}>My Style</span>
               <span className={styles.optBtnSub}>Match your voice</span>
@@ -1888,8 +1945,8 @@ Each section must bring new information or perspective — not restate what anot
           {error && <div className={styles.errorCard}>{error}</div>}
         </main>
 
-        <ComingSoonSection onNotify={setNotifyFeature} />
-        {notifyFeature && (
+        {SHOW_COMING_SOON && <ComingSoonSection onNotify={setNotifyFeature} />}
+        {SHOW_COMING_SOON && notifyFeature && (
           <NotifyModal feature={notifyFeature} onClose={() => setNotifyFeature(null)} />
         )}
       </div>
