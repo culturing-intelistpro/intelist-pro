@@ -58,6 +58,8 @@
   margin-bottom: 28px;
 }
 
+.successTitle { color: #34C759; }
+
 .form {
   display: flex;
   flex-direction: column;

@@ -5,6 +5,7 @@ import styles from './App.module.css'
 import communitiesData from './data/communities.json'
 import { supabase } from './supabase'
 import AuthModal from './AuthModal'
+import NotifyModal from './NotifyModal'
 import masterPromptRules from './masterPromptRules'
 import { callClaude } from './anthropicClient'
 
@@ -619,6 +620,37 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
   )
 }
 
+// ─── Coming Soon ────────────────────────────────────────────────────────────────
+const COMING_SOON_FEATURES = [
+  { key: 'exterior-photo-guide',    title: 'Exterior Photo Guide',    tagline: 'Never miss the perfect angle' },
+  { key: 'interior-ar-guide',       title: 'Interior AR Guide',       tagline: "Steve's eye, in your pocket" },
+  { key: 'brochure-generator',      title: 'Brochure Generator',      tagline: 'Print-ready in seconds' },
+  { key: 'social-media-kit',        title: 'Social Media Kit',        tagline: 'Instagram & Facebook ready in seconds' },
+  { key: 'stock-photo-marketplace', title: 'Stock Photo Marketplace', tagline: 'Buy and sell listing photos' },
+]
+
+function ComingSoonSection({ onNotify }) {
+  return (
+    <section className={styles.comingSoon}>
+      <div className={styles.comingSoonInner}>
+        <h2 className={styles.comingSoonTitle}>Coming Soon</h2>
+        <p className={styles.comingSoonSub}>More tools to help you list smarter.</p>
+        <div className={styles.comingSoonGrid}>
+          {COMING_SOON_FEATURES.map((f) => (
+            <div key={f.key} className={styles.comingSoonCard}>
+              <h3 className={styles.comingSoonCardTitle}>{f.title}</h3>
+              <p className={styles.comingSoonCardTagline}>{f.tagline}</p>
+              <button className={styles.comingSoonNotifyBtn} onClick={() => onNotify(f)}>
+                Notify Me
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ─── App ───────────────────────────────────────────────────────────────────────
 const FREE_LIMIT = 9999 // free generations before paywall
 
@@ -626,6 +658,7 @@ export default function App() {
   const [user, setUser]                   = useState(null)
   const [authChecked, setAuthChecked]     = useState(false)
   const [showAuth, setShowAuth]           = useState(false)
+  const [notifyFeature, setNotifyFeature] = useState(null)
   const [isPro, setIsPro]                 = useState(false)
   const [genCount, setGenCount]           = useState(0)
   const [showPaywall, setShowPaywall]     = useState(false)
@@ -1854,6 +1887,11 @@ Each section must bring new information or perspective — not restate what anot
 
           {error && <div className={styles.errorCard}>{error}</div>}
         </main>
+
+        <ComingSoonSection onNotify={setNotifyFeature} />
+        {notifyFeature && (
+          <NotifyModal feature={notifyFeature} onClose={() => setNotifyFeature(null)} />
+        )}
       </div>
     )
   }

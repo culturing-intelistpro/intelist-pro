@@ -714,6 +714,83 @@
   margin-top: -16px;
 }
 
+/* ── Coming Soon ──────────────────────────────────────────────────────────────── */
+.comingSoon {
+  border-top: 1px solid var(--border-light);
+  padding: 64px 24px 80px;
+}
+
+.comingSoonInner {
+  max-width: 1120px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.comingSoonTitle {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--text-1);
+  margin-bottom: 8px;
+}
+
+.comingSoonSub {
+  font-size: 16px;
+  color: var(--text-3);
+  margin-bottom: 40px;
+}
+
+.comingSoonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  text-align: left;
+}
+
+.comingSoonCard {
+  background: var(--bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--r-card);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.comingSoonCard:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.comingSoonCardTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.comingSoonCardTagline {
+  font-size: 13.5px;
+  color: var(--text-3);
+  line-height: 1.45;
+  flex: 1;
+  margin: 0 0 16px;
+}
+
+.comingSoonNotifyBtn {
+  align-self: flex-start;
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-pill);
+  padding: 8px 18px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-1);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+.comingSoonNotifyBtn:hover { background: #F5F5F7; border-color: #BCBCBC; }
+
 /* ── Results ──────────────────────────────────────────────────────────────────── */
 .resultsMain {
   flex: 1;
@@ -1119,6 +1196,10 @@
 
   .heroTitle { font-size: 40px; }
   .heroSub   { font-size: 16px; }
+
+  .comingSoon      { padding: 48px 16px 60px; }
+  .comingSoonTitle { font-size: 26px; }
+  .comingSoonGrid  { grid-template-columns: 1fr; }
 
   .addressBar {
     height: 56px;
