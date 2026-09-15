@@ -1601,7 +1601,7 @@ Each section must bring new information or perspective — not restate what anot
           <span className={styles.brand}>Intelist <span className={styles.brandAccent}>Pro</span></span>
           {user ? (
             <div className={styles.headerUser}>
-              {!isPro && (
+              {false && !isPro && (
                 <button
                   className={styles.usagePill}
                   onClick={() => { if (genCount >= FREE_LIMIT) setShowPaywall(true) }}
