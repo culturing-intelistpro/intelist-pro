@@ -89,18 +89,18 @@
 
 /* â”€â”€ History button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .historyBtn {
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text-2);
-  font-size: 13px;
+  background: transparent;
+  border: 1.5px solid var(--accent);
+  border-radius: var(--r-pill);
+  color: var(--accent);
+  font-size: 15px;
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
-  padding: 4px 10px;
-  transition: border-color 0.12s, color 0.12s;
+  padding: 9px 20px;
+  transition: background 0.15s, color 0.15s;
 }
-.historyBtn:hover { border-color: var(--text-3); color: var(--text-1); }
+.historyBtn:hover { background: var(--accent); color: #FFFFFF; }
 
 /* â”€â”€ History modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .historyOverlay {

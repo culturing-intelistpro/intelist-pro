@@ -2276,6 +2276,16 @@ Each section must bring new information or perspective — not restate what anot
           )}
         </div>
       </main>
+
+      {/* ── History modal (results page) ── */}
+      {showHistory && (
+        <HistoryModal
+          listings={historyListings}
+          loading={loadingHistory}
+          onClose={() => setShowHistory(false)}
+          onRestore={restoreFromHistory}
+        />
+      )}
     </div>
   )
 }
