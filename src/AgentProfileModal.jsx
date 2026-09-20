@@ -186,7 +186,7 @@ export default function AgentProfileModal({ user, initialProfile, onClose, onSav
     if (!file || !user) return
     try {
       const ext = file.name.split('.').pop() || 'jpg'
-      const fileName = \`agent-photos/\${user.id}-\${Date.now()}.\${ext}\`
+      const fileName = `agent-photos/${user.id}-${Date.now()}.${ext}`
       const { error } = await supabase.storage.from('agent-assets').upload(fileName, file, { upsert: true })
       if (error) throw error
       const { data: { publicUrl } } = supabase.storage.from('agent-assets').getPublicUrl(fileName)
