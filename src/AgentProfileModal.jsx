@@ -1,5 +1,6 @@
 // AgentProfileModal.jsx — Your Marketing DNA
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { removeBackground } from '@imgly/background-removal'
 import { callClaude } from './anthropicClient'
 import { X, Check } from 'lucide-react'
 import { supabase } from './supabase'
@@ -103,6 +104,7 @@ export default function AgentProfileModal({ user, initialProfile, onClose, onSav
   const [skipSample,  setSkipSample]  = useState(false)
   const [brokMatch,   setBrokMatch]   = useState(null)
   const [scanLoading, setScanLoading] = useState(false)
+  const [bgRemoving,  setBgRemoving]  = useState(false)
   const cardInputRef = useRef(null)
 
   const [form, setForm] = useState({
@@ -181,18 +183,40 @@ export default function AgentProfileModal({ user, initialProfile, onClose, onSav
     reader.readAsDataURL(file)
   }, [set])
 
-  // 프로필 사진 업로드 — Supabase Storage 저장
+  // 프로필 사진 업로드 — 배경 제거 후 Supabase Storage 저장
   const uploadAgentPhoto = useCallback(async (file) => {
     if (!file || !user) return
+    setBgRemoving(true)
     try {
-      const ext = file.name.split('.').pop() || 'jpg'
-      const fileName = `agent-photos/${user.id}-${Date.now()}.${ext}`
-      const { error } = await supabase.storage.from('agent-assets').upload(fileName, file, { upsert: true })
+      // 배경 제거 (클라이언트사이드 WASM)
+      const blob = await removeBackground(file, {
+        publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/',
+        output: { format: 'image/png', quality: 0.9 },
+      })
+      const fileName = `agent-photos/${user.id}-${Date.now()}.png`
+      const { error } = await supabase.storage.from('agent-assets').upload(fileName, blob, {
+        contentType: 'image/png',
+        upsert: true,
+      })
       if (error) throw error
       const { data: { publicUrl } } = supabase.storage.from('agent-assets').getPublicUrl(fileName)
       set('agent_photo_url', publicUrl)
-    } catch (e) { console.error('[Intelist] photo upload:', e) }
-  }, [set, user])
+    } catch (e) {
+      console.error('[Intelist] photo upload:', e)
+      // 배경 제거 실패 시 원본 그대로 업로드
+      try {
+        const ext = file.name.split('.').pop() || 'jpg'
+        const fileName = `agent-photos/${user.id}-${Date.now()}.${ext}`
+        const { error } = await supabase.storage.from('agent-assets').upload(fileName, file, { upsert: true })
+        if (!error) {
+          const { data: { publicUrl } } = supabase.storage.from('agent-assets').getPublicUrl(fileName)
+          set('agent_photo_url', publicUrl)
+        }
+      } catch (e2) { console.error('[Intelist] fallback upload:', e2) }
+    } finally {
+      setBgRemoving(false)
+    }
+  }, [set, user, setBgRemoving])
 
   const score = calcScore(form)
 
@@ -393,16 +417,17 @@ export default function AgentProfileModal({ user, initialProfile, onClose, onSav
                           onError={e => { e.target.style.display = 'none' }} />
                       )}
                       <div className={styles.photoUploadActions}>
-                        <label className={styles.photoUploadBtn}>
-                          📷 {form.agent_photo_url ? 'Change Photo' : 'Upload Photo'}
+                        <label className={`${styles.photoUploadBtn} ${bgRemoving ? styles.photoUploadBtnLoading : ''}`}>
+                          {bgRemoving ? <><span className={styles.spinner} /> Removing background…</> : <>📷 {form.agent_photo_url ? 'Change Photo' : 'Upload Photo'}</>}
                           <input type="file" accept="image/*" style={{ display: 'none' }}
+                            disabled={bgRemoving}
                             onChange={e => uploadAgentPhoto(e.target.files?.[0])} />
                         </label>
-                        {form.agent_photo_url && (
+                        {form.agent_photo_url && !bgRemoving && (
                           <button className={styles.photoRemoveBtn}
                             onClick={() => set('agent_photo_url', '')}>Remove</button>
                         )}
-                        <p className={styles.photoHint}>Used across all templates (brochure, SNS, video)</p>
+                        <p className={styles.photoHint}>Background removed automatically · Used across all templates</p>
                       </div>
                     </div>
                     <input className={styles.input} value={form.agent_photo_url}

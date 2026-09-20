@@ -698,6 +698,7 @@
   transition: background 0.15s;
 }
 .photoUploadBtn:hover { background: var(--accent); color: #fff; }
+.photoUploadBtnLoading { opacity: 0.7; cursor: wait; pointer-events: none; }
 .photoRemoveBtn {
   background: none;
   border: none;

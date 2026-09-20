@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@imgly/background-removal": "^1.7.0",
     "@supabase/supabase-js": "^2.106.2",
     "lucide-react": "^1.16.0",
     "mammoth": "^1.12.0",
