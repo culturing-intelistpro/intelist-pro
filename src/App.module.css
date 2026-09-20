@@ -1600,3 +1600,85 @@
 .sandP1 { animation: sandFall1 1.1s ease-in 0s    infinite; }
 .sandP2 { animation: sandFall2 1.1s ease-in 0.37s infinite; }
 .sandP3 { animation: sandFall3 1.1s ease-in 0.72s infinite; }
+
+/* ── Nearby & Commute redesign ──────────────────────────────────────────── */
+.nearbyGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 640px) {
+  .nearbyGrid { grid-template-columns: 1fr; }
+}
+.nearbyCard {
+  background: var(--bg-sec);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.nearbyCardWide {
+  grid-column: 1 / -1;
+}
+.nearbyCardHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nearbyCardIcon {
+  font-size: 16px;
+  line-height: 1;
+}
+.nearbyCardLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.nearbyRows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.nearbyRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 22px;
+}
+.nearbyRowName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-1);
+  line-height: 1.4;
+}
+.nearbyRowSub {
+  font-size: 12px;
+  color: var(--text-3);
+  font-weight: 400;
+}
+.nearbyRowTime {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.nearbyRowTimeSub {
+  font-size: 11px;
+  color: var(--text-3);
+  white-space: nowrap;
+  text-align: right;
+  display: block;
+  margin-top: 1px;
+}
+.nearbyDivider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 2px 0;
+}

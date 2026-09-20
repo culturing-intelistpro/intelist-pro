@@ -432,3 +432,115 @@
   .footer { padding: 12px 16px; }
   .toneGrid { grid-template-columns: 1fr; }
 }
+
+/* ── New classes for redesigned AgentProfileModal ─────────────── */
+
+/* Side-by-side field layout */
+.fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .fieldRow { grid-template-columns: 1fr; }
+}
+
+/* Auto-tone detection note (replaces manual tone selector) */
+.autoToneNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--bg-sec);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.autoToneIcon {
+  font-size: 18px;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+  line-height: 1;
+}
+
+.autoToneTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin: 0 0 4px;
+}
+
+.autoToneSub {
+  font-size: 12px;
+  color: var(--text-3);
+  margin: 0;
+  line-height: 1.55;
+}
+
+/* Skip button (writing sample) */
+.skipBtn {
+  background: none;
+  border: 1.5px dashed var(--border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: var(--text-3);
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  transition: border-color 0.15s, color 0.15s;
+  font-family: inherit;
+}
+
+.skipBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Optional social toggle (checkbox + label) */
+.optionalToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-3);
+  cursor: pointer;
+  user-select: none;
+  margin-top: 2px;
+}
+
+.optionalToggle input[type='checkbox'] {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+/* Skipped field note + re-add link */
+.skippedNote {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-3);
+  background: var(--bg-sec);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.linkBtn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  font-family: inherit;
+}
+
+.linkBtn:hover { opacity: 0.8; }
