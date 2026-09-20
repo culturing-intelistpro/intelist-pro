@@ -1,8 +1,40 @@
 // AgentProfileModal.jsx — Your Marketing DNA
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { callClaude } from './anthropicClient'
 import { X, Check } from 'lucide-react'
 import { supabase } from './supabase'
 import styles from './AgentProfileModal.module.css'
+
+// ─── Brokerage Brand DNA Presets ─────────────────────────────────────────────
+const BROKERAGES = [
+  { name: 'Keller Williams',               keywords: ['keller williams','kw realty','kw'],                primary: '#B40101', secondary: '#222222', font: 'Montserrat',        fontSub: 'Open Sans',   logoText: 'KW'    },
+  { name: 'RE/MAX',                         keywords: ['remax','re/max','re-max'],                          primary: '#DC1B1B', secondary: '#003087', font: 'Roboto',             fontSub: 'Roboto',      logoText: 'RE/MAX'},
+  { name: 'Coldwell Banker',                keywords: ['coldwell banker','coldwell'],                       primary: '#003DA5', secondary: '#FFFFFF', font: 'Open Sans',          fontSub: 'Open Sans',   logoText: 'CB'    },
+  { name: 'Compass',                        keywords: ['compass realty','compass real','compass'],          primary: '#000000', secondary: '#A3A3A3', font: 'Cormorant Garamond', fontSub: 'Inter',       logoText: '⊕'    },
+  { name: 'eXp Realty',                     keywords: ['exp realty','exp'],                                 primary: '#00A2FF', secondary: '#1B1464', font: 'Poppins',            fontSub: 'Poppins',     logoText: 'exp'   },
+  { name: 'Century 21',                     keywords: ['century 21','c21','century21'],                     primary: '#D4AC0D', secondary: '#000000', font: 'Oswald',             fontSub: 'Lato',        logoText: 'C21'   },
+  { name: 'Berkshire Hathaway HomeServices',keywords: ['berkshire hathaway','bhhs','berkshire'],            primary: '#512B86', secondary: '#FFFFFF', font: 'Playfair Display',   fontSub: 'Lato',        logoText: 'BHHS'  },
+  { name: "Sotheby's International Realty", keywords: ["sotheby's",'sothebys','sotheby'],                   primary: '#002A5E', secondary: '#C9B99B', font: 'Cormorant Garamond', fontSub: 'Lato',        logoText: 'SIR'   },
+  { name: "TTR Sotheby's",                  keywords: ['ttr sotheby','ttr'],                                primary: '#002A5E', secondary: '#9B8454', font: 'Cormorant Garamond', fontSub: 'Lato',        logoText: 'TTR'   },
+  { name: 'Long & Foster',                  keywords: ['long & foster','long and foster','long foster'],    primary: '#003087', secondary: '#C8102E', font: 'Lato',               fontSub: 'Lato',        logoText: 'L&F'   },
+  { name: 'Weichert Realtors',              keywords: ['weichert'],                                         primary: '#FFB800', secondary: '#000000', font: 'Inter',              fontSub: 'Inter',       logoText: 'W'     },
+  { name: 'Howard Hanna',                   keywords: ['howard hanna','hanna'],                             primary: '#C8102E', secondary: '#003DA5', font: 'Roboto',             fontSub: 'Roboto',      logoText: 'HH'    },
+  { name: 'Better Homes & Gardens RE',      keywords: ['better homes','bhgre','bhg'],                       primary: '#E31C3D', secondary: '#333333', font: 'Nunito',             fontSub: 'Nunito',      logoText: 'BHG'   },
+  { name: 'ERA Real Estate',                keywords: ['era real estate','era realty'],                     primary: '#003087', secondary: '#FFB800', font: 'Lato',               fontSub: 'Lato',        logoText: 'ERA'   },
+  { name: 'Redfin',                         keywords: ['redfin'],                                           primary: '#D92228', secondary: '#1677FF', font: 'Inter',              fontSub: 'Inter',       logoText: 'R'     },
+  { name: 'Samson Properties',              keywords: ['samson'],                                           primary: '#1B3A6B', secondary: '#C8A951', font: 'Merriweather',       fontSub: 'Lato',        logoText: 'SP'    },
+  { name: 'Pearson Smith Realty',           keywords: ['pearson smith'],                                    primary: '#1D4E8F', secondary: '#C9A84C', font: 'Montserrat',         fontSub: 'Montserrat',  logoText: 'PS'    },
+  { name: 'United Real Estate',             keywords: ['united real estate','united realty'],               primary: '#D62828', secondary: '#1A237E', font: 'Roboto',             fontSub: 'Roboto',      logoText: 'URE'   },
+  { name: 'Corcoran Group',                 keywords: ['corcoran'],                                         primary: '#000000', secondary: '#C8A951', font: 'Cormorant Garamond', fontSub: 'Inter',       logoText: 'C'     },
+  { name: 'Douglas Elliman',                keywords: ['douglas elliman','elliman'],                        primary: '#231F20', secondary: '#9B8454', font: 'Playfair Display',   fontSub: 'Open Sans',   logoText: 'DE'    },
+  { name: 'Engel & Volkers',                keywords: ['engel','volkers'],                                  primary: '#C8102E', secondary: '#000000', font: 'Lato',               fontSub: 'Lato',        logoText: 'E&V'   },
+  { name: 'Real Brokerage',                 keywords: ['real brokerage'],                                   primary: '#1A1A1A', secondary: '#6C63FF', font: 'Inter',              fontSub: 'Inter',       logoText: 'real'  },
+]
+function detectBrokerage(name) {
+  if (!name || name.length < 2) return null
+  const lower = name.toLowerCase()
+  return BROKERAGES.find(b => b.keywords.some(k => lower.includes(k))) || null
+}
 
 // ─── Scoring ──────────────────────────────────────────────────────────────────
 const CHECKLIST = [
@@ -69,6 +101,9 @@ export default function AgentProfileModal({ user, initialProfile, onClose, onSav
   const [skipInsta,   setSkipInsta]   = useState(false)
   const [skipFacebook, setSkipFacebook] = useState(false)
   const [skipSample,  setSkipSample]  = useState(false)
+  const [brokMatch,   setBrokMatch]   = useState(null)
+  const [scanLoading, setScanLoading] = useState(false)
+  const cardInputRef = useRef(null)
 
   const [form, setForm] = useState({
     full_name:       '',
@@ -112,6 +147,53 @@ export default function AgentProfileModal({ user, initialProfile, onClose, onSav
   }, [initialProfile, user])
 
   const set = useCallback((key, val) => setForm(prev => ({ ...prev, [key]: val })), [])
+
+  // 브로커리지 자동 감지
+  useEffect(() => { setBrokMatch(detectBrokerage(form.brokerage)) }, [form.brokerage])
+
+  // 명함 스캔 — Claude 비전으로 이름/전화/브로커리지 추출
+  const scanBusinessCard = useCallback(async (file) => {
+    if (!file) return
+    setScanLoading(true)
+    const reader = new FileReader()
+    reader.onload = async (ev) => {
+      try {
+        const base64 = ev.target.result.split(',')[1]
+        const msg = await callClaude({
+          model: 'claude-opus-4-6',
+          max_tokens: 400,
+          messages: [{ role: 'user', content: [
+            { type: 'image', source: { type: 'base64', media_type: file.type || 'image/jpeg', data: base64 } },
+            { type: 'text', text: 'Real estate agent business card. Extract ONLY name, phone, company. Return ONLY JSON: {"full_name":"","phone":"","brokerage":""}' },
+          ]}],
+        })
+        const txt = msg.content.filter(b => b.type === 'text').map(b => b.text).join('')
+        const m = txt.match(/\{[^{}]+\}/)
+        if (m) {
+          const d = JSON.parse(m[0])
+          if (d.full_name) set('full_name', d.full_name)
+          if (d.phone)     set('phone',     d.phone)
+          if (d.brokerage) set('brokerage', d.brokerage)
+        }
+      } catch (e) { console.error('[Intelist] card scan:', e) }
+      finally { setScanLoading(false) }
+    }
+    reader.readAsDataURL(file)
+  }, [set])
+
+  // 프로필 사진 업로드 — Supabase Storage 저장
+  const uploadAgentPhoto = useCallback(async (file) => {
+    if (!file || !user) return
+    try {
+      const ext = file.name.split('.').pop() || 'jpg'
+      const fileName = \`agent-photos/\${user.id}-\${Date.now()}.\${ext}\`
+      const { error } = await supabase.storage.from('agent-assets').upload(fileName, file, { upsert: true })
+      if (error) throw error
+      const { data: { publicUrl } } = supabase.storage.from('agent-assets').getPublicUrl(fileName)
+      set('agent_photo_url', publicUrl)
+    } catch (e) { console.error('[Intelist] photo upload:', e) }
+  }, [set, user])
+
   const score = calcScore(form)
 
   const save = async () => {
@@ -207,6 +289,16 @@ export default function AgentProfileModal({ user, initialProfile, onClose, onSav
               {/* Tab 0 — Basics */}
               {tab === 0 && (
                 <div className={styles.fields}>
+                  <div className={styles.cardScanRow}>
+                    <input ref={cardInputRef} type="file" accept="image/*" style={{ display: 'none' }}
+                      onChange={e => scanBusinessCard(e.target.files?.[0])} />
+                    <button className={styles.cardScanBtn}
+                      onClick={() => cardInputRef.current?.click()} disabled={scanLoading}>
+                      {scanLoading ? <span className={styles.spinner} /> : '🪪'}
+                      {scanLoading ? 'Reading card…' : 'Scan Business Card'}
+                    </button>
+                    <p className={styles.cardScanHint}>Upload your business card to auto-fill name, phone & company</p>
+                  </div>
                   <div className={styles.fieldRow}>
                     <Field label="Full Name" hint="Used as the listing agent signature">
                       <input className={styles.input} value={form.full_name}
@@ -245,6 +337,27 @@ export default function AgentProfileModal({ user, initialProfile, onClose, onSav
               {/* Tab 1 — Brand */}
               {tab === 1 && (
                 <div className={styles.fields}>
+                  {brokMatch && (
+                    <div className={styles.brokSuggest}>
+                      <div className={styles.brokSuggestLeft}>
+                        <span className={styles.brokLogoChip} style={{ background: brokMatch.primary }}>
+                          {brokMatch.logoText}
+                        </span>
+                        <div>
+                          <p className={styles.brokSuggestName}>{brokMatch.name}</p>
+                          <p className={styles.brokSuggestSub}>Brand colors detected</p>
+                        </div>
+                      </div>
+                      <div className={styles.brokSuggestRight}>
+                        <span className={styles.brokColorDot} style={{ background: brokMatch.primary }} />
+                        <span className={styles.brokColorDot} style={{ background: brokMatch.secondary, border: '1px solid var(--border-light)' }} />
+                        <button className={styles.brokApplyBtn}
+                          onClick={() => { set('brand_color', brokMatch.primary); set('brand_color2', brokMatch.secondary) }}>
+                          Apply
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <div className={styles.fieldRow}>
                     <Field label="Primary Color" hint="Main brand color for your materials">
                       <div className={styles.colorRow}>
@@ -272,17 +385,29 @@ export default function AgentProfileModal({ user, initialProfile, onClose, onSav
                       onChange={e => set('website_url', e.target.value)}
                       placeholder="https://janesmith.com" type="url" />
                   </Field>
-                  <Field label="Profile Photo" hint="Your headshot URL — used on brochures and social posts">
+                  <Field label="Profile Photo" hint="Upload headshot — used across all templates · Background removed automatically">
+                    <div className={styles.photoUploadRow}>
+                      {form.agent_photo_url && (
+                        <img src={form.agent_photo_url} alt="Agent"
+                          className={styles.photoPreviewCircle}
+                          onError={e => { e.target.style.display = 'none' }} />
+                      )}
+                      <div className={styles.photoUploadActions}>
+                        <label className={styles.photoUploadBtn}>
+                          📷 {form.agent_photo_url ? 'Change Photo' : 'Upload Photo'}
+                          <input type="file" accept="image/*" style={{ display: 'none' }}
+                            onChange={e => uploadAgentPhoto(e.target.files?.[0])} />
+                        </label>
+                        {form.agent_photo_url && (
+                          <button className={styles.photoRemoveBtn}
+                            onClick={() => set('agent_photo_url', '')}>Remove</button>
+                        )}
+                        <p className={styles.photoHint}>Used across all templates (brochure, SNS, video)</p>
+                      </div>
+                    </div>
                     <input className={styles.input} value={form.agent_photo_url}
                       onChange={e => set('agent_photo_url', e.target.value)}
-                      placeholder="https://..." type="url" />
-                    {form.agent_photo_url && (
-                      <div className={styles.preview}>
-                        <img src={form.agent_photo_url} alt="Preview"
-                          style={{ borderRadius: '50%', width: 72, height: 72, objectFit: 'cover' }}
-                          onError={e => { e.target.style.display = 'none' }} />
-                      </div>
-                    )}
+                      placeholder="Or paste image URL" type="url" style={{ marginTop: 8 }} />
                   </Field>
                 </div>
               )}

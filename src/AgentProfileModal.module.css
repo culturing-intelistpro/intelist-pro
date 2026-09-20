@@ -544,3 +544,173 @@
 }
 
 .linkBtn:hover { opacity: 0.8; }
+
+
+/* ── Brokerage Brand Suggestion ──────────────────────────────────────────── */
+.brokSuggest {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--bg-sec);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 4px;
+}
+.brokSuggestLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.brokLogoChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+.brokSuggestName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.brokSuggestSub {
+  font-size: 11px;
+  color: var(--text-3);
+  margin: 0;
+}
+.brokSuggestRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.brokColorDot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.brokApplyBtn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.brokApplyBtn:hover { opacity: 0.85; }
+
+/* ── Business Card Scan ───────────────────────────────────────────────────── */
+.cardScanRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-sec);
+  border: 1px dashed var(--border-light);
+  border-radius: 10px;
+  margin-bottom: 6px;
+}
+.cardScanBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-1);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.cardScanBtn:hover:not(:disabled) { background: var(--accent); color: #fff; border-color: var(--accent); }
+.cardScanBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+.cardScanHint {
+  font-size: 12px;
+  color: var(--text-3);
+  margin: 0;
+  line-height: 1.4;
+}
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Profile Photo Upload ─────────────────────────────────────────────────── */
+.photoUploadRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.photoPreviewCircle {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  flex-shrink: 0;
+}
+.photoUploadActions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.photoUploadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-sec);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-1);
+  cursor: pointer;
+  width: fit-content;
+  transition: background 0.15s;
+}
+.photoUploadBtn:hover { background: var(--accent); color: #fff; }
+.photoRemoveBtn {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+}
+.photoRemoveBtn:hover { color: #FF3B30; }
+.photoHint {
+  font-size: 11px;
+  color: var(--text-3);
+  margin: 0;
+  line-height: 1.4;
+}
