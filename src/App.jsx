@@ -10,9 +10,6 @@ import OnboardingTour from './OnboardingTour'
 import masterPromptRules from './masterPromptRules'
 import { callClaude } from './anthropicClient'
 import AgentProfileModal from './AgentProfileModal'
-import VideoGenerator from './VideoGenerator'
-import { uploadListingPhotos } from './photoStorage'
-import MarketingModal from './MarketingModal'
 
 // ─── Listing metadata helpers ──────────────────────────────────────────────────
 function detectTier(addr) {
@@ -1130,9 +1127,6 @@ export default function App() {
   const [loadingHistory,  setLoadingHistory]  = useState(false)
   const [profile,         setProfile]         = useState(null)
   const [showProfile,     setShowProfile]     = useState(false)
-  const [showVideo,       setShowVideo]       = useState(false)
-  const [showMarketing,   setShowMarketing]   = useState(false)
-  const [storedPhotoUrls, setStoredPhotoUrls] = useState([])
 
   const fileInputRef         = useRef(null)
   const styleFileInputRef    = useRef(null)
@@ -1888,18 +1882,16 @@ Each section must bring new information or perspective — not restate what anot
         }).select('id').single()
         if (newListing) {
           setListingId(newListing.id)
-          // 사진 Supabase Storage 업로드 (비동기 — 실패해도 결과에 영향 없음)
-          if (user?.id && newListing.id) {
-            const photoFiles = images.filter(i => !i.isPDF)
-            if (photoFiles.length > 0) {
-              uploadListingPhotos(user.id, newListing.id, photoFiles).then(urls => {
-                if (urls?.length > 0) {
-                  setStoredPhotoUrls(urls)
-                  supabase.from('listings').update({ photo_urls: urls }).eq('id', newListing.id).then(() => {})
-                }
-              }).catch(e => console.warn('[Intelist Pro] Photo upload error:', e))
-            }
-          }
+          saveLocalListing({
+            id: newListing.id,
+            address,
+            mls_copy:       parsed.mls       ?? null,
+            marketing_copy: parsed.marketing ?? null,
+            social_copy:    parsed.social    ?? null,
+            created_at:     new Date().toISOString(),
+            tier:           applyPriceOverride(detectTier(address), detectPriceRange(combinedNotes + ' ' + (zillowBlock || ''))),
+            property_type:  detectPropertyType(combinedNotes + ' ' + (zillowBlock || '')),
+          })
         }
         setGenCount((c) => c + 1)
       } catch (e) {
@@ -2095,7 +2087,7 @@ Each section must bring new information or perspective — not restate what anot
               )}
               {isPro && <span className={styles.proBadge}>Pro ✦</span>}
               <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>
-              <button className={styles.historyBtn} onClick={() => setShowProfile(true)} title="Agent Profile">My Profile</button>
+              <button className={styles.historyBtn} onClick={() => setShowProfile(true)} title="에이전트 프로필 설정">내 프로필</button>
               <span className={styles.headerName}>
                 {user.user_metadata?.full_name ?? user.email}
               </span>
@@ -2383,16 +2375,6 @@ Each section must bring new information or perspective — not restate what anot
           )}
           {user && <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>}
           <button className={styles.newBtn} onClick={reset}>New listing</button>
-          {listingId && (
-            <button className={styles.videoBtn} onClick={() => setShowVideo(true)} title="Create listing video">
-              🎬 Create Video
-            </button>
-          )}
-          {listingId && (
-            <button className={styles.marketingBtn} onClick={() => setShowMarketing(true)} title="Marketing Kit">
-              🎨 Marketing Kit
-            </button>
-          )}
           {user && (
             <button className={styles.signOutBtn} onClick={handleSignOut}>Sign out</button>
           )}
@@ -2550,32 +2532,6 @@ Each section must bring new information or perspective — not restate what anot
         <FeedbackModal
           listingId={listingId}
           onClose={() => setShowFeedback(false)}
-        />
-      )}
-
-      {/* ── Video Generator (Phase 4) ── */}
-      {showVideo && (
-        <VideoGenerator
-          address={displayAddress}
-          results={results}
-          profile={profile}
-          photos={images}
-          photoUrls={storedPhotoUrls}
-          zillow={zillow}
-          onClose={() => setShowVideo(false)}
-        />
-      )}
-
-      {/* ── Marketing Kit (Phase 3) ── */}
-      {showMarketing && (
-        <MarketingModal
-          address={displayAddress}
-          results={results}
-          profile={profile}
-          photos={images}
-          photoUrls={storedPhotoUrls}
-          zillow={zillow}
-          onClose={() => setShowMarketing(false)}
         />
       )}
     </div>
