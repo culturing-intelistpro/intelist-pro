@@ -591,3 +591,105 @@
   font-weight: 500;
   margin: 0;
 }
+
+/* ─── 수정 요청 UI ───────────────────────────────────────────────────────── */
+
+.feedbackSection {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--bg-secondary, #F5F5F7);
+  border: 1px solid var(--border, rgba(0,0,0,0.08));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.feedbackLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-1, #1D1D1F);
+  margin: 0;
+}
+
+.feedbackHint {
+  font-size: 12px;
+  color: var(--text-2, #6E6E73);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.feedbackTextarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border, rgba(0,0,0,0.14));
+  background: var(--surface, #fff);
+  color: var(--text-1, #1D1D1F);
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 68px;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.feedbackTextarea:focus {
+  border-color: var(--accent, #D94035);
+}
+
+.applyBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 20px;
+  background: var(--accent, #D94035);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.applyBtn:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.applyBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.paramsApplied {
+  font-size: 12px;
+  color: #34C759;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* dark mode */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .feedbackSection {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.08);
+  }
+  :root:not([data-theme="light"]) .feedbackTextarea {
+    background: #1C1C1E;
+    border-color: rgba(255,255,255,0.12);
+    color: #F5F5F7;
+  }
+}
+:root[data-theme="dark"] .feedbackSection {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.08);
+}
+:root[data-theme="dark"] .feedbackTextarea {
+  background: #1C1C1E;
+  border-color: rgba(255,255,255,0.12);
+  color: #F5F5F7;
+}

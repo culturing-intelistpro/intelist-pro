@@ -4,6 +4,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { X, Play, Download, Film, Plus, Trash2, GripVertical } from 'lucide-react'
 import styles from './VideoGenerator.module.css'
+import { supabase } from './supabase'
 
 // ─── 슬라이드 구조 ────────────────────────────────────────────────────────────
 const SLIDE_DURATION = 5000
@@ -255,6 +256,25 @@ function renderEndCard(ctx, address, agent, brandColor, alpha) {
   ctx.globalAlpha = 1
 }
 
+// ─── 수정 요청 파라미터 파서 ─────────────────────────────────────────────────
+function parseFeedback(text) {
+  const t = text.toLowerCase()
+  const params = {}
+  if (t.includes('느리게') || t.includes('slower') || t.includes('천천히') || t.includes('길게'))
+    params.slideDuration = Math.min(SLIDE_DURATION * 1.4, 9000)
+  if (t.includes('빠르게') || t.includes('faster') || t.includes('빠른') || t.includes('짧게'))
+    params.slideDuration = Math.max(SLIDE_DURATION * 0.65, 2000)
+  if (t.includes('글씨 크게') || t.includes('폰트 크게') || t.includes('텍스트 크게') || t.includes('larger'))
+    params.fontScale = 1.2
+  if (t.includes('글씨 작게') || t.includes('폰트 작게') || t.includes('smaller'))
+    params.fontScale = 0.82
+  if (t.includes('부드럽게') || t.includes('smoother') || t.includes('전환 느리게'))
+    params.fadeDuration = Math.min(FADE_DURATION * 1.6, 800)
+  if (t.includes('전환 빠르게') || t.includes('transition faster'))
+    params.fadeDuration = Math.max(FADE_DURATION * 0.5, 80)
+  return params
+}
+
 // ─── 메인 컴포넌트 ────────────────────────────────────────────────────────────
 export default function VideoGenerator({ address, results, profile, photos, photoUrls, zillow, onClose }) {
   const canvasRef  = useRef(null)
@@ -281,6 +301,9 @@ export default function VideoGenerator({ address, results, profile, photos, phot
 
   const [managedPhotos, setManagedPhotos] = useState(initPhotos)
   const [dragIdx, setDragIdx] = useState(null)
+  const [feedbackText, setFeedbackText] = useState('')
+  const [feedbackSaving, setFeedbackSaving] = useState(false)
+  const [appliedParams, setAppliedParams] = useState({})
 
   const brandColor = profile?.brand_color || '#D94035'
   const agent = {
@@ -290,7 +313,7 @@ export default function VideoGenerator({ address, results, profile, photos, phot
     website_url: profile?.website_url || '',
   }
 
-  const totalMs = TITLE_DURATION + managedPhotos.length * SLIDE_DURATION + END_DURATION
+  const totalMsEst = TITLE_DURATION + managedPhotos.length * (appliedParams.slideDuration ?? SLIDE_DURATION) + END_DURATION
 
   // 사진 추가
   const handleAddPhotos = async (e) => {
@@ -326,9 +349,13 @@ export default function VideoGenerator({ address, results, profile, photos, phot
   const onDragEnd = () => setDragIdx(null)
 
   // 영상 생성
-  const generate = async () => {
+  const generate = async (overrideParams = {}) => {
     if (status === 'generating' || managedPhotos.length < 1) return
     setStatus('generating'); setProgress(0); setBlobUrl(null)
+    const params = { ...appliedParams, ...overrideParams }
+    const SLIDE_DUR  = params.slideDuration ?? SLIDE_DURATION
+    const FADE_DUR   = params.fadeDuration  ?? FADE_DURATION
+    const FONT_SCALE = params.fontScale     ?? 1
     chunksRef.current = []
 
     const canvas = canvasRef.current
@@ -346,6 +373,7 @@ export default function VideoGenerator({ address, results, profile, photos, phot
 
     const mimeTypes = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
     const mimeType  = mimeTypes.find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm'
+    const totalMs = TITLE_DURATION + managedPhotos.length * SLIDE_DUR + END_DURATION
     const stream    = canvas.captureStream(TARGET_FPS)
     const recorder  = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 })
     recRef.current  = recorder
@@ -373,22 +401,22 @@ export default function VideoGenerator({ address, results, profile, photos, phot
       }
 
       if (elapsed < TITLE_DURATION) {
-        const alpha = elapsed < FADE_DURATION ? elapsed / FADE_DURATION : 1
+        const alpha = elapsed < FADE_DUR ? elapsed / FADE_DUR : 1
         renderTitleCard(ctx, address, agent, brandColor, alpha, zillow)
       } else {
         const afterTitle  = elapsed - TITLE_DURATION
-        const slideIdx    = Math.floor(afterTitle / SLIDE_DURATION)
+        const slideIdx    = Math.floor(afterTitle / SLIDE_DUR)
         if (slideIdx >= imgs.length) {
-          const endElapsed = afterTitle - imgs.length * SLIDE_DURATION
-          const alpha = endElapsed < FADE_DURATION ? endElapsed / FADE_DURATION : 1
+          const endElapsed = afterTitle - imgs.length * SLIDE_DUR
+          const alpha = endElapsed < FADE_DUR ? endElapsed / FADE_DUR : 1
           renderEndCard(ctx, address, agent, brandColor, alpha)
         } else {
-          const withinSlide    = afterTitle - slideIdx * SLIDE_DURATION
-          const slideProgress  = withinSlide / SLIDE_DURATION
+          const withinSlide    = afterTitle - slideIdx * SLIDE_DUR
+          const slideProgress  = withinSlide / SLIDE_DUR
           let alpha = 1
-          if (withinSlide < FADE_DURATION) alpha = withinSlide / FADE_DURATION
-          else if (withinSlide > SLIDE_DURATION - FADE_DURATION)
-            alpha = (SLIDE_DURATION - withinSlide) / FADE_DURATION
+          if (withinSlide < FADE_DUR) alpha = withinSlide / FADE_DUR
+          else if (withinSlide > SLIDE_DUR - FADE_DUR)
+            alpha = (SLIDE_DUR - withinSlide) / FADE_DUR
           renderPhotoSlide(ctx, imgs[slideIdx], address, agent, brandColor, slideProgress, Math.max(0, Math.min(1, alpha)))
         }
       }
@@ -407,6 +435,28 @@ export default function VideoGenerator({ address, results, profile, photos, phot
     cancelAnimationFrame(rafRef.current)
     if (blobUrl) URL.revokeObjectURL(blobUrl)
   }, [blobUrl])
+
+  const handleApplyFeedback = async () => {
+    if (!feedbackText.trim()) return
+    setFeedbackSaving(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const parsed = parseFeedback(feedbackText)
+      await supabase.from('video_feedback').insert({
+        user_id: user?.id ?? null,
+        feedback_text: feedbackText.trim(),
+        applied: true,
+        params_json: parsed,
+      })
+    } catch (err) {
+      console.warn('video_feedback 저장 실패:', err)
+    }
+    const newParams = parseFeedback(feedbackText)
+    setAppliedParams(newParams)
+    setFeedbackText('')
+    setFeedbackSaving(false)
+    generate(newParams)
+  }
 
   const downloadVideo = () => {
     if (!blobUrl) return
@@ -529,8 +579,8 @@ export default function VideoGenerator({ address, results, profile, photos, phot
             {/* 영상 정보 & 액션 */}
             <div className={styles.statusSection}>
               <p className={styles.durationLabel}>
-                예상 길이: <strong>{Math.round(totalMs / 1000)}초</strong>
-                {' '}(오프닝 3s + 사진 {photoCount}장 × 5s + 클로징 5s)
+                예상 길이: <strong>{Math.round(totalMsEst / 1000)}초</strong>
+                {' '}(오프닝 3s + 사진 {photoCount}장 × {(appliedParams.slideDuration ?? SLIDE_DURATION) / 1000}s + 클로징 5s)
               </p>
 
               {photoCount < 3 && photoCount > 0 && (
@@ -555,12 +605,47 @@ export default function VideoGenerator({ address, results, profile, photos, phot
                     <button className={styles.downloadBtn} onClick={downloadVideo}>
                       <Download size={16} /> Download .webm
                     </button>
-                    <button className={styles.regenBtn} onClick={generate}>
+                    <button className={styles.regenBtn} onClick={() => generate()}>
                       <Play size={14} /> Regenerate
                     </button>
                   </>
                 )}
               </div>
+              {/* ── 수정 요청 UI ───────────────────────────────────────── */}
+              {status === 'done' && (
+                <div className={styles.feedbackSection}>
+                  <p className={styles.feedbackLabel}>✏️ 수정 요청</p>
+                  <p className={styles.feedbackHint}>
+                    예: "조금 더 느리게" · "글씨 크게" · "전환 부드럽게"
+                  </p>
+                  <textarea
+                    className={styles.feedbackTextarea}
+                    placeholder="수정하고 싶은 부분을 자유롭게 작성하세요..."
+                    value={feedbackText}
+                    onChange={e => setFeedbackText(e.target.value)}
+                    rows={3}
+                  />
+                  <button
+                    className={styles.applyBtn}
+                    onClick={handleApplyFeedback}
+                    disabled={!feedbackText.trim() || feedbackSaving}>
+                    {feedbackSaving ? '저장 중...' : '✦ 수정 적용 후 재생성'}
+                  </button>
+                  {Object.keys(appliedParams).length > 0 && (
+                    <p className={styles.paramsApplied}>
+                      ✓ 적용됨:{' '}
+                      {[
+                        appliedParams.slideDuration != null &&
+                          `슬라이드 ${appliedParams.slideDuration / 1000}s`,
+                        appliedParams.fontScale != null &&
+                          `폰트 ×${appliedParams.fontScale}`,
+                        appliedParams.fadeDuration != null &&
+                          `페이드 ${appliedParams.fadeDuration}ms`,
+                      ].filter(Boolean).join(' · ')}
+                    </p>
+                  )}
+                </div>
+              )}
 
               <p className={styles.techNote}>
                 브라우저에서 직접 렌더링 · API 비용 없음 · Instagram Reels, TikTok, YouTube Shorts 호환
