@@ -704,7 +704,7 @@ const ONBOARDING_STEPS = [
   { targetId: 'tour-record-btn',   emoji: '🎙️', title: 'Voice Input',           message: "Prefer to talk it out? Hit record and describe the home — we'll transcribe your words and weave them in." },
   { targetId: 'tour-photos-btn',   emoji: '📸', title: 'Photos & Documents',    message: 'Upload 5–10 listing photos and your MLS sheet. The photos you choose signal what makes this home special — we read that.' },
   { targetId: 'tour-style-btn',    emoji: '✍️', title: 'Your Writing Style',    message: 'Paste a few of your past listing descriptions. We study your voice and match it — so every output sounds like you wrote it.' },
-  { targetId: 'tour-submit-arrow', emoji: '✨', title: "You're All Set",         message: 'Hit the arrow to generate MLS copy, a Zillow 'What\'s Special' description, and a social media caption — all in seconds.' },
+  { targetId: 'tour-submit-arrow', emoji: '✨', title: "You're All Set",         message: "Hit the arrow to generate MLS copy, a Zillow 'What’s Special' description, and a social media caption — all in seconds." },
 ]
 
 // ─── Coming Soon ────────────────────────────────────────────────────────────────
