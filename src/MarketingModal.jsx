@@ -2,7 +2,7 @@
 // 브로셔 (세로/가로 전환) + SNS 소셜 템플릿 + PNG/PDF 다운로드
 // Canvas API 기반, 브라우저 내장 렌더링 (API 비용 0원)
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { X, Download, Image, FileText, RotateCcw, Smartphone } from 'lucide-react'
+import { X, Download, Image, FileText, RotateCcw, Smartphone, Video } from 'lucide-react'
 import styles from './MarketingModal.module.css'
 
 // ─── 캔버스 치수 ─────────────────────────────────────────────────────────────
@@ -453,6 +453,189 @@ async function renderBrochureDark(canvas, { orientation, address, results, profi
   }
 }
 
+// ─── VIDEO 렌더러 ────────────────────────────────────────────────────────────
+// canvas.captureStream() + MediaRecorder로 WebM 생성 (비용 0원)
+async function renderVideo(canvas, { address, results, profile, photos, photoUrls, zillow }) {
+  const W = 1080; const H = 1080
+  canvas.width = W; canvas.height = H
+  const ctx = canvas.getContext('2d')
+  const BRAND = profile?.brand_color || '#D94035'
+  const FPS   = 30
+  const SLIDE_DUR = 3.0 // 슬라이드당 3초
+  const TRANS_DUR = 0.4 // 전환 0.4초
+
+  const imgSrcs = [
+    ...photos.filter(p => !p.isPDF).map(p => p.preview || `data:image/jpeg;base64,${p.base64}`),
+    ...photoUrls,
+  ].filter(Boolean)
+
+  let imgs = []
+  try { imgs = await Promise.all(imgSrcs.slice(0, 8).map(loadImage)) } catch {}
+
+  let agentImg = null
+  if (profile?.agent_photo_url) { try { agentImg = await loadImage(profile.agent_photo_url) } catch {} }
+
+  const parts = address.split(',')
+  const streetAddr = parts[0] || address
+  const cityAddr   = parts.slice(1).join(',').trim()
+  const specs = []
+  if (zillow?.beds)  specs.push(`${zillow.beds} Beds`)
+  if (zillow?.baths) specs.push(`${zillow.baths} Baths`)
+  if (zillow?.sqft)  specs.push(`${Number(zillow.sqft).toLocaleString()} sqft`)
+  if (zillow?.price) specs.push(zillow.price)
+
+  // ── 슬라이드 정의 ──
+  const slides = []
+  // 슬라이드 0: 커버 (JUST LISTED + 주소)
+  slides.push({ type: 'cover', img: imgs[0] || null })
+  // 슬라이드 1~N: 각 사진
+  for (let i = 1; i < Math.min(imgs.length, 6); i++) slides.push({ type: 'photo', img: imgs[i], idx: i })
+  // 마지막 슬라이드: 에이전트
+  slides.push({ type: 'agent' })
+
+  // 슬라이드 그리기 함수
+  function drawSlide(slide, progress) {
+    ctx.clearRect(0, 0, W, H)
+    const img = slide.img
+
+    if (slide.type === 'cover') {
+      // 배경
+      if (img) { drawCover(ctx, img, 0, 0, W, H) } else { ctx.fillStyle = BRAND; ctx.fillRect(0, 0, W, H) }
+      // 다크 그라디언트
+      const g = ctx.createLinearGradient(0, H * 0.2, 0, H)
+      g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.82)')
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H)
+      // BRAND 좌측 바
+      ctx.fillStyle = BRAND; ctx.fillRect(0, 0, 10, H)
+
+      const fadeIn = Math.min(1, progress * 3)
+      ctx.globalAlpha = fadeIn
+
+      // JUST LISTED 배지
+      ctx.fillStyle = BRAND
+      roundRect(ctx, 80, H * 0.50, 280, 58, 29); ctx.fill()
+      ctx.fillStyle = '#fff'; ctx.font = `bold 24px system-ui, sans-serif`
+      ctx.letterSpacing = '3px'; ctx.fillText('JUST LISTED', 110, H * 0.50 + 38); ctx.letterSpacing = '0px'
+
+      // 주소
+      ctx.fillStyle = '#fff'; ctx.font = `bold 80px system-ui, sans-serif`
+      wrapText(ctx, streetAddr, 80, H * 0.58, W - 160, 90, 2)
+      if (cityAddr) { ctx.fillStyle = 'rgba(255,255,255,0.60)'; ctx.font = `40px system-ui, sans-serif`; ctx.fillText(cityAddr, 80, H * 0.58 + 200) }
+
+      // 스펙 / 가격
+      if (specs.length) {
+        ctx.fillStyle = 'rgba(255,255,255,0.80)'; ctx.font = `bold 40px system-ui, sans-serif`
+        ctx.fillText(specs.slice(0, 3).join('  ·  '), 80, H * 0.82)
+      }
+      if (zillow?.price) { ctx.fillStyle = BRAND; ctx.font = `bold 56px system-ui, sans-serif`; ctx.fillText(zillow.price, 80, H * 0.88) }
+
+      ctx.globalAlpha = 1
+      // 하단 바
+      ctx.fillStyle = BRAND; ctx.fillRect(0, H - 10, W, 10)
+
+    } else if (slide.type === 'photo') {
+      if (img) { drawCover(ctx, img, 0, 0, W, H) } else { ctx.fillStyle = '#1A1A1A'; ctx.fillRect(0, 0, W, H) }
+      // 하단 오버레이
+      const g2 = ctx.createLinearGradient(0, H * 0.65, 0, H)
+      g2.addColorStop(0, 'rgba(0,0,0,0)'); g2.addColorStop(1, 'rgba(0,0,0,0.70)')
+      ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H)
+
+      const fadeIn = Math.min(1, progress * 3)
+      ctx.globalAlpha = fadeIn
+
+      ctx.fillStyle = '#fff'; ctx.font = `bold 52px system-ui, sans-serif`
+      wrapText(ctx, streetAddr, 60, H * 0.78, W - 120, 62, 2)
+      if (cityAddr) { ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.font = `34px system-ui, sans-serif`; ctx.fillText(cityAddr, 60, H * 0.78 + 140) }
+
+      ctx.globalAlpha = 1
+      ctx.fillStyle = BRAND; ctx.fillRect(0, 0, 10, H)
+      ctx.fillStyle = BRAND; ctx.fillRect(0, H - 10, W, 10)
+
+    } else if (slide.type === 'agent') {
+      ctx.fillStyle = '#F8F8F8'; ctx.fillRect(0, 0, W, H)
+      ctx.fillStyle = BRAND; ctx.fillRect(0, 0, W, 14)
+
+      const fadeIn = Math.min(1, progress * 3)
+      ctx.globalAlpha = fadeIn
+
+      // 에이전트 사진
+      if (agentImg) {
+        const agR = 160; const agCX = W / 2; const agCY = H * 0.35
+        drawCirclePhoto(ctx, agentImg, agCX, agCY, agR, BRAND)
+      }
+
+      // 이름 + 정보
+      const nameY = agentImg ? H * 0.60 : H * 0.40
+      ctx.fillStyle = '#1A1A1A'; ctx.font = `bold 72px system-ui, sans-serif`
+      ctx.textAlign = 'center'
+      ctx.fillText(profile?.full_name || 'Your Agent', W / 2, nameY)
+      ctx.fillStyle = BRAND; ctx.font = `bold 44px system-ui, sans-serif`
+      ctx.fillText(profile?.brokerage || '', W / 2, nameY + 68)
+      ctx.fillStyle = '#555'; ctx.font = `38px system-ui, sans-serif`
+      if (profile?.phone) ctx.fillText(profile.phone, W / 2, nameY + 128)
+      if (profile?.website_url) ctx.fillText(profile.website_url.replace(/^https?:\/\//, ''), W / 2, nameY + 176)
+      ctx.textAlign = 'left'
+
+      // JUST LISTED 주소 다시
+      ctx.fillStyle = BRAND; ctx.fillRect(80, H * 0.84, W - 160, 3)
+      ctx.fillStyle = '#888'; ctx.font = `34px system-ui, sans-serif`; ctx.textAlign = 'center'
+      ctx.fillText(address, W / 2, H * 0.91)
+      ctx.textAlign = 'left'
+
+      ctx.globalAlpha = 1
+      ctx.fillStyle = BRAND; ctx.fillRect(0, H - 14, W, 14)
+    }
+  }
+
+  // ── MediaRecorder로 WebM 녹화 ──
+  const stream = canvas.captureStream(FPS)
+  const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+    ? 'video/webm;codecs=vp9'
+    : 'video/webm'
+  const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 4_000_000 })
+  const chunks = []
+  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data) }
+
+  return new Promise((resolve, reject) => {
+    recorder.onstop = () => {
+      const blob = new Blob(chunks, { type: mimeType })
+      resolve(blob)
+    }
+    recorder.onerror = e => reject(e)
+    recorder.start()
+
+    let slideIdx = 0
+    let elapsed  = 0
+    let lastTs   = null
+
+    function tick(ts) {
+      if (lastTs === null) lastTs = ts
+      const dt = (ts - lastTs) / 1000
+      lastTs = ts
+      elapsed += dt
+
+      const slide = slides[slideIdx]
+      const cycleT = slideIdx < slides.length - 1 ? SLIDE_DUR : SLIDE_DUR
+      const progress = elapsed / cycleT
+
+      // 전환 효과: 마지막 0.4초는 페이드
+      const fadeOut = elapsed > cycleT - TRANS_DUR ? 1 - (cycleT - elapsed) / TRANS_DUR : 1
+      drawSlide(slide, progress)
+
+      if (elapsed >= cycleT) {
+        slideIdx++
+        elapsed = 0
+        if (slideIdx >= slides.length) {
+          recorder.stop()
+          return
+        }
+      }
+      requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  })
+}
+
 // ─── SNS 템플릿 렌더러 ───────────────────────────────────────────────────────
 async function renderSNS(canvas, { format, address, results, profile, photos, photoUrls, zillow }) {
   const dim = SNS[format]
@@ -622,6 +805,7 @@ export default function MarketingModal({ address, results, profile, photos = [],
   const [rendered,    setRendered]    = useState(false)
   const [errMsg,      setErrMsg]      = useState('')
   const [template,    setTemplate]    = useState('classic')
+  const [videoBlob,   setVideoBlob]   = useState(null)
 
   // ─── 독립 모드: 자체 입력값 (props로 초기화, 직접 편집 가능) ───────────────
   const [propAddr,  setPropAddr]  = useState(address || '')
@@ -677,6 +861,11 @@ export default function MarketingModal({ address, results, profile, photos = [],
         if (template === 'modern') await renderBrochureModern(canvas, { ...renderData, orientation })
         else if (template === 'dark') await renderBrochureDark(canvas, { ...renderData, orientation })
         else await renderBrochureClassic(canvas, { ...renderData, orientation })
+      } else if (tab === 'video') {
+        const blob = await renderVideo(canvas, { ...renderData })
+        setVideoBlob(blob)
+        setRendered(true)
+        return
       } else {
         await renderSNS(canvas, { ...renderData, format: snsFormat })
       }
@@ -712,7 +901,17 @@ export default function MarketingModal({ address, results, profile, photos = [],
     a.click()
   }
 
-  const currentDim = tab === 'brochure' ? BROCHURE[orientation] : SNS[snsFormat]
+  const downloadVideo = () => {
+    if (!videoBlob) return
+    const a = document.createElement('a')
+    const slug = address.split(',')[0].replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '')
+    a.href = URL.createObjectURL(videoBlob)
+    a.download = `${slug}_slideshow.webm`
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000)
+  }
+
+  const currentDim = tab === 'brochure' ? BROCHURE[orientation] : (tab === 'sns' ? SNS[snsFormat] : { label: '1080×1080 · WebM Video' })
 
   return (
     <div className={styles.overlay} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
@@ -733,7 +932,13 @@ export default function MarketingModal({ address, results, profile, photos = [],
           {/* 좌측: 미리보기 */}
           <div className={styles.previewCol}>
             <div className={`${styles.previewFrame} ${tab === 'brochure' && orientation === 'landscape' ? styles.landscape : ''}`}>
-              {rendered ? (
+              {rendered && tab === 'video' && videoBlob ? (
+                <div className={styles.videoDone}>
+                  <Video size={36} style={{ color: 'var(--brand, #D94035)' }} />
+                  <p style={{ marginTop: 8, fontWeight: 600 }}>Video ready!</p>
+                  <p style={{ fontSize: 12, opacity: 0.6 }}>Click WebM to download</p>
+                </div>
+              ) : rendered ? (
                 <img ref={previewRef} className={styles.previewImg} alt="Marketing material preview" />
               ) : (
                 <div className={styles.previewPlaceholder}>
@@ -795,7 +1000,7 @@ export default function MarketingModal({ address, results, profile, photos = [],
               )}
             </div>
 
-            {/* 탭: Brochure / SNS */}
+            {/* 탭: Brochure / SNS / Video */}
             <div className={styles.tabRow}>
               <button
                 className={`${styles.tabBtn} ${tab === 'brochure' ? styles.tabBtnActive : ''}`}
@@ -806,6 +1011,11 @@ export default function MarketingModal({ address, results, profile, photos = [],
                 className={`${styles.tabBtn} ${tab === 'sns' ? styles.tabBtnActive : ''}`}
                 onClick={() => { setTab('sns'); setRendered(false) }}>
                 <Smartphone size={15} /> SNS
+              </button>
+              <button
+                className={`${styles.tabBtn} ${tab === 'video' ? styles.tabBtnActive : ''}`}
+                onClick={() => { setTab('video'); setRendered(false); setVideoBlob(null) }}>
+                <Video size={15} /> Video
               </button>
             </div>
 
@@ -866,6 +1076,20 @@ export default function MarketingModal({ address, results, profile, photos = [],
               </div>
             )}
 
+            {/* Video 옵션 */}
+            {tab === 'video' && (
+              <div className={styles.section}>
+                <p className={styles.sectionTitle}>Slideshow Video</p>
+                <p className={styles.hint}>
+                  Property photos → address slide → agent card<br />
+                  ~{Math.max(2, (localPhotos.filter(p=>!p.isPDF).length + 1))}x 3 sec · Square 1080×1080 · WebM
+                </p>
+                <p className={styles.hint} style={{ marginTop: 8, color: 'var(--brand, #D94035)' }}>
+                  ⚠️ Rendering takes a few seconds per slide — please wait
+                </p>
+              </div>
+            )}
+
             {/* 에이전트 정보 확인 */}
             <div className={styles.agentCheck}>
               <p className={styles.sectionTitle}>Design DNA</p>
@@ -892,7 +1116,7 @@ export default function MarketingModal({ address, results, profile, photos = [],
                   <><RotateCcw size={15} /> {rendered ? 'Re-generate' : 'Generate'}</>
                 )}
               </button>
-              {rendered && (
+              {rendered && tab !== 'video' && (
                 <>
                   <button className={styles.dlBtn} onClick={downloadPNG}>
                     <Download size={14} /> PNG
@@ -901,6 +1125,11 @@ export default function MarketingModal({ address, results, profile, photos = [],
                     <Download size={14} /> JPEG
                   </button>
                 </>
+              )}
+              {rendered && tab === 'video' && videoBlob && (
+                <button className={styles.dlBtn} onClick={downloadVideo}>
+                  <Download size={14} /> WebM
+                </button>
               )}
             </div>
 
