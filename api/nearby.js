@@ -77,17 +77,29 @@ const MALL_PLACES = [
 // Text Search also returns sub-departments at the same address (pharmacy,
 // bakery, deli, floral, gas station, optical, etc.) that must be filtered out.
 const SHOPPING_CHAINS = [
-  { name: 'Whole Foods',         query: 'Whole Foods Market',  variants: ['whole foods market'] },
-  { name: 'Wegmans',             query: 'Wegmans',             variants: ['wegmans'] },
-  { name: "Trader Joe's",        query: "Trader Joe's",        variants: ["trader joe's", 'trader joes'] },
-  { name: 'Harris Teeter',       query: 'Harris Teeter',       variants: ['harris teeter'] },
-  { name: 'Safeway',             query: 'Safeway',             variants: ['safeway'] },
-  { name: 'Giant',               query: 'Giant Food',          variants: ['giant food', 'giant'] },
-  { name: 'Costco',              query: 'Costco Wholesale',    variants: ['costco wholesale', 'costco'] },
-  { name: "BJ's Wholesale Club", query: "BJ's Wholesale Club", variants: ["bj's wholesale club", 'bjs wholesale club'] },
-  { name: "Sam's Club",          query: "Sam's Club",          variants: ["sam's club", 'sams club'] },
-  { name: 'Walmart',             query: 'Walmart Supercenter', variants: ['walmart supercenter', 'walmart'] },
-  { name: 'Target',              query: 'Target',              variants: ['target'] },
+  // Premium / natural
+  { name: 'Whole Foods',         query: 'Whole Foods Market',       variants: ['whole foods market'] },
+  { name: 'Wegmans',             query: 'Wegmans',                  variants: ['wegmans'] },
+  { name: "Trader Joe's",        query: "Trader Joe's",             variants: ["trader joe's", 'trader joes'] },
+  // Traditional grocery
+  { name: 'Harris Teeter',       query: 'Harris Teeter',            variants: ['harris teeter'] },
+  { name: 'Safeway',             query: 'Safeway',                  variants: ['safeway'] },
+  { name: 'Giant',               query: 'Giant Food',               variants: ['giant food', 'giant'] },
+  { name: 'Food Lion',           query: 'Food Lion',                variants: ['food lion'] },
+  { name: 'Kroger',              query: 'Kroger',                   variants: ['kroger'] },
+  { name: 'Publix',              query: 'Publix',                   variants: ['publix'] },
+  // Discount grocery
+  { name: 'Aldi',                query: 'Aldi',                     variants: ['aldi'] },
+  { name: 'Lidl',                query: 'Lidl',                     variants: ['lidl'] },
+  // Asian grocery (well-known in NoVA)
+  { name: 'H Mart',              query: 'H Mart',                   variants: ['h mart', 'hmart'] },
+  { name: 'Lotte Plaza Market',  query: 'Lotte Plaza Market',       variants: ['lotte plaza market', 'lotte plaza'] },
+  // Warehouse / big box
+  { name: 'Costco',              query: 'Costco Wholesale',         variants: ['costco wholesale', 'costco'] },
+  { name: "BJ's Wholesale Club", query: "BJ's Wholesale Club",      variants: ["bj's wholesale club", 'bjs wholesale club'] },
+  { name: "Sam's Club",          query: "Sam's Club",               variants: ["sam's club", 'sams club'] },
+  { name: 'Walmart',             query: 'Walmart Supercenter',      variants: ['walmart supercenter', 'walmart'] },
+  { name: 'Target',              query: 'Target',                   variants: ['target'] },
 ]
 
 // Every place across the fixed-coordinate categories, in a fixed flat order —
@@ -289,7 +301,7 @@ export default async function handler(req, res) {
       })
       .filter(Boolean)
       .sort((a, b) => a.distanceMeters - b.distanceMeters)
-      .slice(0, 3)
+      .slice(0, 5)
 
     const walkableMalls = MALL_PLACES
       .map((mall, i) => {
