@@ -449,7 +449,7 @@ function useRelativeTime(timestamp) {
 }
 
 // ─── Result card ───────────────────────────────────────────────────────────────
-function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, initialVerb = 'Generated', revisingAll = false, onTrackEvent }) {
+function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, initialVerb = 'Generated', revisingAll = false, onTrackEvent, onCopy }) {
   const [text, setText]                   = useState(content)
   const [original]                        = useState(content)
   const [isEditing, setIsEditing]         = useState(false)
@@ -558,6 +558,7 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
             text_length:  text.length,
             was_modified: text !== original,
           })
+          onCopy?.()
           // Also keep the legacy sections_copied array for backward compat
           if (listingId && sectionKey) {
             const { data } = await supabase.from('listings').select('sections_copied').eq('id', listingId).single()
@@ -962,6 +963,8 @@ export default function App() {
   const [nearby, setNearby]               = useState(null)
   const [results, setResults]             = useState(null)
   const [activeTab, setActiveTab]         = useState('mls')
+  const [visitedTabs, setVisitedTabs]     = useState(new Set(['mls']))
+  const [showMlsNudge, setShowMlsNudge]   = useState(false)
   const [error, setError]                 = useState(null)
   const [activePanel, setActivePanel]     = useState(null) // 'notes'|'record'|'photos'|'style'|null
   const [styleFiles, setStyleFiles]       = useState([])
@@ -1797,7 +1800,7 @@ Each section must bring new information or perspective — not restate what anot
     setActivePanel(null); setStyleFiles([])
     images.forEach((img) => URL.revokeObjectURL(img.preview))
     setImages([]); setListingId(null); setZillowData(null); setDirections(null); setNearby(null)
-    setActiveTab('mls'); setElapsedMs(null)
+    setActiveTab('mls'); setElapsedMs(null); setVisitedTabs(new Set(['mls'])); setShowMlsNudge(false)
   }
 
   // ── Opt button class helper ─────────────────────────────────────────────────
@@ -2228,9 +2231,19 @@ Each section must bring new information or perspective — not restate what anot
               role="tab"
               aria-selected={activeTab === t.key}
               className={`${styles.tabBtn} ${activeTab === t.key ? styles.tabBtnActive : ''}`}
-              onClick={() => setActiveTab(t.key)}
+              onClick={() => {
+                setActiveTab(t.key)
+                setVisitedTabs((prev) => new Set([...prev, t.key]))
+              }}
             >
               {t.label}
+              {!visitedTabs.has(t.key) && activeTab !== t.key && (
+                <span style={{
+                  display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
+                  background: '#0071E3', marginLeft: 5, verticalAlign: 'middle',
+                  marginBottom: 2, flexShrink: 0,
+                }} />
+              )}
             </button>
           ))}
         </div>
@@ -2239,7 +2252,36 @@ Each section must bring new information or perspective — not restate what anot
           {/* MLS / Zillow / Instagram stay mounted (so edits, drafts, and undo state
               survive tab switches) — only their visibility toggles. */}
           <div style={{ display: activeTab === 'mls' ? 'block' : 'none' }}>
-            <ResultCard key={`mls-${reviseAllCount}`} tag="MLS Description" sublabel="Short description · 200–250 words" content={results.mls} onChange={(t) => setResults((r) => ({ ...r, mls: t }))} listingId={listingId} sectionKey="mls" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} />
+            <ResultCard key={`mls-${reviseAllCount}`} tag="MLS Description" sublabel="Short description · 200–250 words" content={results.mls} onChange={(t) => setResults((r) => ({ ...r, mls: t }))} listingId={listingId} sectionKey="mls" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} onCopy={() => { if (!visitedTabs.has('zillow') || !visitedTabs.has('instagram')) setShowMlsNudge(true) }} />
+            {showMlsNudge && (!visitedTabs.has('zillow') || !visitedTabs.has('instagram')) && (
+              <div style={{
+                marginTop: 10, padding: '12px 16px', background: '#EFF6FF',
+                border: '1px solid #BFDBFE', borderRadius: 12,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+              }}>
+                <span style={{ fontSize: 13, color: '#1E40AF', lineHeight: 1.4 }}>
+                  ✨ You also have{!visitedTabs.has('zillow') && !visitedTabs.has('instagram') ? " What's Special + Social Media" : !visitedTabs.has('zillow') ? " a What's Special" : " a Social Media"} caption ready.
+                </span>
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  {!visitedTabs.has('zillow') && (
+                    <button onClick={() => { setActiveTab('zillow'); setVisitedTabs((p) => new Set([...p, 'zillow'])); setShowMlsNudge(false) }}
+                      style={{ background: '#0071E3', color: '#fff', border: 'none', borderRadius: 20, padding: '5px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      What's Special
+                    </button>
+                  )}
+                  {!visitedTabs.has('instagram') && (
+                    <button onClick={() => { setActiveTab('instagram'); setVisitedTabs((p) => new Set([...p, 'instagram'])); setShowMlsNudge(false) }}
+                      style={{ background: '#0071E3', color: '#fff', border: 'none', borderRadius: 20, padding: '5px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      Social Media
+                    </button>
+                  )}
+                  <button onClick={() => setShowMlsNudge(false)}
+                    style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: 16, cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           <div style={{ display: activeTab === 'zillow' ? 'block' : 'none' }}>
             <ResultCard key={`zillow-${reviseAllCount}`} tag="Listing Portal" sublabel="Long form · 300–400 words" content={results.marketing} onChange={(t) => setResults((r) => ({ ...r, marketing: t }))} listingId={listingId} sectionKey="zillow" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} />
