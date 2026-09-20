@@ -102,6 +102,36 @@
 }
 .historyBtn:hover { background: var(--accent); color: #FFFFFF; }
 
+.videoBtn {
+  background: #1D1D1F;
+  border: none;
+  border-radius: var(--r-pill);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 9px 18px;
+  transition: background 0.15s, transform 0.1s;
+  letter-spacing: -0.01em;
+}
+.videoBtn:hover { background: #333; transform: translateY(-1px); }
+
+.marketingBtn {
+  background: var(--accent, #D94035);
+  border: none;
+  border-radius: var(--r-pill);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 9px 18px;
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: -0.01em;
+}
+.marketingBtn:hover { opacity: 0.88; transform: translateY(-1px); }
+
 /* â”€â”€ History modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .historyOverlay {
   position: fixed;
