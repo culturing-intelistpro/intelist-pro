@@ -946,7 +946,7 @@ Use only data found on Zillow. Set any unfound field to null.`,
           <div className={styles.headerLeft}>
             <Image size={20} style={{ color: 'var(--icon)' }} />
             <div>
-              <h2 className={styles.title}>D-Lap</h2>
+              <h2 className={styles.title}>D-Lab</h2>
               <p className={styles.sub}>Brochure · SNS · PNG / JPEG Download</p>
             </div>
           </div>

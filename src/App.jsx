@@ -2169,7 +2169,7 @@ Each section must bring new information or perspective — not restate what anot
               {isPro && <span className={styles.proBadge}>Pro ✦</span>}
               <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>
               <button className={styles.marketingBtn} onClick={() => setShowMarketing(true)}>
-                🎨 D-Lap
+                🎨 D-Lab
               </button>
               <span className={styles.headerName}>
                 {user.user_metadata?.full_name ?? user.email}
@@ -2458,7 +2458,7 @@ Each section must bring new information or perspective — not restate what anot
           )}
           <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>
           <button className={styles.marketingBtn} onClick={() => setShowMarketing(true)}>
-            🎨 D-Lap
+            🎨 D-Lab
           </button>
           <button className={styles.newBtn} onClick={reset}>New listing</button>
           {user && (
