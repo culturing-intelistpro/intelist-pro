@@ -328,81 +328,48 @@ function GenerateCountdown({ loading, startTimeRef }) {
   const topH  = Math.round(48 * (1 - pct))   // top sand height — shrinks
   const botH  = Math.round(48 * pct)           // bottom sand height — grows
 
+  // 원 둘레 계산: r=26 → circumference ≈ 163.4
+  const r   = 26
+  const circ = 2 * Math.PI * r
+  const dash = circ * (1 - pct)
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-      <svg width="72" height="116" viewBox="0 0 64 108" style={{ overflow: 'visible' }}>
-        <defs>
-          {/* Top bulb clip — triangle pointing down */}
-          <clipPath id="hgTop">
-            <polygon points="2,4 62,4 32,52"/>
-          </clipPath>
-          {/* Bottom bulb clip — triangle pointing up */}
-          <clipPath id="hgBot">
-            <polygon points="32,56 62,104 2,104"/>
-          </clipPath>
-        </defs>
-
-        {/* ── Hourglass frame ── */}
-        {/* Top outer border */}
-        <path d="M2,4 L62,4 L32,52 Z"
-              fill="none" stroke="#D1D1D6" strokeWidth="2" strokeLinejoin="round"/>
-        {/* Bottom outer border */}
-        <path d="M32,56 L62,104 L2,104 Z"
-              fill="none" stroke="#D1D1D6" strokeWidth="2" strokeLinejoin="round"/>
-        {/* Horizontal caps */}
-        <line x1="0" y1="4"   x2="64" y2="4"   stroke="#D1D1D6" strokeWidth="2.5" strokeLinecap="round"/>
-        <line x1="0" y1="104" x2="64" y2="104" stroke="#D1D1D6" strokeWidth="2.5" strokeLinecap="round"/>
-        {/* Neck lines */}
-        <line x1="29" y1="52" x2="35" y2="52" stroke="#D1D1D6" strokeWidth="2" strokeLinecap="round"/>
-        <line x1="29" y1="56" x2="35" y2="56" stroke="#D1D1D6" strokeWidth="2" strokeLinecap="round"/>
-
-        {/* ── Top sand (pale blue, shrinks as time passes) ── */}
-        <rect x="0" y="4" width="64" height={topH}
-              fill="#BFDBFE" clipPath="url(#hgTop)"/>
-        {/* Top sand surface — slightly darker edge */}
-        {topH > 2 && (
-          <rect x="0" y={4 + topH - 2} width="64" height="2"
-                fill="#60A5FA" clipPath="url(#hgTop)"/>
-        )}
-
-        {/* ── Bottom sand (richer blue, grows as time passes) ── */}
-        {botH > 0 && (
-          <rect x="0" y={104 - botH} width="64" height={botH}
-                fill="#3B82F6" opacity="0.55" clipPath="url(#hgBot)"/>
-        )}
-        {/* Bottom sand surface — brighter top edge */}
-        {botH > 2 && (
-          <rect x="0" y={104 - botH} width="64" height="2"
-                fill="#60A5FA" clipPath="url(#hgBot)"/>
-        )}
-
-        {/* ── Falling sand particles (animated, only while sand remains in top) ── */}
-        {pct < 0.98 && (
-          <>
-            <circle cx="32" cy="52" r="1.8" fill="#3B82F6" className={styles.sandP1}/>
-            <circle cx="32" cy="52" r="1.8" fill="#2563EB" className={styles.sandP2}/>
-            <circle cx="32" cy="52" r="1.4" fill="#60A5FA" className={styles.sandP3}/>
-          </>
-        )}
-      </svg>
-
-      {/* Countdown number */}
-      <div style={{ textAlign: 'center', lineHeight: 1 }}>
-        {phase === 'over' ? (
-          <span style={{ fontSize: 15, color: '#8a8a8e', fontWeight: 500 }}>Almost there…</span>
-        ) : (
-          <>
-            <span style={{
-              fontVariantNumeric: 'tabular-nums', fontSize: 38, fontWeight: 700,
-              color: '#1D1D1F', letterSpacing: '-1.5px', display: 'block',
-            }}>
-              {secs}
-            </span>
-            <span style={{ fontSize: 12, color: '#8a8a8e', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              sec remaining
-            </span>
-          </>
-        )}
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+      {/* 얇은 원형 프로그레스 */}
+      <div style={{ position: 'relative', width: 64, height: 64 }}>
+        <svg width="64" height="64" viewBox="0 0 64 64" style={{ transform: 'rotate(-90deg)' }}>
+          {/* 배경 트랙 */}
+          <circle cx="32" cy="32" r={r} fill="none"
+            stroke="var(--border-light, rgba(0,0,0,0.08))" strokeWidth="3"/>
+          {/* 진행 바 */}
+          <circle cx="32" cy="32" r={r} fill="none"
+            stroke="var(--accent, #D94035)" strokeWidth="3"
+            strokeLinecap="round"
+            strokeDasharray={circ}
+            strokeDashoffset={dash}
+            style={{ transition: 'stroke-dashoffset 0.9s ease' }}/>
+        </svg>
+        {/* 중앙 숫자 */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          lineHeight: 1,
+        }}>
+          {phase === 'over' ? (
+            <span style={{ fontSize: 11, color: 'var(--text-3, #8a8a8e)', fontWeight: 500 }}>…</span>
+          ) : (
+            <>
+              <span style={{
+                fontVariantNumeric: 'tabular-nums',
+                fontSize: 18, fontWeight: 700,
+                color: 'var(--text-1, #1D1D1F)',
+                letterSpacing: '-0.5px',
+              }}>{secs}</span>
+              <span style={{ fontSize: 9, color: 'var(--text-3, #8a8a8e)', letterSpacing: '0.5px' }}>sec</span>
+            </>
+          )}
+        </div>
       </div>
     </div>
   )
