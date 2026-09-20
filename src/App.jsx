@@ -449,7 +449,7 @@ function useRelativeTime(timestamp) {
 }
 
 // ─── Result card ───────────────────────────────────────────────────────────────
-function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, initialVerb = 'Generated', revisingAll = false }) {
+function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, initialVerb = 'Generated', revisingAll = false, onTrackEvent }) {
   const [text, setText]                   = useState(content)
   const [original]                        = useState(content)
   const [isEditing, setIsEditing]         = useState(false)
@@ -479,6 +479,7 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
   const [timestamp, setTimestamp]         = useState(new Date())
   const [timestampVerb, setTimestampVerb] = useState(initialVerb)
   const relativeTime = useRelativeTime(timestamp)
+  const sectionReviseCountRef             = useRef(0)  // per-section revise count for event tracking
 
   const isModified = text !== original
 
@@ -492,6 +493,12 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
   const saveEdit = async () => {
     commitText(editDraft, 'Revised')
     setIsEditing(false)
+    // Track manual edit event (section-level text edited by hand)
+    onTrackEvent?.('edit_manual', {
+      section:       sectionKey,
+      revise_count:  sectionReviseCountRef.current,
+      chars_changed: Math.abs(editDraft.length - text.length),
+    })
     if (listingId) {
       const { data } = await supabase.from('listings').select('edit_count').eq('id', listingId).single()
       supabase.from('listings').update({ edit_count: (data?.edit_count || 0) + 1 }).eq('id', listingId)
@@ -515,6 +522,13 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
       })
       commitText(msg.content[0]?.text?.trim() ?? text, 'Revised')
       setReviseInput('')
+      sectionReviseCountRef.current += 1
+      // Track per-section AI revise event (prompt + section logged for personalization)
+      onTrackEvent?.('revise_section', {
+        section:       sectionKey,
+        prompt,
+        revise_count:  sectionReviseCountRef.current,
+      })
       if (listingId) {
         const { data } = await supabase.from('listings').select('ai_revise_count, revise_prompts').eq('id', listingId).single()
         supabase.from('listings').update({
@@ -537,6 +551,14 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
           <p className={styles.cardSub}>{sublabel}</p>
         </div>
         <CopyButton text={text} onCopy={async () => {
+          // Rich copy event: which section, timing, how many revisions were made first
+          onTrackEvent?.('copy_section', {
+            section:      sectionKey,
+            revise_count: sectionReviseCountRef.current,
+            text_length:  text.length,
+            was_modified: text !== original,
+          })
+          // Also keep the legacy sections_copied array for backward compat
           if (listingId && sectionKey) {
             const { data } = await supabase.from('listings').select('sections_copied').eq('id', listingId).single()
             supabase.from('listings').update({ sections_copied: [...(data?.sections_copied || []), sectionKey] }).eq('id', listingId)
@@ -644,6 +666,51 @@ const COMING_SOON_FEATURES = [
   { key: 'stock-photo-marketplace', title: 'Stock Photo Marketplace', tagline: 'Buy and sell listing photos' },
 ]
 
+// ── HistoryModal ─────────────────────────────────────────────────────────────
+function HistoryModal({ listings, loading, onClose, onRestore }) {
+  const fmt = (iso) => {
+    const d = new Date(iso)
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
+
+  return (
+    <div className={styles.historyOverlay} onClick={onClose}>
+      <div className={styles.historyPanel} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.historyHeader}>
+          <span className={styles.historyTitle}>My Listings</span>
+          <button className={styles.historyClose} onClick={onClose}>✕</button>
+        </div>
+        {loading ? (
+          <div className={styles.historyEmpty}>Loading…</div>
+        ) : listings.length === 0 ? (
+          <div className={styles.historyEmpty}>
+            <p>No saved listings yet.</p>
+            <p style={{ fontSize: '0.82rem', marginTop: 4, opacity: 0.6 }}>Generate a listing and it will appear here.</p>
+          </div>
+        ) : (
+          <ul className={styles.historyList}>
+            {listings.map((l) => (
+              <li key={l.id} className={styles.historyItem} onClick={() => onRestore(l)}>
+                <div className={styles.historyItemAddr}>{l.address}</div>
+                <div className={styles.historyItemMeta}>
+                  {fmt(l.created_at)}
+                  {l.tier ? <span className={styles.historyItemTier}>{l.tier}</span> : null}
+                  {l.property_type ? <span className={styles.historyItemType}>{l.property_type}</span> : null}
+                </div>
+                {l.mls_copy && (
+                  <p className={styles.historyItemPreview}>
+                    {l.mls_copy.slice(0, 120)}{l.mls_copy.length > 120 ? '…' : ''}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function ComingSoonSection({ onNotify }) {
   return (
     <section className={styles.comingSoon}>
@@ -709,6 +776,76 @@ export default function App() {
     }
   }, [user])
 
+  // ── Profile loading ───────────────────────────────────────────────────────
+  const loadProfile = useCallback(async (userId) => {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, phone, brokerage, brand_color, logo_url, website_url, instagram_url, writing_style')
+        .eq('id', userId)
+        .maybeSingle()
+      if (data) setProfile(data)
+    } catch (e) {
+      console.warn('[Intelist Pro] Profile load error:', e)
+    }
+  }, [])
+
+  // ── History loading ───────────────────────────────────────────────────────
+  const loadHistory = useCallback(async (userId) => {
+    setLoadingHistory(true)
+    try {
+      const { data } = await supabase
+        .from('listings')
+        .select('id, address, mls_copy, marketing_copy, social_copy, created_at, tier, property_type')
+        .eq('user_id', userId)
+        .not('mls_copy', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(30)
+      setHistoryListings(data ?? [])
+    } catch (e) {
+      console.warn('[Intelist Pro] History load error:', e)
+    } finally {
+      setLoadingHistory(false)
+    }
+  }, [])
+
+  const openHistory = () => {
+    setShowHistory(true)
+    if (user) loadHistory(user.id)
+  }
+
+  const restoreFromHistory = (listing) => {
+    reset()
+    setAddress(listing.address ?? '')
+    setResults({
+      address:   listing.address ?? '',
+      mls:       listing.mls_copy ?? '',
+      marketing: listing.marketing_copy ?? '',
+      social:    listing.social_copy ?? '',
+    })
+    setListingId(listing.id)
+    setShowHistory(false)
+  }
+
+  // ── Post-generation event tracker (personalization data) ──────────────────
+  // Logs rich behavioral data: what was copied, when, after how many revisions,
+  // what revision prompts were used — used to learn each agent's preferences.
+  const trackEvent = useCallback(async (type, extra = {}) => {
+    const id = listingIdRef.current
+    if (!id) return
+    const event = {
+      type,
+      ts:              new Date().toISOString(),
+      ms_since_gen:    generationTimeRef.current ? Date.now() - generationTimeRef.current : null,
+      ...extra,
+    }
+    try {
+      await supabase.rpc('append_listing_event', { p_listing_id: id, p_event: event })
+    } catch (e) {
+      console.warn('[Intelist Pro] Event tracking error:', e)
+    }
+  }, [])
+
   // ── Subscription / usage check ────────────────────────────────────────────
   const checkSubscription = useCallback(async (userId) => {
     try {
@@ -740,7 +877,7 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setAuthChecked(true)
-      if (session?.user) { checkSubscription(session.user.id); checkOnboarding(session.user.id) }
+      if (session?.user) { checkSubscription(session.user.id); checkOnboarding(session.user.id); loadProfile(session.user.id) }
 
       // Handle return from Stripe Checkout
       const params = new URLSearchParams(window.location.search)
@@ -754,10 +891,10 @@ export default function App() {
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
-      if (session?.user) { checkSubscription(session.user.id); checkOnboarding(session.user.id) }
+      if (session?.user) { checkSubscription(session.user.id); checkOnboarding(session.user.id); loadProfile(session.user.id) }
     })
     return () => subscription.unsubscribe()
-  }, [checkSubscription, checkOnboarding])
+  }, [checkSubscription, checkOnboarding, loadProfile])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -792,6 +929,12 @@ export default function App() {
   const [revisingAll,    setRevisingAll]       = useState(false)
   const [reviseAllCount, setReviseAllCount]   = useState(0)
   const [elapsedMs,      setElapsedMs]         = useState(null)
+
+  // ── History & Profile ────────────────────────────────────────────────────────
+  const [showHistory,     setShowHistory]     = useState(false)
+  const [historyListings, setHistoryListings] = useState([])
+  const [loadingHistory,  setLoadingHistory]  = useState(false)
+  const [profile,         setProfile]         = useState(null)
 
   const fileInputRef         = useRef(null)
   const styleFileInputRef    = useRef(null)
@@ -1526,6 +1669,10 @@ Each section must bring new information or perspective — not restate what anot
           price_range:      priceRange,
           session_start:    new Date(sessionStartRef.current).toISOString(),
           generation_time:  new Date(generationTimeRef.current).toISOString(),
+          // ── Save generated copy for history & personalization ────────────
+          mls_copy:         parsed.mls       ?? null,
+          marketing_copy:   parsed.marketing ?? null,
+          social_copy:      parsed.social    ?? null,
         }).select('id').single()
         if (newListing) setListingId(newListing.id)
         setGenCount((c) => c + 1)
@@ -1564,6 +1711,8 @@ Each section must bring new information or perspective — not restate what anot
         social:    socialMsg.content[0]?.text?.trim()    ?? r.social,
       }))
       setReviseAllCount((c) => c + 1)
+      // Track revise-all event with the full prompt (key personalization signal)
+      trackEvent('revise_all', { prompt, revise_all_count: reviseAllCount + 1 })
       setReviseAllInput('')
     } catch (err) {
       console.error('[Intelist Pro] Revise All error:', err)
@@ -1702,6 +1851,7 @@ Each section must bring new information or perspective — not restate what anot
                 </button>
               )}
               {isPro && <span className={styles.proBadge}>Pro ✦</span>}
+              <button className={styles.historyBtn} onClick={openHistory} title="My past listings">History</button>
               <span className={styles.headerName}>
                 {user.user_metadata?.full_name ?? user.email}
               </span>
@@ -1949,6 +2099,16 @@ Each section must bring new information or perspective — not restate what anot
         {SHOW_COMING_SOON && notifyFeature && (
           <NotifyModal feature={notifyFeature} onClose={() => setNotifyFeature(null)} />
         )}
+
+        {/* ── History modal ── */}
+        {showHistory && (
+          <HistoryModal
+            listings={historyListings}
+            loading={loadingHistory}
+            onClose={() => setShowHistory(false)}
+            onRestore={restoreFromHistory}
+          />
+        )}
       </div>
     )
   }
@@ -1977,6 +2137,7 @@ Each section must bring new information or perspective — not restate what anot
               {user.user_metadata?.full_name ?? user.email}
             </span>
           )}
+          {user && <button className={styles.historyBtn} onClick={openHistory} title="My past listings">History</button>}
           <button className={styles.newBtn} onClick={reset}>New listing</button>
           {user && (
             <button className={styles.signOutBtn} onClick={handleSignOut}>Sign out</button>
@@ -1998,7 +2159,8 @@ Each section must bring new information or perspective — not restate what anot
           <h2 className={styles.resultsAddress}>{displayAddress}</h2>
         </div>
         <div className={styles.copyAllRow} style={{ marginBottom: 16 }}>
-          <CopyButton text={allText} label="Copy all three" className={styles.copyAllBtn} />
+          <CopyButton text={allText} label="Copy all three" className={styles.copyAllBtn}
+            onCopy={() => trackEvent('copy_all', { revise_all_count: reviseAllCount, text_length: allText.length })} />
         </div>
 
         {/* ── Revise All ── */}
@@ -2030,13 +2192,13 @@ Each section must bring new information or perspective — not restate what anot
           {/* MLS / Zillow / Instagram stay mounted (so edits, drafts, and undo state
               survive tab switches) — only their visibility toggles. */}
           <div style={{ display: activeTab === 'mls' ? 'block' : 'none' }}>
-            <ResultCard key={`mls-${reviseAllCount}`} tag="MLS Description" sublabel="Short description · 200–250 words" content={results.mls} onChange={(t) => setResults((r) => ({ ...r, mls: t }))} listingId={listingId} sectionKey="mls" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
+            <ResultCard key={`mls-${reviseAllCount}`} tag="MLS Description" sublabel="Short description · 200–250 words" content={results.mls} onChange={(t) => setResults((r) => ({ ...r, mls: t }))} listingId={listingId} sectionKey="mls" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} />
           </div>
           <div style={{ display: activeTab === 'zillow' ? 'block' : 'none' }}>
-            <ResultCard key={`zillow-${reviseAllCount}`} tag="Zillow · What's Special" sublabel="Long form · 300–400 words" content={results.marketing} onChange={(t) => setResults((r) => ({ ...r, marketing: t }))} listingId={listingId} sectionKey="zillow" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
+            <ResultCard key={`zillow-${reviseAllCount}`} tag="Zillow · What's Special" sublabel="Long form · 300–400 words" content={results.marketing} onChange={(t) => setResults((r) => ({ ...r, marketing: t }))} listingId={listingId} sectionKey="zillow" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} />
           </div>
           <div style={{ display: activeTab === 'instagram' ? 'block' : 'none' }}>
-            <ResultCard key={`instagram-${reviseAllCount}`} tag="Social Media Caption" sublabel="Instagram / Facebook caption" content={results.social} onChange={(t) => setResults((r) => ({ ...r, social: t }))} listingId={listingId} sectionKey="instagram" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
+            <ResultCard key={`instagram-${reviseAllCount}`} tag="Social Media Caption" sublabel="Instagram / Facebook caption" content={results.social} onChange={(t) => setResults((r) => ({ ...r, social: t }))} listingId={listingId} sectionKey="instagram" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} />
           </div>
 
           {activeTab === 'directions' && hasDirections && (
