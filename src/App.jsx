@@ -354,7 +354,7 @@ function GenerateCountdown({ loading, startTimeRef }) {
           lineHeight: 1,
         }}>
           {phase === 'over' ? (
-            <span style={{ fontSize: 11, color: 'var(--text-3, #8a8a8e)', fontWeight: 500 }}>…</span>
+            <span style={{ fontSize: 10, color: 'var(--accent, #D94035)', fontWeight: 600, textAlign: 'center', lineHeight: 1.2 }}>almost<br/>there</span>
           ) : (
             <>
               <span style={{
@@ -368,6 +368,14 @@ function GenerateCountdown({ loading, startTimeRef }) {
           )}
         </div>
       </div>
+      {phase === 'over' && (
+        <p style={{
+          fontSize: 12, color: 'var(--accent, #D94035)', fontWeight: 600,
+          margin: 0, textAlign: 'center', letterSpacing: '0.01em',
+        }}>
+          A few more seconds…
+        </p>
+      )}
     </div>
   )
 }
@@ -1863,6 +1871,21 @@ Each section must bring new information or perspective — not restate what anot
       setElapsedMs(elapsed)
       setResults(parsed)
       setReviseAllCount(0)
+      // localStorage에 먼저 저장 (DB 성공 여부 무관)
+      {
+        const combinedText = combinedNotes + ' ' + (zillowBlock || '')
+        const localId = `local_${Date.now()}`
+        saveLocalListing({
+          id: localId,
+          address,
+          mls_copy:       parsed.mls       ?? null,
+          marketing_copy: parsed.marketing ?? null,
+          social_copy:    parsed.social    ?? null,
+          created_at:     new Date().toISOString(),
+          tier:           applyPriceOverride(detectTier(address), detectPriceRange(combinedText)),
+          property_type:  detectPropertyType(combinedText),
+        })
+      }
       // Track listing in Supabase (best-effort)
       try {
         const combinedText = combinedNotes + ' ' + (zillowBlock || '')
@@ -1882,6 +1905,7 @@ Each section must bring new information or perspective — not restate what anot
         }).select('id').single()
         if (newListing) {
           setListingId(newListing.id)
+          // local_ 임시 항목을 실제 DB id로 교체
           saveLocalListing({
             id: newListing.id,
             address,
@@ -1892,6 +1916,14 @@ Each section must bring new information or perspective — not restate what anot
             tier:           applyPriceOverride(detectTier(address), detectPriceRange(combinedNotes + ' ' + (zillowBlock || ''))),
             property_type:  detectPropertyType(combinedNotes + ' ' + (zillowBlock || '')),
           })
+          // local_ 임시 항목 제거
+          try {
+            const raw = localStorage.getItem(LOCAL_HISTORY_KEY)
+            const arr = raw ? JSON.parse(raw) : []
+            const cleaned = arr.filter(l => !String(l.id).startsWith('local_'))
+            cleaned.unshift({ id: newListing.id, address, mls_copy: parsed.mls ?? null, marketing_copy: parsed.marketing ?? null, social_copy: parsed.social ?? null, created_at: new Date().toISOString() })
+            localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(cleaned.slice(0, 30)))
+          } catch {}
         }
         setGenCount((c) => c + 1)
       } catch (e) {
@@ -2426,7 +2458,7 @@ Each section must bring new information or perspective — not restate what anot
               {!visitedTabs.has(t.key) && activeTab !== t.key && (
                 <span style={{
                   display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
-                  background: '#0071E3', marginLeft: 5, verticalAlign: 'middle',
+                  background: '#D94035', marginLeft: 5, verticalAlign: 'middle',
                   marginBottom: 2, flexShrink: 0,
                 }} />
               )}
