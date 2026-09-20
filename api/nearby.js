@@ -92,6 +92,8 @@ const SHOPPING_CHAINS = [
   { name: 'Aldi',                query: 'Aldi',                     variants: ['aldi'] },
   { name: 'Lidl',                query: 'Lidl',                     variants: ['lidl'] },
   // Asian grocery (well-known in NoVA)
+  { name: 'Great Wall Supermarket', query: 'Great Wall Supermarket', variants: ['great wall supermarket'] },
+  { name: '99 Ranch Market',      query: '99 Ranch Market',          variants: ['99 ranch market', '99ranch'] },
   { name: 'H Mart',              query: 'H Mart',                   variants: ['h mart', 'hmart'] },
   { name: 'Lotte Plaza Market',  query: 'Lotte Plaza Market',       variants: ['lotte plaza market', 'lotte plaza'] },
   // Warehouse / big box
