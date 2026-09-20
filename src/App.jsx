@@ -785,29 +785,41 @@ export default function App() {
 
   // ── Onboarding tour: only for users who haven't completed it ────────────────
   const checkOnboarding = useCallback(async (userId) => {
+    // localStorage is primary — instant, reliable, per-browser
     try {
-      const { data, error } = await supabase
+      const key = `intelist_onboarding_done_${userId}`
+      if (localStorage.getItem(key) === 'true') return  // already done
+    } catch {}
+    // Supabase as secondary (gracefully fails if column missing)
+    try {
+      const { data } = await supabase
         .from('profiles')
         .select('onboarding_completed')
         .eq('id', userId)
         .maybeSingle()
-      if (error) console.warn('[Intelist Pro] Onboarding check query error:', error)
-      if (!data?.onboarding_completed) {
-        setShowOnboarding(true)
-        setTourStep(0)
+      if (data?.onboarding_completed) {
+        // Mark in localStorage so we skip the DB call next time
+        try { localStorage.setItem(`intelist_onboarding_done_${userId}`, 'true') } catch {}
+        return
       }
     } catch (e) {
       console.warn('[Intelist Pro] Onboarding check error:', e)
     }
+    setShowOnboarding(true)
+    setTourStep(0)
   }, [])
 
   const finishOnboarding = useCallback(async () => {
     setShowOnboarding(false)
+    // Save to localStorage first (always works)
     if (user) {
-      const { error: upsertError } = await supabase
-        .from('profiles')
-        .upsert({ id: user.id, onboarding_completed: true })
-      if (upsertError) console.warn('[Intelist Pro] Onboarding save error:', upsertError)
+      try { localStorage.setItem(`intelist_onboarding_done_${user.id}`, 'true') } catch {}
+      // Also save to Supabase (best-effort — may fail if column missing)
+      try {
+        await supabase.from('profiles').upsert({ id: user.id, onboarding_completed: true })
+      } catch (e) {
+        console.warn('[Intelist Pro] Onboarding save error:', e)
+      }
     }
   }, [user])
 
