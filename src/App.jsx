@@ -2154,7 +2154,6 @@ Each section must bring new information or perspective — not restate what anot
               )}
               {isPro && <span className={styles.proBadge}>Pro ✦</span>}
               <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>
-              <button className={styles.historyBtn} onClick={() => setShowProfile(true)} title="에이전트 프로필 설정">Profile</button>
               <span className={styles.headerName}>
                 {user.user_metadata?.full_name ?? user.email}
               </span>
