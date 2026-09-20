@@ -101,6 +101,22 @@
   transition: background 0.15s, color 0.15s;
 }
 .historyBtn:hover { background: var(--accent); color: #FFFFFF; }
+/* ── Marketing Kit 버튼 ──────────────────────────────────────────────────── */
+.marketingBtn {
+  background: transparent;
+  border: 1.5px solid #7C3AED;
+  border-radius: var(--r-pill);
+  color: #7C3AED;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 9px 20px;
+  transition: background 0.15s, color 0.15s;
+}
+.marketingBtn:hover { background: #7C3AED; color: #FFFFFF; }
+
+
 
 /* â”€â”€ History modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .historyOverlay {

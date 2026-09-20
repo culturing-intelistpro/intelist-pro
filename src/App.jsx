@@ -10,6 +10,7 @@ import OnboardingTour from './OnboardingTour'
 import masterPromptRules from './masterPromptRules'
 import { callClaude } from './anthropicClient'
 import AgentProfileModal from './AgentProfileModal'
+import MarketingModal from './MarketingModal'
 
 // ─── Listing metadata helpers ──────────────────────────────────────────────────
 function detectTier(addr) {
@@ -1170,6 +1171,7 @@ export default function App() {
   const [loadingHistory,  setLoadingHistory]  = useState(false)
   const [profile,         setProfile]         = useState(null)
   const [showProfile,     setShowProfile]     = useState(false)
+  const [showMarketing,   setShowMarketing]   = useState(false)
 
   const fileInputRef         = useRef(null)
   const styleFileInputRef    = useRef(null)
@@ -2063,7 +2065,19 @@ Each section must bring new information or perspective — not restate what anot
         {toast && <div className={styles.toast}>{toast}</div>}
 
         {/* Agent Profile Modal */}
-        {showProfile && (
+        {showMarketing && (
+        <MarketingModal
+          onClose={() => setShowMarketing(false)}
+          address={address}
+          results={results}
+          profile={profile}
+          photos={images.filter(f => f.type?.startsWith('image/'))}
+          photoUrls={[]}
+          zillow={zillowData}
+        />
+      )}
+
+      {showProfile && (
           <AgentProfileModal
             user={user}
             initialProfile={profile}
@@ -2154,6 +2168,11 @@ Each section must bring new information or perspective — not restate what anot
               )}
               {isPro && <span className={styles.proBadge}>Pro ✦</span>}
               <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>
+              {results.mls && (
+                <button className={styles.marketingBtn} onClick={() => setShowMarketing(true)}>
+                  🎨 Marketing Kit
+                </button>
+              )}
               <span className={styles.headerName}>
                 {user.user_metadata?.full_name ?? user.email}
               </span>
