@@ -674,32 +674,67 @@ function HistoryModal({ listings, loading, onClose, onRestore }) {
   }
 
   return (
-    <div className={styles.historyOverlay} onClick={onClose}>
-      <div className={styles.historyPanel} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.historyHeader}>
-          <span className={styles.historyTitle}>My Listings</span>
-          <button className={styles.historyClose} onClick={onClose}>✕</button>
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
+        zIndex: 9999, display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: '#fff', width: 'min(420px, 100vw)', height: '100dvh',
+          display: 'flex', flexDirection: 'column', boxShadow: '-4px 0 24px rgba(0,0,0,0.18)',
+          overflowY: 'hidden',
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '20px 20px 16px', borderBottom: '1px solid #E5E5E5', flexShrink: 0,
+        }}>
+          <span style={{ fontSize: 16, fontWeight: 600, color: '#1D1D1F' }}>My Listings</span>
+          <button onClick={onClose} style={{
+            background: 'none', border: 'none', fontSize: 18, color: '#86868B',
+            cursor: 'pointer', lineHeight: 1, padding: '4px 6px',
+          }}>✕</button>
         </div>
+
+        {/* Body */}
         {loading ? (
-          <div className={styles.historyEmpty}>Loading…</div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#86868B', fontSize: 14 }}>
+            Loading…
+          </div>
         ) : listings.length === 0 ? (
-          <div className={styles.historyEmpty}>
-            <p>No saved listings yet.</p>
-            <p style={{ fontSize: '0.82rem', marginTop: 4, opacity: 0.6 }}>Generate a listing and it will appear here.</p>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#86868B', fontSize: 14, textAlign: 'center', padding: 24 }}>
+            <p style={{ margin: 0 }}>No saved listings yet.</p>
+            <p style={{ margin: '6px 0 0', fontSize: 12, opacity: 0.7 }}>Generate a listing and it will appear here.</p>
           </div>
         ) : (
-          <ul className={styles.historyList}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, overflowY: 'auto', flex: 1 }}>
             {listings.map((l) => (
-              <li key={l.id} className={styles.historyItem} onClick={() => onRestore(l)}>
-                <div className={styles.historyItemAddr}>{l.address}</div>
-                <div className={styles.historyItemMeta}>
+              <li
+                key={l.id}
+                onClick={() => onRestore(l)}
+                style={{
+                  padding: '14px 20px', borderBottom: '1px solid #F0F0F0',
+                  cursor: 'pointer', transition: 'background 0.1s',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#FAFAFA'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <div style={{ fontSize: 14, fontWeight: 500, color: '#1D1D1F', marginBottom: 4, lineHeight: 1.3 }}>
+                  {l.address}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#86868B', marginBottom: 6 }}>
                   {fmt(l.created_at)}
-                  {l.tier ? <span className={styles.historyItemTier}>{l.tier}</span> : null}
-                  {l.property_type ? <span className={styles.historyItemType}>{l.property_type}</span> : null}
+                  {l.tier && <span style={{ background: '#F5F5F5', borderRadius: 4, padding: '1px 6px', fontSize: 11, textTransform: 'capitalize' }}>{l.tier}</span>}
+                  {l.property_type && <span style={{ background: '#F5F5F5', borderRadius: 4, padding: '1px 6px', fontSize: 11, textTransform: 'capitalize' }}>{l.property_type}</span>}
                 </div>
                 {l.mls_copy && (
-                  <p className={styles.historyItemPreview}>
-                    {l.mls_copy.slice(0, 120)}{l.mls_copy.length > 120 ? '…' : ''}
+                  <p style={{ fontSize: 12, color: '#86868B', lineHeight: 1.5, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {l.mls_copy.slice(0, 140)}{l.mls_copy.length > 140 ? '…' : ''}
                   </p>
                 )}
               </li>
@@ -1851,7 +1886,7 @@ Each section must bring new information or perspective — not restate what anot
                 </button>
               )}
               {isPro && <span className={styles.proBadge}>Pro ✦</span>}
-              <button className={styles.historyBtn} onClick={openHistory} title="My past listings">History</button>
+              <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>
               <span className={styles.headerName}>
                 {user.user_metadata?.full_name ?? user.email}
               </span>
@@ -2137,7 +2172,7 @@ Each section must bring new information or perspective — not restate what anot
               {user.user_metadata?.full_name ?? user.email}
             </span>
           )}
-          {user && <button className={styles.historyBtn} onClick={openHistory} title="My past listings">History</button>}
+          {user && <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>}
           <button className={styles.newBtn} onClick={reset}>New listing</button>
           {user && (
             <button className={styles.signOutBtn} onClick={handleSignOut}>Sign out</button>
