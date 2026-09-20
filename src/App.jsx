@@ -9,6 +9,7 @@ import NotifyModal from './NotifyModal'
 import OnboardingTour from './OnboardingTour'
 import masterPromptRules from './masterPromptRules'
 import { callClaude } from './anthropicClient'
+import AgentProfileModal from './AgentProfileModal'
 
 // ─── Listing metadata helpers ──────────────────────────────────────────────────
 function detectTier(addr) {
@@ -1000,7 +1001,7 @@ export default function App() {
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('full_name, phone, brokerage, brand_color, logo_url, website_url, instagram_url, writing_style')
+        .select('full_name, phone, brokerage, brand_color, logo_url, agent_photo_url, website_url, instagram_url, facebook_url, linkedin_url, writing_style, copy_tone, specialties, certifications, tagline')
         .eq('id', userId)
         .maybeSingle()
       if (data) setProfile(data)
@@ -1158,6 +1159,7 @@ export default function App() {
   const [historyListings, setHistoryListings] = useState([])
   const [loadingHistory,  setLoadingHistory]  = useState(false)
   const [profile,         setProfile]         = useState(null)
+  const [showProfile,     setShowProfile]     = useState(false)
 
   const fileInputRef         = useRef(null)
   const styleFileInputRef    = useRef(null)
@@ -1520,10 +1522,24 @@ Use only data found on Zillow. Set any unfound field to null.`,
 
       const styleTextParts = [
         prevListing.trim(),
+        // Also include saved writing_style from profile (if not already added as styleFile)
+        profile?.writing_style?.trim() ?? '',
         ...styleFiles.filter((f) => f.text).map((f) => `[${f.name}]\n${f.text.trim()}`),
       ].filter(Boolean)
       const prevBlock = styleTextParts.length
         ? `\nAgent's previous listing sample(s) (use only to calibrate tone and writing style — do NOT copy facts or phrases):\n"""\n${styleTextParts.join('\n\n---\n\n')}\n"""`
+        : ''
+
+      // ── Agent profile block — brand info injected into prompt ──────────────
+      const agentProfileLines = []
+      if (profile?.full_name)     agentProfileLines.push(`Agent name: ${profile.full_name}`)
+      if (profile?.brokerage)     agentProfileLines.push(`Brokerage: ${profile.brokerage}`)
+      if (profile?.copy_tone)     agentProfileLines.push(`Preferred writing tone: ${profile.copy_tone}`)
+      if (profile?.specialties)   agentProfileLines.push(`Agent specialties: ${profile.specialties}`)
+      if (profile?.certifications) agentProfileLines.push(`Certifications: ${profile.certifications}`)
+      if (profile?.tagline)       agentProfileLines.push(`Agent tagline: "${profile.tagline}"`)
+      const agentProfileBlock = agentProfileLines.length
+        ? `\nAgent profile (use for attribution and tone calibration — do NOT invent facts):\n${agentProfileLines.join('\n')}`
         : ''
 
       // Build Zillow block
@@ -1557,7 +1573,7 @@ First, normalize the property address to proper US real estate format (title cas
 Property address: ${address}${combinedNotes ? `\nAgent notes: ${combinedNotes}` : ''}${(images.length) ? `\n${Math.min(images.filter(i=>!i.isPDF).length, 5)} photo(s) and ${images.filter(i=>i.isPDF).length} MLS/PDF file(s) attached.` : ''}${prevBlock /* agent style samples — if provided */}
 ${zillowBlock ? `\n${zillowBlock}` : ''}${/* Zillow data — if provided */''}
 ${schoolBlock ? `\n${schoolBlock}` : ''}${/* school data — if provided */''}
-${communityBlock ? `\n${communityBlock}` : ''}${/* community data — if provided */''}
+${communityBlock ? `\n${communityBlock}` : ''}${agentProfileBlock}
 
 === HOW TO USE ATTACHED FILES ===
 MLS SHEET (image or PDF): Extract as verified facts — specs, schools, HOA, transportation, room details. These are the factual backbone.
@@ -2000,6 +2016,16 @@ Each section must bring new information or perspective — not restate what anot
         {/* Toast */}
         {toast && <div className={styles.toast}>{toast}</div>}
 
+        {/* Agent Profile Modal */}
+        {showProfile && (
+          <AgentProfileModal
+            user={user}
+            initialProfile={profile}
+            onClose={() => setShowProfile(false)}
+            onSave={(updated) => setProfile(prev => ({ ...prev, ...updated }))}
+          />
+        )}
+
         {/* Auth modal */}
         {showAuth && (
           <AuthModal
@@ -2082,6 +2108,7 @@ Each section must bring new information or perspective — not restate what anot
               )}
               {isPro && <span className={styles.proBadge}>Pro ✦</span>}
               <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>
+              <button className={styles.historyBtn} onClick={() => setShowProfile(true)} title="에이전트 프로필 설정">내 프로필</button>
               <span className={styles.headerName}>
                 {user.user_metadata?.full_name ?? user.email}
               </span>
