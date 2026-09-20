@@ -1,8 +1,8 @@
 import { useState, useLayoutEffect, useCallback } from 'react'
 import styles from './OnboardingTour.module.css'
 
-const TOOLTIP_WIDTH = 300
-const GAP = 14 // space between target and tooltip
+const TOOLTIP_WIDTH = 380
+const GAP = 16
 
 export default function OnboardingTour({ steps, step, onNext, onSkip, onFinish }) {
   const [rect, setRect]           = useState(null)
@@ -16,9 +16,7 @@ export default function OnboardingTour({ steps, step, onNext, onSkip, onFinish }
     if (!el) { setRect(null); return }
     const r = el.getBoundingClientRect()
     setRect(r)
-    // Prefer placing the tooltip below the target; flip above if that would
-    // run off the bottom of the viewport.
-    setPlacement(window.innerHeight - r.bottom < 160 ? 'top' : 'bottom')
+    setPlacement(window.innerHeight - r.bottom < 220 ? 'top' : 'bottom')
   }, [current.targetId])
 
   useLayoutEffect(() => {
@@ -31,52 +29,76 @@ export default function OnboardingTour({ steps, step, onNext, onSkip, onFinish }
     }
   }, [measure])
 
-  if (!rect) return null // target isn't mounted (e.g. panel not rendered yet) — skip rather than show a broken tour
+  if (!rect) return null
 
-  const centerX = rect.left + rect.width / 2
+  const centerX    = rect.left + rect.width / 2
   const tooltipLeft = Math.min(
     Math.max(centerX - TOOLTIP_WIDTH / 2, 16),
-    window.innerWidth - TOOLTIP_WIDTH - 16
+    window.innerWidth - TOOLTIP_WIDTH - 16,
   )
-  const arrowLeft = Math.min(Math.max(centerX - tooltipLeft, 24), TOOLTIP_WIDTH - 24)
+  const arrowLeft = Math.min(Math.max(centerX - tooltipLeft, 28), TOOLTIP_WIDTH - 28)
 
   const tooltipStyle = {
     width: TOOLTIP_WIDTH,
-    left: tooltipLeft,
+    left:  tooltipLeft,
     ...(placement === 'bottom'
-      ? { top: rect.bottom + GAP }
+      ? { top:    rect.bottom + GAP }
       : { bottom: window.innerHeight - rect.top + GAP }),
   }
 
   return (
     <>
-      {/* Blocks interaction with the page underneath while the tour is active. */}
+      {/* Blocks page interaction during tour */}
       <div className={styles.blocker} onClick={(e) => e.stopPropagation()} />
 
-      {/* Dark overlay with a "spotlight" cut around the target, via box-shadow. */}
+      {/* Spotlight ring around target element */}
       <div
         className={styles.spotlight}
         style={{
-          top: rect.top - 6,
-          left: rect.left - 6,
-          width: rect.width + 12,
-          height: rect.height + 12,
+          top:    rect.top    - 8,
+          left:   rect.left   - 8,
+          width:  rect.width  + 16,
+          height: rect.height + 16,
         }}
       />
 
       <div className={styles.tooltip} style={tooltipStyle}>
+        {/* Arrow */}
         <span
           className={placement === 'bottom' ? styles.arrowTop : styles.arrowBottom}
           style={{ left: arrowLeft }}
         />
-        <p className={styles.stepIndicator}>{step + 1} of {steps.length}</p>
+
+        {/* Header: emoji icon + step title */}
+        <div className={styles.header}>
+          {current.emoji && (
+            <span className={styles.emoji}>{current.emoji}</span>
+          )}
+          <div className={styles.headerText}>
+            {current.title && (
+              <p className={styles.title}>{current.title}</p>
+            )}
+            <p className={styles.stepLabel}>{step + 1} of {steps.length}</p>
+          </div>
+        </div>
+
+        {/* Message */}
         <p className={styles.message}>{current.message}</p>
+
+        {/* Progress dots */}
+        <div className={styles.dots}>
+          {steps.map((_, i) => (
+            <span key={i} className={i === step ? styles.dotActive : styles.dot} />
+          ))}
+        </div>
+
+        {/* Actions */}
         <div className={styles.actions}>
           {isLast ? (
-            <button className={styles.finishBtn} onClick={onFinish}>Got it, let's go! →</button>
+            <button className={styles.finishBtn} onClick={onFinish}>Let's go →</button>
           ) : (
             <>
-              <button className={styles.skipBtn} onClick={onSkip}>Skip</button>
+              <button className={styles.skipBtn} onClick={onSkip}>Skip tour</button>
               <button className={styles.nextBtn} onClick={onNext}>Next</button>
             </>
           )}

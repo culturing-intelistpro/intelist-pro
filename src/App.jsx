@@ -645,12 +645,12 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
 
 // ─── Onboarding tour ────────────────────────────────────────────────────────────
 const ONBOARDING_STEPS = [
-  { targetId: 'address-input',    message: "Start here! Enter the property address — we'll pull up everything we need." },
-  { targetId: 'tour-notes-btn',   message: 'Add any special features or highlights about the property here.' },
-  { targetId: 'tour-record-btn',  message: "Prefer to talk? Record your notes and we'll transcribe them for you." },
-  { targetId: 'tour-photos-btn',  message: "Upload 5–10 listing photos and your MLS sheet. Choose the photos that best showcase this home — what you pick tells us what matters most." },
-  { targetId: 'tour-style-btn',   message: 'Paste your past listing descriptions so we can match your writing style.' },
-  { targetId: 'tour-submit-arrow', message: 'All set! Enter your address and hit the arrow to generate your listing copy.' },
+  { targetId: 'address-input',     emoji: '📍', title: 'Property Address',      message: "Start here. Enter the property address and we'll automatically pull up the Zillow data, school assignments, and neighborhood details." },
+  { targetId: 'tour-notes-btn',    emoji: '📝', title: 'Notes',                 message: 'Add any standout features — recent upgrades, finishes, layout highlights. The more specific you are, the stronger the copy.' },
+  { targetId: 'tour-record-btn',   emoji: '🎙️', title: 'Voice Input',           message: "Prefer to talk it out? Hit record and describe the home — we'll transcribe your words and weave them in." },
+  { targetId: 'tour-photos-btn',   emoji: '📸', title: 'Photos & Documents',    message: 'Upload 5–10 listing photos and your MLS sheet. The photos you choose signal what makes this home special — we read that.' },
+  { targetId: 'tour-style-btn',    emoji: '✍️', title: 'Your Writing Style',    message: 'Paste a few of your past listing descriptions. We study your voice and match it — so every output sounds like you wrote it.' },
+  { targetId: 'tour-submit-arrow', emoji: '✨', title: "You're All Set",         message: 'Hit the arrow to generate MLS copy, a Zillow 'What\'s Special' description, and a social media caption — all in seconds.' },
 ]
 
 // ─── Coming Soon ────────────────────────────────────────────────────────────────
@@ -2168,7 +2168,7 @@ Each section must bring new information or perspective — not restate what anot
   const hasNearby     = Boolean(nearby && Object.keys(nearby).length > 0)
   const tabs = [
     { key: 'mls',       label: 'MLS' },
-    { key: 'zillow',    label: 'Zillow' },
+    { key: 'zillow',    label: "What's Special" },
     { key: 'instagram', label: 'Social Media' },
     ...(hasDirections ? [{ key: 'directions', label: 'Directions' }] : []),
     ...(hasNearby     ? [{ key: 'nearby',     label: 'Nearby & Commute' }] : []),
@@ -2242,7 +2242,7 @@ Each section must bring new information or perspective — not restate what anot
             <ResultCard key={`mls-${reviseAllCount}`} tag="MLS Description" sublabel="Short description · 200–250 words" content={results.mls} onChange={(t) => setResults((r) => ({ ...r, mls: t }))} listingId={listingId} sectionKey="mls" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} />
           </div>
           <div style={{ display: activeTab === 'zillow' ? 'block' : 'none' }}>
-            <ResultCard key={`zillow-${reviseAllCount}`} tag="Zillow · What's Special" sublabel="Long form · 300–400 words" content={results.marketing} onChange={(t) => setResults((r) => ({ ...r, marketing: t }))} listingId={listingId} sectionKey="zillow" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} />
+            <ResultCard key={`zillow-${reviseAllCount}`} tag="Listing Portal" sublabel="Long form · 300–400 words" content={results.marketing} onChange={(t) => setResults((r) => ({ ...r, marketing: t }))} listingId={listingId} sectionKey="zillow" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} />
           </div>
           <div style={{ display: activeTab === 'instagram' ? 'block' : 'none' }}>
             <ResultCard key={`instagram-${reviseAllCount}`} tag="Social Media Caption" sublabel="Instagram / Facebook caption" content={results.social} onChange={(t) => setResults((r) => ({ ...r, social: t }))} listingId={listingId} sectionKey="instagram" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} />
