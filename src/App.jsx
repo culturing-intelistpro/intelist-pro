@@ -289,73 +289,117 @@ function GenerateCountdown({ loading, startTimeRef }) {
 
   useEffect(() => {
     if (!loading) return
-    if (avgSecs === null) return  // no history yet — skip countdown
+    if (avgSecs === null) return
     setSecs(avgSecs)
     setPhase('counting')
     const interval = setInterval(() => {
       setSecs(prev => {
         if (prev === null) return null
-        if (prev <= 1) {
-          setPhase('over')
-          clearInterval(interval)
-          return 0
-        }
+        if (prev <= 1) { setPhase('over'); clearInterval(interval); return 0 }
         return prev - 1
       })
     }, 1000)
     return () => clearInterval(interval)
   }, [loading])
 
-  // When loading goes false while still counting — flash early-finish message
   useEffect(() => {
-    if (!loading && phase === 'counting' && secs !== null && secs > 0) {
-      setPhase('done')
-    }
+    if (!loading && phase === 'counting' && secs !== null && secs > 0) setPhase('done')
   }, [loading])
 
-  if (avgSecs === null) return null  // first few runs — existing spinner handles it
-
-  if (phase === 'over') {
-    return (
-      <p style={{
-        marginTop: 16,
-        fontSize: 13,
-        color: '#8a8a8e',
-        textAlign: 'center',
-        lineHeight: 1.5,
-      }}>
-        Almost there…<br/>Just a little longer 😊
-      </p>
-    )
-  }
+  if (avgSecs === null) return null
 
   if (phase === 'done') {
     return (
-      <p style={{
-        marginTop: 16,
-        fontSize: 13,
-        color: '#34c759',
-        textAlign: 'center',
-        fontWeight: 500,
-      }}>
-        Done faster than expected ✓
+      <p style={{ fontSize: 13, color: '#34c759', textAlign: 'center', fontWeight: 600, margin: 0 }}>
+        ✓ Done faster than expected
       </p>
     )
   }
 
-  // counting phase
+  const total = avgSecs
+  const pct   = phase === 'over' ? 1 : Math.max(0, Math.min(1, (total - (secs ?? 0)) / total))
+  // Hourglass geometry (viewBox 0 0 64 108)
+  // Top bulb: triangle (2,4) → (62,4) → (32,52)
+  // Bottom bulb: triangle (32,56) → (62,104) → (2,104)
+  const topH  = Math.round(48 * (1 - pct))   // top sand height — shrinks
+  const botH  = Math.round(48 * pct)           // bottom sand height — grows
+
   return (
-    <div style={{ marginTop: 16, textAlign: 'center' }}>
-      <span style={{
-        fontVariantNumeric: 'tabular-nums',
-        fontSize: 28,
-        fontWeight: 600,
-        color: '#1c1c1e',
-        letterSpacing: '-0.5px',
-      }}>
-        {secs}
-      </span>
-      <span style={{ fontSize: 13, color: '#8a8a8e', marginLeft: 4 }}>sec</span>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+      <svg width="72" height="116" viewBox="0 0 64 108" style={{ overflow: 'visible' }}>
+        <defs>
+          {/* Top bulb clip — triangle pointing down */}
+          <clipPath id="hgTop">
+            <polygon points="2,4 62,4 32,52"/>
+          </clipPath>
+          {/* Bottom bulb clip — triangle pointing up */}
+          <clipPath id="hgBot">
+            <polygon points="32,56 62,104 2,104"/>
+          </clipPath>
+        </defs>
+
+        {/* ── Hourglass frame ── */}
+        {/* Top outer border */}
+        <path d="M2,4 L62,4 L32,52 Z"
+              fill="none" stroke="#D1D1D6" strokeWidth="2" strokeLinejoin="round"/>
+        {/* Bottom outer border */}
+        <path d="M32,56 L62,104 L2,104 Z"
+              fill="none" stroke="#D1D1D6" strokeWidth="2" strokeLinejoin="round"/>
+        {/* Horizontal caps */}
+        <line x1="0" y1="4"   x2="64" y2="4"   stroke="#D1D1D6" strokeWidth="2.5" strokeLinecap="round"/>
+        <line x1="0" y1="104" x2="64" y2="104" stroke="#D1D1D6" strokeWidth="2.5" strokeLinecap="round"/>
+        {/* Neck lines */}
+        <line x1="29" y1="52" x2="35" y2="52" stroke="#D1D1D6" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="29" y1="56" x2="35" y2="56" stroke="#D1D1D6" strokeWidth="2" strokeLinecap="round"/>
+
+        {/* ── Top sand (pale blue, shrinks as time passes) ── */}
+        <rect x="0" y="4" width="64" height={topH}
+              fill="#BFDBFE" clipPath="url(#hgTop)"/>
+        {/* Top sand surface — slightly darker edge */}
+        {topH > 2 && (
+          <rect x="0" y={4 + topH - 2} width="64" height="2"
+                fill="#60A5FA" clipPath="url(#hgTop)"/>
+        )}
+
+        {/* ── Bottom sand (richer blue, grows as time passes) ── */}
+        {botH > 0 && (
+          <rect x="0" y={104 - botH} width="64" height={botH}
+                fill="#3B82F6" opacity="0.55" clipPath="url(#hgBot)"/>
+        )}
+        {/* Bottom sand surface — brighter top edge */}
+        {botH > 2 && (
+          <rect x="0" y={104 - botH} width="64" height="2"
+                fill="#60A5FA" clipPath="url(#hgBot)"/>
+        )}
+
+        {/* ── Falling sand particles (animated, only while sand remains in top) ── */}
+        {pct < 0.98 && (
+          <>
+            <circle cx="32" cy="52" r="1.8" fill="#3B82F6" className={styles.sandP1}/>
+            <circle cx="32" cy="52" r="1.8" fill="#2563EB" className={styles.sandP2}/>
+            <circle cx="32" cy="52" r="1.4" fill="#60A5FA" className={styles.sandP3}/>
+          </>
+        )}
+      </svg>
+
+      {/* Countdown number */}
+      <div style={{ textAlign: 'center', lineHeight: 1 }}>
+        {phase === 'over' ? (
+          <span style={{ fontSize: 15, color: '#8a8a8e', fontWeight: 500 }}>Almost there…</span>
+        ) : (
+          <>
+            <span style={{
+              fontVariantNumeric: 'tabular-nums', fontSize: 38, fontWeight: 700,
+              color: '#1D1D1F', letterSpacing: '-1.5px', display: 'block',
+            }}>
+              {secs}
+            </span>
+            <span style={{ fontSize: 12, color: '#8a8a8e', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              sec remaining
+            </span>
+          </>
+        )}
+      </div>
     </div>
   )
 }
@@ -452,6 +496,7 @@ function useRelativeTime(timestamp) {
 function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, initialVerb = 'Generated', revisingAll = false, onTrackEvent, onCopy }) {
   const [text, setText]                   = useState(content)
   const [original]                        = useState(content)
+  const [revisionHistory, setRevisionHistory] = useState([])   // stack for multi-step undo
   const [isEditing, setIsEditing]         = useState(false)
   const [editDraft, setEditDraft]         = useState(content)
   const [reviseInput, setReviseInput]     = useState('')
@@ -483,7 +528,8 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
 
   const isModified = text !== original
 
-  const commitText = (newText, verb) => {
+  const commitText = (newText, verb, pushHistory = true) => {
+    if (pushHistory) setRevisionHistory(prev => [...prev, text])
     setText(newText)
     onChange?.(newText)
     setTimestamp(new Date())
@@ -505,7 +551,12 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
     }
   }
 
-  const undo = () => commitText(original, 'Restored')
+  const undoRevision = () => {
+    if (revisionHistory.length === 0) return
+    const prev = revisionHistory[revisionHistory.length - 1]
+    setRevisionHistory(h => h.slice(0, -1))
+    commitText(prev, revisionHistory.length === 1 ? 'Restored' : 'Reverted', false)
+  }
 
   const revise = async () => {
     if (!reviseInput.trim()) return
@@ -604,8 +655,10 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
               <PenLine size={14} />
               Edit
             </button>
-            {isModified && (
-              <button className={styles.undoBtn} onClick={undo}>Undo</button>
+            {revisionHistory.length > 0 && (
+              <button className={styles.undoBtn} onClick={undoRevision}>
+                ↩ Undo
+              </button>
             )}
           </div>
           {/* Row 2: AI revise */}
@@ -668,6 +721,124 @@ const COMING_SOON_FEATURES = [
 ]
 
 // ── HistoryModal ─────────────────────────────────────────────────────────────
+
+/* ─────────────────────────────────────────────────────────────
+   FeedbackModal — appears once after user copies their first listing
+   ───────────────────────────────────────────────────────────── */
+function FeedbackModal({ listingId, onClose }) {
+  const [rating, setRating]   = useState(0)
+  const [hovered, setHovered] = useState(0)
+  const [comment, setComment] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+
+  const submit = async () => {
+    if (rating === 0) return
+    setSubmitted(true)
+    try {
+      await supabase.from('listings').update({
+        feedback_rating: rating,
+        feedback_comment: comment.trim() || null,
+        feedback_at: new Date().toISOString(),
+      }).eq('id', listingId)
+    } catch (e) {
+      console.error('[Intelist Pro] feedback save error', e)
+    }
+    setTimeout(onClose, 1400)
+  }
+
+  const labels = ['', 'Needs work', 'Could be better', 'Pretty good', 'Really good', 'Amazing!']
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9000,
+      background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '0 16px',
+    }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: 'var(--surface, #fff)',
+        borderRadius: 20, padding: '32px 28px 28px',
+        width: '100%', maxWidth: 400,
+        boxShadow: '0 24px 64px rgba(0,0,0,0.18)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
+      }}>
+        {submitted ? (
+          <div style={{ textAlign: 'center', padding: '12px 0' }}>
+            <div style={{ fontSize: 40, marginBottom: 10 }}>🙏</div>
+            <p style={{ fontSize: 17, fontWeight: 600, color: 'var(--text, #1d1d1f)' }}>Thanks for your feedback!</p>
+          </div>
+        ) : (
+          <>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>⭐</div>
+              <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--text, #1d1d1f)', marginBottom: 4 }}>
+                How was your experience?
+              </p>
+              <p style={{ fontSize: 14, color: '#8a8a8e', lineHeight: 1.4 }}>
+                Rate your first listing creation — your feedback helps us improve.
+              </p>
+            </div>
+
+            {/* Star rating */}
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[1,2,3,4,5].map(n => (
+                <button key={n}
+                  onMouseEnter={() => setHovered(n)}
+                  onMouseLeave={() => setHovered(0)}
+                  onClick={() => setRating(n)}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontSize: 36, padding: 2, lineHeight: 1,
+                    filter: n <= (hovered || rating) ? 'none' : 'grayscale(1) opacity(0.35)',
+                    transition: 'filter 0.12s, transform 0.1s',
+                    transform: n <= (hovered || rating) ? 'scale(1.15)' : 'scale(1)',
+                  }}
+                >⭐</button>
+              ))}
+            </div>
+
+            {/* Label under stars */}
+            <p style={{ fontSize: 13, color: '#3B82F6', fontWeight: 600, minHeight: 20, marginTop: -8 }}>
+              {labels[hovered || rating]}
+            </p>
+
+            {/* Optional comment */}
+            <textarea
+              placeholder="Any comments? (optional)"
+              value={comment}
+              onChange={e => setComment(e.target.value)}
+              rows={3}
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                border: '1.5px solid #e0e0e5', borderRadius: 10,
+                padding: '10px 12px', fontSize: 14,
+                fontFamily: 'inherit', resize: 'vertical',
+                outline: 'none', color: 'var(--text, #1d1d1f)',
+                background: 'var(--bg, #f5f5f7)',
+              }}
+            />
+
+            <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+              <button onClick={onClose} style={{
+                flex: 1, padding: '11px 0', borderRadius: 12,
+                border: '1.5px solid #e0e0e5', background: 'transparent',
+                color: '#8a8a8e', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit',
+              }}>Skip</button>
+              <button onClick={submit} disabled={rating === 0} style={{
+                flex: 2, padding: '11px 0', borderRadius: 12,
+                border: 'none', background: rating === 0 ? '#e0e0e5' : '#0071E3',
+                color: rating === 0 ? '#aaa' : '#fff', fontSize: 15,
+                fontWeight: 600, cursor: rating === 0 ? 'default' : 'pointer',
+                fontFamily: 'inherit', transition: 'background 0.15s',
+              }}>Submit Feedback</button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function HistoryModal({ listings, loading, onClose, onRestore }) {
   const fmt = (iso) => {
     const d = new Date(iso)
@@ -965,6 +1136,8 @@ export default function App() {
   const [activeTab, setActiveTab]         = useState('mls')
   const [visitedTabs, setVisitedTabs]     = useState(new Set(['mls']))
   const [showMlsNudge, setShowMlsNudge]   = useState(false)
+  const [showFeedback, setShowFeedback]   = useState(false)
+  const feedbackShownRef = useRef(false)   // show feedback only once per listing session
   const [error, setError]                 = useState(null)
   const [activePanel, setActivePanel]     = useState(null) // 'notes'|'record'|'photos'|'style'|null
   const [styleFiles, setStyleFiles]       = useState([])
@@ -1800,7 +1973,14 @@ Each section must bring new information or perspective — not restate what anot
     setActivePanel(null); setStyleFiles([])
     images.forEach((img) => URL.revokeObjectURL(img.preview))
     setImages([]); setListingId(null); setZillowData(null); setDirections(null); setNearby(null)
-    setActiveTab('mls'); setElapsedMs(null); setVisitedTabs(new Set(['mls'])); setShowMlsNudge(false)
+    setActiveTab('mls'); setElapsedMs(null); setVisitedTabs(new Set(['mls'])); setShowMlsNudge(false); setShowFeedback(false); feedbackShownRef.current = false
+  }
+
+  // ── Feedback trigger (once per listing session, after first copy) ──────────
+  const triggerFeedback = () => {
+    if (feedbackShownRef.current) return
+    feedbackShownRef.current = true
+    setTimeout(() => setShowFeedback(true), 800)   // small delay so copy action feels done
   }
 
   // ── Opt button class helper ─────────────────────────────────────────────────
@@ -2210,7 +2390,7 @@ Each section must bring new information or perspective — not restate what anot
         </div>
         <div className={styles.copyAllRow} style={{ marginBottom: 16 }}>
           <CopyButton text={allText} label="Copy all three" className={styles.copyAllBtn}
-            onCopy={() => trackEvent('copy_all', { revise_all_count: reviseAllCount, text_length: allText.length })} />
+            onCopy={() => { trackEvent('copy_all', { revise_all_count: reviseAllCount, text_length: allText.length }); triggerFeedback() }} />
         </div>
 
         {/* ── Revise All ── */}
@@ -2252,7 +2432,7 @@ Each section must bring new information or perspective — not restate what anot
           {/* MLS / Zillow / Instagram stay mounted (so edits, drafts, and undo state
               survive tab switches) — only their visibility toggles. */}
           <div style={{ display: activeTab === 'mls' ? 'block' : 'none' }}>
-            <ResultCard key={`mls-${reviseAllCount}`} tag="MLS Description" sublabel="Short description · 200–250 words" content={results.mls} onChange={(t) => setResults((r) => ({ ...r, mls: t }))} listingId={listingId} sectionKey="mls" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} onCopy={() => { if (!visitedTabs.has('zillow') || !visitedTabs.has('instagram')) setShowMlsNudge(true) }} />
+            <ResultCard key={`mls-${reviseAllCount}`} tag="MLS Description" sublabel="Short description · 200–250 words" content={results.mls} onChange={(t) => setResults((r) => ({ ...r, mls: t }))} listingId={listingId} sectionKey="mls" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} onCopy={() => { if (!visitedTabs.has('zillow') || !visitedTabs.has('instagram')) setShowMlsNudge(true); triggerFeedback() }} />
             {showMlsNudge && (!visitedTabs.has('zillow') || !visitedTabs.has('instagram')) && (
               <div style={{
                 marginTop: 10, padding: '12px 16px', background: '#EFF6FF',
@@ -2284,10 +2464,10 @@ Each section must bring new information or perspective — not restate what anot
             )}
           </div>
           <div style={{ display: activeTab === 'zillow' ? 'block' : 'none' }}>
-            <ResultCard key={`zillow-${reviseAllCount}`} tag="Listing Portal" sublabel="Long form · 300–400 words" content={results.marketing} onChange={(t) => setResults((r) => ({ ...r, marketing: t }))} listingId={listingId} sectionKey="zillow" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} />
+            <ResultCard key={`zillow-${reviseAllCount}`} tag="Listing Portal" sublabel="Long form · 300–400 words" content={results.marketing} onChange={(t) => setResults((r) => ({ ...r, marketing: t }))} listingId={listingId} sectionKey="zillow" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} onCopy={triggerFeedback} />
           </div>
           <div style={{ display: activeTab === 'instagram' ? 'block' : 'none' }}>
-            <ResultCard key={`instagram-${reviseAllCount}`} tag="Social Media Caption" sublabel="Instagram / Facebook caption" content={results.social} onChange={(t) => setResults((r) => ({ ...r, social: t }))} listingId={listingId} sectionKey="instagram" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} />
+            <ResultCard key={`instagram-${reviseAllCount}`} tag="Social Media Caption" sublabel="Instagram / Facebook caption" content={results.social} onChange={(t) => setResults((r) => ({ ...r, social: t }))} listingId={listingId} sectionKey="instagram" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} onCopy={triggerFeedback} />
           </div>
 
           {activeTab === 'directions' && hasDirections && (
@@ -2338,6 +2518,14 @@ Each section must bring new information or perspective — not restate what anot
           loading={loadingHistory}
           onClose={() => setShowHistory(false)}
           onRestore={restoreFromHistory}
+        />
+      )}
+
+      {/* ── Feedback modal (shows once after first copy) ── */}
+      {showFeedback && listingId && (
+        <FeedbackModal
+          listingId={listingId}
+          onClose={() => setShowFeedback(false)}
         />
       )}
     </div>
