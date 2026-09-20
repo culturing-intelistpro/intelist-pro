@@ -69,6 +69,25 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 99) {
   return currY
 }
 
+// ─── 에이전트 사진 원형 헬퍼 ────────────────────────────────────────────────────
+// agentImg: loadImage로 미리 로드한 이미지 객체 (null이면 no-op)
+function drawCirclePhoto(ctx, agentImg, cx, cy, r, brandColor) {
+  if (!agentImg) return
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(cx, cy, r, 0, Math.PI * 2)
+  ctx.clip()
+  const aspect = agentImg.width / agentImg.height
+  let sx, sy, sw, sh
+  if (aspect > 1) { sh = agentImg.height; sw = sh; sx = (agentImg.width - sw) / 2; sy = 0 }
+  else { sw = agentImg.width; sh = sw; sx = 0; sy = (agentImg.height - sh) / 2 }
+  ctx.drawImage(agentImg, sx, sy, sw, sh, cx - r, cy - r, r * 2, r * 2)
+  ctx.restore()
+  ctx.beginPath()
+  ctx.arc(cx, cy, r, 0, Math.PI * 2)
+  ctx.strokeStyle = brandColor; ctx.lineWidth = Math.max(4, Math.round(r * 0.07)); ctx.stroke()
+}
+
 // ─── 브로셔 렌더러 ───────────────────────────────────────────────────────────
 async function renderBrochureClassic(canvas, { orientation, address, results, profile, photos, photoUrls, zillow }) {
   const dim = BROCHURE[orientation]
@@ -92,6 +111,10 @@ async function renderBrochureClassic(canvas, { orientation, address, results, pr
 
   let imgs = []
   try { imgs = await Promise.all(imgSrcs.map(loadImage)) } catch {}
+
+  // 에이전트 사진 (선택적)
+  let agentImg = null
+  if (profile?.agent_photo_url) { try { agentImg = await loadImage(profile.agent_photo_url) } catch {} }
 
   if (isPort) {
     // ── 세로 브로셔 레이아웃 ─────────────────────────────────────────────────
@@ -172,13 +195,16 @@ async function renderBrochureClassic(canvas, { orientation, address, results, pr
     const agentY = H - 420
     ctx.fillStyle = '#fff'; ctx.fillRect(0, agentY, W, H - agentY)
     ctx.fillStyle = BRAND; ctx.fillRect(0, agentY, W, 6)
+    const agR = 110; const agCX = PAD + agR; const agCY = agentY + 210
+    drawCirclePhoto(ctx, agentImg, agCX, agCY, agR, BRAND)
+    const txX = agentImg ? agCX + agR + 36 : PAD
     ctx.fillStyle = '#1D1D1F'; ctx.font = `bold 52px system-ui, sans-serif`
-    ctx.fillText(profile?.full_name || '', PAD, agentY + 90)
+    ctx.fillText(profile?.full_name || '', txX, agentY + 90)
     ctx.fillStyle = BRAND; ctx.font = `36px system-ui, sans-serif`
-    ctx.fillText(profile?.brokerage || '', PAD, agentY + 145)
+    ctx.fillText(profile?.brokerage || '', txX, agentY + 145)
     ctx.fillStyle = '#555'; ctx.font = `34px system-ui, sans-serif`
     const contacts = [profile?.phone, profile?.website_url?.replace(/^https?:\/\//, ''), profile?.email].filter(Boolean)
-    contacts.forEach((c, i) => ctx.fillText(c, PAD, agentY + 210 + i * 52))
+    contacts.forEach((c, i) => ctx.fillText(c, txX, agentY + 210 + i * 52))
     // Brand Color 하단 바
     ctx.fillStyle = BRAND; ctx.fillRect(0, H - 18, W, 18)
 
@@ -272,6 +298,8 @@ async function renderBrochureModern(canvas, { orientation, address, results, pro
   const PAD = isPort ? 120 : 100
   const imgSrcs = [...photos.filter(p=>!p.isPDF).map(p=>p.preview||`data:image/jpeg;base64,${p.base64}`),...photoUrls].filter(Boolean).slice(0,6)
   let imgs = []; try { imgs = await Promise.all(imgSrcs.map(loadImage)) } catch {}
+  let agentImg = null
+  if (profile?.agent_photo_url) { try { agentImg = await loadImage(profile.agent_photo_url) } catch {} }
 
   if (isPort) {
     ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H)
@@ -308,11 +336,14 @@ async function renderBrochureModern(canvas, { orientation, address, results, pro
     const agY = H - 400
     ctx.fillStyle = '#FAFAFA'; ctx.fillRect(0, agY, W, H - agY)
     ctx.fillStyle = BRAND; ctx.fillRect(PAD, agY + 10, 80, 6)
-    ctx.fillStyle = '#1A1A1A'; ctx.font = `bold 52px system-ui, sans-serif`; ctx.fillText(profile?.full_name || '', PAD, agY + 90)
-    ctx.fillStyle = BRAND; ctx.font = `36px system-ui, sans-serif`; ctx.fillText(profile?.brokerage || '', PAD, agY + 145)
+    const magR = 100; const magCX = PAD + magR; const magCY = agY + 200
+    drawCirclePhoto(ctx, agentImg, magCX, magCY, magR, BRAND)
+    const mtxX = agentImg ? magCX + magR + 36 : PAD
+    ctx.fillStyle = '#1A1A1A'; ctx.font = `bold 52px system-ui, sans-serif`; ctx.fillText(profile?.full_name || '', mtxX, agY + 90)
+    ctx.fillStyle = BRAND; ctx.font = `36px system-ui, sans-serif`; ctx.fillText(profile?.brokerage || '', mtxX, agY + 145)
     ctx.fillStyle = '#666'; ctx.font = `32px system-ui, sans-serif`
     const contacts = [profile?.phone, profile?.website_url?.replace(/^https?:\/\//, '')].filter(Boolean)
-    contacts.forEach((c, i) => ctx.fillText(c, PAD, agY + 200 + i * 48))
+    contacts.forEach((c, i) => ctx.fillText(c, mtxX, agY + 200 + i * 48))
   } else {
     const leftW = Math.round(W * 0.50)
     ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H)
@@ -350,6 +381,8 @@ async function renderBrochureDark(canvas, { orientation, address, results, profi
   const PAD = isPort ? 120 : 100
   const imgSrcs = [...photos.filter(p=>!p.isPDF).map(p=>p.preview||`data:image/jpeg;base64,${p.base64}`),...photoUrls].filter(Boolean).slice(0,6)
   let imgs = []; try { imgs = await Promise.all(imgSrcs.map(loadImage)) } catch {}
+  let agentImg = null
+  if (profile?.agent_photo_url) { try { agentImg = await loadImage(profile.agent_photo_url) } catch {} }
 
   if (isPort) {
     ctx.fillStyle = '#141414'; ctx.fillRect(0, 0, W, H)
@@ -381,11 +414,14 @@ async function renderBrochureDark(canvas, { orientation, address, results, profi
     const agY = H - 420
     ctx.fillStyle = '#1E1E1E'; ctx.fillRect(0, agY, W, H - agY)
     ctx.fillStyle = BRAND; ctx.fillRect(PAD, agY + 10, 80, 4)
-    ctx.fillStyle = '#FFFFFF'; ctx.font = `bold 52px system-ui, sans-serif`; ctx.fillText(profile?.full_name || '', PAD, agY + 90)
-    ctx.fillStyle = BRAND; ctx.font = `36px system-ui, sans-serif`; ctx.fillText(profile?.brokerage || '', PAD, agY + 145)
+    const dagR = 110; const dagCX = PAD + dagR; const dagCY = agY + 210
+    drawCirclePhoto(ctx, agentImg, dagCX, dagCY, dagR, BRAND)
+    const dtxX = agentImg ? dagCX + dagR + 36 : PAD
+    ctx.fillStyle = '#FFFFFF'; ctx.font = `bold 52px system-ui, sans-serif`; ctx.fillText(profile?.full_name || '', dtxX, agY + 90)
+    ctx.fillStyle = BRAND; ctx.font = `36px system-ui, sans-serif`; ctx.fillText(profile?.brokerage || '', dtxX, agY + 145)
     ctx.fillStyle = '#777'; ctx.font = `32px system-ui, sans-serif`
     const contacts = [profile?.phone, profile?.website_url?.replace(/^https?:\/\//, '')].filter(Boolean)
-    contacts.forEach((c, i) => ctx.fillText(c, PAD, agY + 200 + i * 48))
+    contacts.forEach((c, i) => ctx.fillText(c, dtxX, agY + 200 + i * 48))
     ctx.fillStyle = BRAND; ctx.fillRect(0, H - 12, W, 12)
   } else {
     const leftW = Math.round(W * 0.52)
@@ -435,6 +471,12 @@ async function renderSNS(canvas, { format, address, results, profile, photos, ph
   let imgs = []
   try { imgs = await Promise.all(imgSrcs.slice(0, 1).map(loadImage)) } catch {}
 
+  // 에이전트 사진 로드 (선택적)
+  let agentImg = null
+  if (profile?.agent_photo_url) {
+    try { agentImg = await loadImage(profile.agent_photo_url) } catch {}
+  }
+
   // 배경 이미지
   if (imgs[0]) {
     drawCover(ctx, imgs[0], 0, 0, W, H)
@@ -443,74 +485,128 @@ async function renderSNS(canvas, { format, address, results, profile, photos, ph
   }
 
   // 그라디언트 오버레이 (하단 2/3)
-  const grad = ctx.createLinearGradient(0, H * 0.2, 0, H)
+  const grad = ctx.createLinearGradient(0, H * 0.15, 0, H)
   grad.addColorStop(0, 'rgba(0,0,0,0)')
-  grad.addColorStop(0.4, 'rgba(0,0,0,0.35)')
-  grad.addColorStop(1, 'rgba(0,0,0,0.80)')
+  grad.addColorStop(0.45, 'rgba(0,0,0,0.40)')
+  grad.addColorStop(1, 'rgba(0,0,0,0.85)')
   ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H)
 
   // Brand Color 좌측 바
   ctx.fillStyle = BRAND; ctx.fillRect(0, 0, 10, H)
 
   const PAD = Math.round(W * 0.075)
+  const parts = address.split(',')
 
   if (format === 'story') {
-    // Story 레이아웃 (세로)
+    // ── Story 9:16 레이아웃 ─────────────────────────────────
     // 상단: JUST LISTED 배지
     ctx.fillStyle = BRAND
-    roundRect(ctx, PAD, PAD * 1.5, 340, 64, 32); ctx.fill()
-    ctx.fillStyle = '#fff'; ctx.font = `bold 28px system-ui, sans-serif`
-    ctx.letterSpacing = '3px'; ctx.fillText('JUST LISTED', PAD + 32, PAD * 1.5 + 42); ctx.letterSpacing = '0px'
+    roundRect(ctx, PAD, PAD * 1.5, 380, 70, 35); ctx.fill()
+    ctx.fillStyle = '#fff'; ctx.font = `bold 30px system-ui, sans-serif`
+    ctx.letterSpacing = '4px'; ctx.fillText('JUST LISTED', PAD + 36, PAD * 1.5 + 46); ctx.letterSpacing = '0px'
 
     // 중간: 주소
-    ctx.fillStyle = '#fff'; ctx.font = `bold 84px system-ui, sans-serif`
-    const parts = address.split(',')
-    wrapText(ctx, parts[0] || address, PAD, H * 0.35, W - PAD * 2, 96)
+    ctx.fillStyle = '#fff'; ctx.font = `bold 88px system-ui, sans-serif`
+    const addrEndY = wrapText(ctx, parts[0] || address, PAD, H * 0.36, W - PAD * 2, 100)
 
-    // 스펙
-    const specs = [zillow?.beds ? `${zillow.beds} BD` : null, zillow?.baths ? `${zillow.baths} BA` : null, zillow?.sqft ? `${Number(zillow.sqft).toLocaleString()} SF` : null].filter(Boolean)
+    // 구분선
+    ctx.fillStyle = BRAND; ctx.fillRect(PAD, addrEndY + 36, 100, 6)
+
+    // 스펙 + 가격
+    const specs = []
+    if (zillow?.beds)  specs.push(`${zillow.beds} BD`)
+    if (zillow?.baths) specs.push(`${zillow.baths} BA`)
+    if (zillow?.sqft)  specs.push(`${Number(zillow.sqft).toLocaleString()} SF`)
     if (specs.length) {
-      ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(PAD, H * 0.52, W - PAD * 2, 2)
-      ctx.fillStyle = '#fff'; ctx.font = `bold 52px system-ui, sans-serif`
-      ctx.fillText(specs.join('  ·  '), PAD, H * 0.58)
+      ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.font = `500 50px system-ui, sans-serif`
+      ctx.fillText(specs.join('  ·  '), PAD, addrEndY + 110)
+    }
+    if (zillow?.price) {
+      ctx.fillStyle = '#fff'; ctx.font = `bold 64px system-ui, sans-serif`
+      ctx.fillText(zillow.price, PAD, addrEndY + 188)
     }
 
-    // 하단: 에이전트
-    ctx.fillStyle = 'rgba(255,255,255,0.92)'; ctx.font = `bold 44px system-ui, sans-serif`
-    ctx.fillText(profile?.full_name || '', PAD, H - 220)
-    ctx.fillStyle = 'rgba(255,255,255,0.65)'; ctx.font = `32px system-ui, sans-serif`
-    ctx.fillText(profile?.brokerage || '', PAD, H - 165)
-    ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.font = `28px system-ui, sans-serif`
-    ctx.fillText(profile?.phone || '', PAD, H - 120)
+    // 하단 에이전트 섹션
+    const agentY = H - 280
+    ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(0, agentY, W, 280)
+
+    const agentR = 70
+    const agentCX = PAD + agentR
+    const agentCY = agentY + 140
+
+    if (agentImg) {
+      drawCirclePhoto(ctx, agentImg, agentCX, agentCY, agentR, BRAND)
+      const textX = agentCX + agentR + 36
+      ctx.fillStyle = '#fff'; ctx.font = `bold 46px system-ui, sans-serif`
+      ctx.fillText(profile?.full_name || '', textX, agentCY - 24)
+      ctx.fillStyle = 'rgba(255,255,255,0.65)'; ctx.font = `34px system-ui, sans-serif`
+      ctx.fillText(profile?.brokerage || '', textX, agentCY + 24)
+      ctx.fillStyle = 'rgba(255,255,255,0.50)'; ctx.font = `30px system-ui, sans-serif`
+      ctx.fillText(profile?.phone || '', textX, agentCY + 62)
+    } else {
+      ctx.fillStyle = '#fff'; ctx.font = `bold 46px system-ui, sans-serif`
+      ctx.fillText(profile?.full_name || '', PAD, agentCY - 10)
+      ctx.fillStyle = 'rgba(255,255,255,0.65)'; ctx.font = `34px system-ui, sans-serif`
+      ctx.fillText(profile?.brokerage || '', PAD, agentCY + 40)
+      ctx.fillStyle = 'rgba(255,255,255,0.50)'; ctx.font = `30px system-ui, sans-serif`
+      ctx.fillText(profile?.phone || '', PAD, agentCY + 86)
+    }
 
   } else {
-    // Square / Portrait 레이아웃
+    // ── Square 1:1 / Portrait 4:5 레이아웃 ────────────────────
     const isSquare = format === 'square'
-    const textY = isSquare ? H * 0.55 : H * 0.60
+    const textY    = isSquare ? H * 0.50 : H * 0.55
 
-    // JUST LISTED
+    // JUST LISTED 배지
+    const badgeW = isSquare ? 280 : 310
+    const badgeH = isSquare ? 56 : 62
     ctx.fillStyle = BRAND
-    roundRect(ctx, PAD, textY - 100, 300, 56, 28); ctx.fill()
-    ctx.fillStyle = '#fff'; ctx.font = `bold 24px system-ui, sans-serif`
-    ctx.letterSpacing = '3px'; ctx.fillText('JUST LISTED', PAD + 24, textY - 63); ctx.letterSpacing = '0px'
+    roundRect(ctx, PAD, textY - badgeH - 30, badgeW, badgeH, badgeH / 2); ctx.fill()
+    ctx.fillStyle = '#fff'; ctx.font = `bold ${isSquare ? 24 : 26}px system-ui, sans-serif`
+    ctx.letterSpacing = '3px'
+    ctx.fillText('JUST LISTED', PAD + Math.round(badgeW * 0.12), textY - 30 - (badgeH - (isSquare ? 24 : 26)) / 2 - 4)
+    ctx.letterSpacing = '0px'
 
     // 주소
-    ctx.fillStyle = '#fff'; ctx.font = `bold ${isSquare ? 64 : 72}px system-ui, sans-serif`
-    const parts = address.split(',')
-    const addrEndY = wrapText(ctx, parts[0] || address, PAD, textY, W - PAD * 2, isSquare ? 74 : 84)
+    ctx.fillStyle = '#fff'; ctx.font = `bold ${isSquare ? 66 : 74}px system-ui, sans-serif`
+    const addrEndY = wrapText(ctx, parts[0] || address, PAD, textY, W - PAD * 2, isSquare ? 76 : 86)
+
+    // 구분선
+    ctx.fillStyle = BRAND; ctx.fillRect(PAD, addrEndY + 28, 80, 5)
 
     // 스펙
-    const specs = [zillow?.beds ? `${zillow.beds} BD` : null, zillow?.baths ? `${zillow.baths} BA` : null].filter(Boolean)
+    const specs = []
+    if (zillow?.beds)  specs.push(`${zillow.beds} BD`)
+    if (zillow?.baths) specs.push(`${zillow.baths} BA`)
     if (specs.length) {
-      ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.font = `bold ${isSquare ? 36 : 40}px system-ui, sans-serif`
-      ctx.fillText(specs.join('  ·  '), PAD, addrEndY + 18)
+      ctx.fillStyle = 'rgba(255,255,255,0.80)'; ctx.font = `bold ${isSquare ? 36 : 40}px system-ui, sans-serif`
+      ctx.fillText(specs.join('  ·  '), PAD, addrEndY + 86)
+    }
+    if (zillow?.price) {
+      ctx.fillStyle = '#fff'; ctx.font = `bold ${isSquare ? 42 : 46}px system-ui, sans-serif`
+      ctx.fillText(zillow.price, PAD, addrEndY + 148)
     }
 
-    // 에이전트
-    ctx.fillStyle = 'rgba(255,255,255,0.88)'; ctx.font = `bold ${isSquare ? 30 : 34}px system-ui, sans-serif`
-    ctx.fillText(profile?.full_name || '', PAD, H - 80)
-    ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.font = `${isSquare ? 24 : 26}px system-ui, sans-serif`
-    ctx.fillText(profile?.brokerage || '', PAD, H - 44)
+    // 하단 에이전트 줄
+    const agentBarH = isSquare ? 110 : 120
+    ctx.fillStyle = 'rgba(0,0,0,0.40)'; ctx.fillRect(0, H - agentBarH, W, agentBarH)
+    const agentR = Math.round(agentBarH * 0.38)
+    const agentCX = PAD + agentR
+    const agentCY = H - agentBarH / 2
+
+    if (agentImg) {
+      drawCirclePhoto(ctx, agentImg, agentCX, agentCY, agentR, BRAND)
+      const textX = agentCX + agentR + 28
+      ctx.fillStyle = '#fff'; ctx.font = `bold ${isSquare ? 30 : 34}px system-ui, sans-serif`
+      ctx.fillText(profile?.full_name || '', textX, agentCY - 12)
+      ctx.fillStyle = 'rgba(255,255,255,0.60)'; ctx.font = `${isSquare ? 24 : 26}px system-ui, sans-serif`
+      ctx.fillText(profile?.brokerage || '', textX, agentCY + 24)
+    } else {
+      ctx.fillStyle = '#fff'; ctx.font = `bold ${isSquare ? 30 : 34}px system-ui, sans-serif`
+      ctx.fillText(profile?.full_name || '', PAD, agentCY - 8)
+      ctx.fillStyle = 'rgba(255,255,255,0.60)'; ctx.font = `${isSquare ? 24 : 26}px system-ui, sans-serif`
+      ctx.fillText(profile?.brokerage || '', PAD, agentCY + 28)
+    }
   }
 
   // 하단 브랜드 바
