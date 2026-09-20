@@ -2,6 +2,7 @@
 // 브로셔 (세로/가로 전환) + SNS 소셜 템플릿 + PNG/PDF 다운로드
 // Canvas API 기반, 브라우저 내장 렌더링 (API 비용 0원)
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { callClaude } from './anthropicClient'
 import { X, Download, Image, FileText, RotateCcw, Smartphone, Video } from 'lucide-react'
 import styles from './MarketingModal.module.css'
 
@@ -807,36 +808,60 @@ export default function MarketingModal({ address, results, profile, photos = [],
   const [template,    setTemplate]    = useState('classic')
   const [videoBlob,   setVideoBlob]   = useState(null)
 
-  // ─── 독립 모드: 자체 입력값 (props로 초기화, 직접 편집 가능) ───────────────
-  const [propAddr,  setPropAddr]  = useState(address || '')
-  const [propBeds,  setPropBeds]  = useState(zillow?.beds  ?? '')
-  const [propBaths, setPropBaths] = useState(zillow?.baths ?? '')
-  const [propSqft,  setPropSqft]  = useState(zillow?.sqft  ?? '')
-  const [propPrice, setPropPrice] = useState(zillow?.price ?? '')
-  const [propDesc,  setPropDesc]  = useState(results?.mls  ?? '')
+  // ─── 주소 + 자동 조회 상태 ──────────────────────────────────────────────────
+  const [propAddr,    setPropAddr]    = useState(address || '')
+  const [lookupData,  setLookupData]  = useState(zillow || null)  // Zillow 조회 결과
+  const [looking,     setLooking]     = useState(false)            // 조회 중
+  const [lookupErr,   setLookupErr]   = useState('')
   const [localPhotos, setLocalPhotos] = useState(photos || [])
 
-  // props가 나중에 채워지면 동기화 (listing 서비스 연동)
+  // props zillow/address가 나중에 채워지면 동기화 (listing 서비스 연동)
   useEffect(() => { if (address) setPropAddr(address) }, [address])
-  useEffect(() => { if (zillow?.beds)  setPropBeds(zillow.beds)   }, [zillow?.beds])
-  useEffect(() => { if (zillow?.baths) setPropBaths(zillow.baths) }, [zillow?.baths])
-  useEffect(() => { if (zillow?.sqft)  setPropSqft(zillow.sqft)   }, [zillow?.sqft])
-  useEffect(() => { if (zillow?.price) setPropPrice(zillow.price)  }, [zillow?.price])
-  useEffect(() => { if (results?.mls)  setPropDesc(results.mls)   }, [results?.mls])
-  useEffect(() => { if (photos?.length) setLocalPhotos(photos)    }, [photos])
+  useEffect(() => { if (zillow) setLookupData(zillow) }, [zillow])
+  useEffect(() => { if (photos?.length) setLocalPhotos(photos) }, [photos])
+
+  // Zillow 자동 조회 (main app과 동일한 방식)
+  const lookupProperty = async () => {
+    if (!propAddr.trim()) return
+    setLooking(true); setLookupErr(''); setLookupData(null); setRendered(false)
+    try {
+      const msg = await callClaude({
+        model: 'claude-opus-4-6',
+        max_tokens: 800,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{
+          role: 'user',
+          content: `Search Zillow for this exact property address: "${propAddr.trim()}". Return ONLY a JSON object with these fields (no markdown, no explanation):
+{"beds":number|null,"baths":number|null,"sqft":number|null,"price":string|null,"propertyType":string|null,"yearBuilt":number|null,"lotSize":string|null}
+Use only data found on Zillow. Set any unfound field to null.`,
+        }],
+      })
+      const allText = msg.content.filter(b => b.type === 'text').map(b => b.text).join('\n')
+      const matches = allText.match(/\{[^{}]*\}/g)
+      if (matches?.length) {
+        setLookupData(JSON.parse(matches[matches.length - 1]))
+      } else {
+        setLookupErr('Property not found — check the address and try again')
+      }
+    } catch (e) {
+      setLookupErr('Lookup failed: ' + e.message)
+    } finally {
+      setLooking(false)
+    }
+  }
 
   const canvasRef  = useRef(null)
   const previewRef = useRef(null)
   const photoInputRef = useRef(null)
 
-  // 독립 모드 데이터: 내부 상태를 canvas 렌더에 전달
+  // canvas 렌더에 전달할 데이터 (lookupData 우선 사용)
   const renderData = {
     address:   propAddr,
     profile,
     photos:    localPhotos,
     photoUrls,
-    results:   { mls: propDesc },
-    zillow:    { beds: propBeds, baths: propBaths, sqft: propSqft, price: propPrice },
+    results:   { mls: results?.mls || '' },
+    zillow:    lookupData || {},
   }
 
   // 로컬 사진 추가
@@ -954,28 +979,44 @@ export default function MarketingModal({ address, results, profile, photos = [],
           {/* 우측: 컨트롤 */}
           <div className={styles.controlCol}>
 
-            {/* ── Property Info (독립 모드: 직접 입력 or listing에서 자동입력) ── */}
+            {/* ── Property: 주소 입력 + 자동 조회 ────────────────────────────── */}
             <div className={styles.section}>
               <p className={styles.sectionTitle}>Property</p>
-              <input
-                className={styles.propInput}
-                placeholder="Property address"
-                value={propAddr}
-                onChange={e => { setPropAddr(e.target.value); setRendered(false) }}
-              />
-              <div className={styles.propRow}>
-                <input className={styles.propInputSm} placeholder="Beds" type="number" min="0" value={propBeds}  onChange={e => { setPropBeds(e.target.value);  setRendered(false) }} />
-                <input className={styles.propInputSm} placeholder="Baths" type="number" min="0" value={propBaths} onChange={e => { setPropBaths(e.target.value); setRendered(false) }} />
-                <input className={styles.propInputSm} placeholder="Sq ft" type="number" min="0" value={propSqft}  onChange={e => { setPropSqft(e.target.value);  setRendered(false) }} />
-                <input className={styles.propInputSm} placeholder="Price" value={propPrice} onChange={e => { setPropPrice(e.target.value); setRendered(false) }} />
+              <div className={styles.addrRow}>
+                <input
+                  className={styles.propInput}
+                  placeholder="Property address"
+                  value={propAddr}
+                  onChange={e => { setPropAddr(e.target.value); setRendered(false) }}
+                  onKeyDown={e => { if (e.key === 'Enter') lookupProperty() }}
+                />
+                <button
+                  className={styles.lookupBtn}
+                  onClick={lookupProperty}
+                  disabled={looking || !propAddr.trim()}>
+                  {looking ? <span className={styles.spinner} /> : '🔍'}
+                </button>
               </div>
-              <textarea
-                className={styles.propTextarea}
-                placeholder="Listing description (optional — used in brochure)"
-                rows={3}
-                value={propDesc}
-                onChange={e => { setPropDesc(e.target.value); setRendered(false) }}
-              />
+
+              {/* 조회 결과 칩 */}
+              {lookupData && (
+                <div className={styles.dataChips}>
+                  {lookupData.beds     && <span className={styles.chip}>{lookupData.beds} Beds</span>}
+                  {lookupData.baths    && <span className={styles.chip}>{lookupData.baths} Baths</span>}
+                  {lookupData.sqft     && <span className={styles.chip}>{Number(lookupData.sqft).toLocaleString()} sqft</span>}
+                  {lookupData.price    && <span className={styles.chipPrice}>{lookupData.price}</span>}
+                  {lookupData.yearBuilt && <span className={styles.chip}>Built {lookupData.yearBuilt}</span>}
+                  {lookupData.propertyType && <span className={styles.chip}>{lookupData.propertyType}</span>}
+                </div>
+              )}
+
+              {/* 조회 오류 */}
+              {lookupErr && <p className={styles.lookupErrMsg}>{lookupErr}</p>}
+
+              {/* 아직 조회 안 됨 (props zillow도 없을 때) */}
+              {!lookupData && !looking && !lookupErr && propAddr && (
+                <p className={styles.hint}>Press 🔍 to auto-fill property details from Zillow</p>
+              )}
             </div>
 
             {/* ── Photos ─────────────────────────────────────────────────── */}

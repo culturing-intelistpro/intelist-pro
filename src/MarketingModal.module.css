@@ -434,8 +434,14 @@
 }
 
 /* ── Property Info 독립 입력 폼 ──────────────────────────────────────────── */
+.addrRow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 10px;
+}
 .propInput {
-  width: 100%;
+  flex: 1;
   padding: 9px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -445,43 +451,49 @@
   background: var(--bg);
   outline: none;
   box-sizing: border-box;
-  margin-bottom: 8px;
 }
 .propInput:focus { border-color: var(--accent); }
-.propRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1.4fr;
+.lookupBtn {
+  flex-shrink: 0;
+  width: 36px; height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-2, #F5F5F7);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  transition: background 0.15s;
+}
+.lookupBtn:hover:not(:disabled) { background: var(--accent); color: #fff; border-color: var(--accent); }
+.lookupBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+.dataChips {
+  display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 8px;
+  margin-top: 2px;
 }
-.propInputSm {
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+.chip {
+  padding: 4px 10px;
+  border-radius: 20px;
   font-size: 12px;
-  font-family: inherit;
-  color: var(--text-1);
-  background: var(--bg);
-  outline: none;
-  width: 100%;
-  box-sizing: border-box;
-}
-.propInputSm:focus { border-color: var(--accent); }
-.propTextarea {
-  width: 100%;
-  padding: 9px 12px;
+  font-weight: 500;
+  background: var(--bg-2, #F0F0F3);
+  color: var(--text-2);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 12px;
-  font-family: inherit;
-  color: var(--text-1);
-  background: var(--bg);
-  outline: none;
-  resize: vertical;
-  box-sizing: border-box;
-  line-height: 1.5;
 }
-.propTextarea:focus { border-color: var(--accent); }
+.chipPrice {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--accent, #D94035);
+  color: #fff;
+}
+.lookupErrMsg {
+  font-size: 11px;
+  color: #E53E3E;
+  margin-top: 4px;
+}
 .photoHeader {
   display: flex;
   align-items: center;
