@@ -466,7 +466,7 @@ export default function MarketingModal({ address, results, profile, photos = [],
           <div className={styles.headerLeft}>
             <Image size={20} style={{ color: 'var(--icon)' }} />
             <div>
-              <h2 className={styles.title}>Marketing Kit</h2>
+              <h2 className={styles.title}>D-Lap</h2>
               <p className={styles.sub}>Brochure · SNS · PNG / JPEG Download</p>
             </div>
           </div>

@@ -2168,11 +2168,9 @@ Each section must bring new information or perspective — not restate what anot
               )}
               {isPro && <span className={styles.proBadge}>Pro ✦</span>}
               <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>
-              {results.mls && (
-                <button className={styles.marketingBtn} onClick={() => setShowMarketing(true)}>
-                  🎨 Marketing Kit
-                </button>
-              )}
+              <button className={styles.marketingBtn} onClick={() => setShowMarketing(true)}>
+                🎨 D-Lap
+              </button>
               <span className={styles.headerName}>
                 {user.user_metadata?.full_name ?? user.email}
               </span>
@@ -2459,12 +2457,26 @@ Each section must bring new information or perspective — not restate what anot
             </span>
           )}
           <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>
+          <button className={styles.marketingBtn} onClick={() => setShowMarketing(true)}>
+            🎨 D-Lap
+          </button>
           <button className={styles.newBtn} onClick={reset}>New listing</button>
           {user && (
             <button className={styles.signOutBtn} onClick={handleSignOut}>Sign out</button>
           )}
         </div>
       </header>
+      {showMarketing && (
+        <MarketingModal
+          onClose={() => setShowMarketing(false)}
+          address={results?.address || address}
+          results={results}
+          profile={profile}
+          photos={images.filter(f => f.type?.startsWith('image/'))}
+          photoUrls={[]}
+          zillow={zillowData}
+        />
+      )}
 
       <main className={styles.resultsMain}>
         <div className={styles.resultsHero}>
