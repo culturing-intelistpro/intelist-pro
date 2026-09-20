@@ -10,7 +10,6 @@ import OnboardingTour from './OnboardingTour'
 import masterPromptRules from './masterPromptRules'
 import { callClaude } from './anthropicClient'
 import AgentProfileModal from './AgentProfileModal'
-import MarketingModal from './MarketingModal'
 
 // ─── Listing metadata helpers ──────────────────────────────────────────────────
 function detectTier(addr) {
@@ -1171,7 +1170,6 @@ export default function App() {
   const [loadingHistory,  setLoadingHistory]  = useState(false)
   const [profile,         setProfile]         = useState(null)
   const [showProfile,     setShowProfile]     = useState(false)
-  const [showMarketing,   setShowMarketing]   = useState(false)
 
   const fileInputRef         = useRef(null)
   const styleFileInputRef    = useRef(null)
@@ -2065,19 +2063,7 @@ Each section must bring new information or perspective — not restate what anot
         {toast && <div className={styles.toast}>{toast}</div>}
 
         {/* Agent Profile Modal */}
-        {showMarketing && (
-        <MarketingModal
-          onClose={() => setShowMarketing(false)}
-          address={address}
-          results={results}
-          profile={profile}
-          photos={images.filter(f => f.type?.startsWith('image/'))}
-          photoUrls={[]}
-          zillow={zillowData}
-        />
-      )}
-
-      {showProfile && (
+        {showProfile && (
           <AgentProfileModal
             user={user}
             initialProfile={profile}
@@ -2168,9 +2154,6 @@ Each section must bring new information or perspective — not restate what anot
               )}
               {isPro && <span className={styles.proBadge}>Pro ✦</span>}
               <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>
-              <button className={styles.marketingBtn} onClick={() => setShowMarketing(true)}>
-                🎨 D-Lab
-              </button>
               <span className={styles.headerName}>
                 {user.user_metadata?.full_name ?? user.email}
               </span>
@@ -2457,26 +2440,12 @@ Each section must bring new information or perspective — not restate what anot
             </span>
           )}
           <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>
-          <button className={styles.marketingBtn} onClick={() => setShowMarketing(true)}>
-            🎨 D-Lab
-          </button>
           <button className={styles.newBtn} onClick={reset}>New listing</button>
           {user && (
             <button className={styles.signOutBtn} onClick={handleSignOut}>Sign out</button>
           )}
         </div>
       </header>
-      {showMarketing && (
-        <MarketingModal
-          onClose={() => setShowMarketing(false)}
-          address={results?.address || address}
-          results={results}
-          profile={profile}
-          photos={images.filter(f => f.type?.startsWith('image/'))}
-          photoUrls={[]}
-          zillow={zillowData}
-        />
-      )}
 
       <main className={styles.resultsMain}>
         <div className={styles.resultsHero}>
@@ -2599,52 +2568,15 @@ Each section must bring new information or perspective — not restate what anot
                   Object.values(nearby).map((c) => `${c.label}\n${c.items.map((i) => `• ${i}`).join('\n')}`).join('\n\n')
                 } />
               </div>
-              <div className={styles.nearbyGrid}>
-                {Object.entries(nearby).map(([key, cat]) => {
-                  const ICONS = { schools:'🏫', shopping:'🛒', metro:'🚇', employment:'💼', parks:'🌿', airports:'✈️' }
-                  const icon = ICONS[key] ?? '📍'
-                  const isWide = key === 'employment' || key === 'airports' || Object.keys(nearby).length <= 2
-                  return (
-                    <div key={key} className={[styles.nearbyCard, isWide ? styles.nearbyCardWide : ''].filter(Boolean).join(' ')}>
-                      <div className={styles.nearbyCardHead}>
-                        <span className={styles.nearbyCardIcon}>{icon}</span>
-                        <span className={styles.nearbyCardLabel}>{cat.label}</span>
-                      </div>
-                      <div className={styles.nearbyRows}>
-                        {cat.items.map((item, i) => {
-                          const parts = item.split(' — ')
-                          let name = '', sub = '', time = ''
-                          if (key === 'schools') {
-                            sub = parts[0] ?? ''
-                            name = parts[1] ?? ''
-                            time = parts[2] ?? ''
-                          } else if (key === 'metro') {
-                            sub = parts[0] ?? ''
-                            const rest = parts.slice(1).join(' — ')
-                            const pm = rest.match(/^(.+?)\s*\((.+?)\)$/)
-                            if (pm) { name = pm[1]; time = pm[2] }
-                            else name = rest
-                          } else {
-                            name = parts[0] ?? item
-                            const infoRaw = parts.slice(1).join(' — ')
-                            const rm = infoRaw.match(/^(.+?)\s*\(rush hour:\s*(.+?)\)$/)
-                            if (rm) { time = rm[1].trim(); sub = `rush: ${rm[2]}` }
-                            else time = infoRaw
-                          }
-                          return (
-                            <div key={i} className={styles.nearbyRow}>
-                              <div>
-                                <span className={styles.nearbyRowName}>{name || item}</span>
-                                {sub && <span className={styles.nearbyRowSub}>&nbsp;{sub}</span>}
-                              </div>
-                              {time && <span className={styles.nearbyRowTime}>{time}</span>}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                })}
+              <div className={styles.nearbyGroups}>
+                {Object.entries(nearby).map(([key, cat]) => (
+                  <div key={key} className={styles.nearbyGroup}>
+                    <p className={styles.nearbyGroupLabel}>{cat.label}</p>
+                    <ul className={styles.nearbyList}>
+                      {cat.items.map((item, i) => <li key={i}>{item}</li>)}
+                    </ul>
+                  </div>
+                ))}
               </div>
             </div>
           )}
