@@ -263,6 +263,27 @@ function GenerateTimeline({ loadingStep }) {
 // ─── Generation countdown timer ──────────────────────────────────────────────
 const GEN_TIMES_KEY = 'intelist_gen_times'
 
+// ── Local listing history (localStorage fallback) ─────────────────────────
+const LOCAL_HISTORY_KEY = 'intelist_local_history'
+
+function saveLocalListing(listing) {
+  try {
+    const raw = localStorage.getItem(LOCAL_HISTORY_KEY)
+    const arr = raw ? JSON.parse(raw) : []
+    // 같은 id 있으면 제거 후 앞에 추가
+    const filtered = arr.filter(l => String(l.id) !== String(listing.id))
+    filtered.unshift(listing)
+    localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(filtered.slice(0, 30)))
+  } catch {}
+}
+
+function getLocalListings() {
+  try {
+    const raw = localStorage.getItem(LOCAL_HISTORY_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch { return [] }
+}
+
 function getAverageGenTime() {
   try {
     const raw = localStorage.getItem(GEN_TIMES_KEY)
@@ -856,8 +877,9 @@ function HistoryModal({ listings, loading, onClose, onRestore }) {
           </div>
         ) : listings.length === 0 ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#86868B', fontSize: 14, textAlign: 'center', padding: 24 }}>
-            <p style={{ margin: 0 }}>No saved listings yet.</p>
-            <p style={{ margin: '6px 0 0', fontSize: 12, opacity: 0.7 }}>Generate a listing and it will appear here.</p>
+            <p style={{ margin: 0, fontSize: 32 }}>📋</p>
+            <p style={{ margin: '8px 0 0', fontWeight: 600, color: '#1D1D1F' }}>No listings yet</p>
+            <p style={{ margin: '4px 0 0', fontSize: 12, opacity: 0.7 }}>Generate a listing and it will appear here automatically.</p>
           </div>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, overflowY: 'auto', flex: 1 }}>
@@ -996,9 +1018,18 @@ export default function App() {
         .not('mls_copy', 'is', null)
         .order('created_at', { ascending: false })
         .limit(30)
-      setHistoryListings(data ?? [])
+      const local = getLocalListings()
+      const dbData = data ?? []
+      if (dbData.length === 0 && local.length > 0) {
+        setHistoryListings(local)
+      } else {
+        const dbIds = new Set(dbData.map(l => String(l.id)))
+        const extras = local.filter(l => !dbIds.has(String(l.id)))
+        setHistoryListings([...dbData, ...extras])
+      }
     } catch (e) {
       console.warn('[Intelist Pro] History load error:', e)
+      setHistoryListings(getLocalListings())
     } finally {
       setLoadingHistory(false)
     }
@@ -1006,7 +1037,11 @@ export default function App() {
 
   const openHistory = () => {
     setShowHistory(true)
-    if (user) loadHistory(user.id)
+    if (user) {
+      loadHistory(user.id)
+    } else {
+      setHistoryListings(getLocalListings())
+    }
   }
 
   const restoreFromHistory = (listing) => {
@@ -2405,7 +2440,7 @@ Each section must bring new information or perspective — not restate what anot
               {user.user_metadata?.full_name ?? user.email}
             </span>
           )}
-          {user && <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>}
+          <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>
           <button className={styles.newBtn} onClick={reset}>New listing</button>
           {user && (
             <button className={styles.signOutBtn} onClick={handleSignOut}>Sign out</button>
