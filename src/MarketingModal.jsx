@@ -1062,6 +1062,7 @@ Use only data found on Zillow. Set any unfound field to null.`,
 
             {/* Brochure 옵션 */}
             {tab === 'brochure' && (
+              <>
               <div className={styles.section}>
                 <p className={styles.sectionTitle}>Orientation</p>
                 <div className={styles.optionRow}>
@@ -1097,6 +1098,7 @@ Use only data found on Zillow. Set any unfound field to null.`,
                   </button>
                 </div>
               </div>
+              </>
             )}
 
             {/* SNS 옵션 */}
