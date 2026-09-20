@@ -1,7 +1,7 @@
 // MarketingModal.jsx — Phase 3: 홍보물 키트 자동 생성
 // 브로셔 (세로/가로 전환) + SNS 소셜 템플릿 + PNG/PDF 다운로드
 // Canvas API 기반, 브라우저 내장 렌더링 (API 비용 0원)
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { X, Download, Image, FileText, RotateCcw, Smartphone } from 'lucide-react'
 import styles from './MarketingModal.module.css'
 
@@ -361,18 +361,59 @@ async function renderSNS(canvas, { format, address, results, profile, photos, ph
 }
 
 // ─── 메인 컴포넌트 ────────────────────────────────────────────────────────────
-export default function MarketingModal({ address, results, profile, photos, photoUrls = [], zillow, onClose }) {
-  const [tab,         setTab]         = useState('brochure')   // 'brochure' | 'sns'
-  const [orientation, setOrientation] = useState('portrait')   // 'portrait' | 'landscape'
-  const [snsFormat,   setSnsFormat]   = useState('square')     // 'square' | 'portrait' | 'story'
+export default function MarketingModal({ address, results, profile, photos = [], photoUrls = [], zillow, onClose }) {
+  const [tab,         setTab]         = useState('brochure')
+  const [orientation, setOrientation] = useState('portrait')
+  const [snsFormat,   setSnsFormat]   = useState('square')
   const [rendering,   setRendering]   = useState(false)
   const [rendered,    setRendered]    = useState(false)
   const [errMsg,      setErrMsg]      = useState('')
 
-  const canvasRef = useRef(null)
-  const previewRef = useRef(null)
+  // ─── 독립 모드: 자체 입력값 (props로 초기화, 직접 편집 가능) ───────────────
+  const [propAddr,  setPropAddr]  = useState(address || '')
+  const [propBeds,  setPropBeds]  = useState(zillow?.beds  ?? '')
+  const [propBaths, setPropBaths] = useState(zillow?.baths ?? '')
+  const [propSqft,  setPropSqft]  = useState(zillow?.sqft  ?? '')
+  const [propPrice, setPropPrice] = useState(zillow?.price ?? '')
+  const [propDesc,  setPropDesc]  = useState(results?.mls  ?? '')
+  const [localPhotos, setLocalPhotos] = useState(photos || [])
 
-  const renderData = { address, results, profile, photos, photoUrls, zillow }
+  // props가 나중에 채워지면 동기화 (listing 서비스 연동)
+  useEffect(() => { if (address) setPropAddr(address) }, [address])
+  useEffect(() => { if (zillow?.beds)  setPropBeds(zillow.beds)   }, [zillow?.beds])
+  useEffect(() => { if (zillow?.baths) setPropBaths(zillow.baths) }, [zillow?.baths])
+  useEffect(() => { if (zillow?.sqft)  setPropSqft(zillow.sqft)   }, [zillow?.sqft])
+  useEffect(() => { if (zillow?.price) setPropPrice(zillow.price)  }, [zillow?.price])
+  useEffect(() => { if (results?.mls)  setPropDesc(results.mls)   }, [results?.mls])
+  useEffect(() => { if (photos?.length) setLocalPhotos(photos)    }, [photos])
+
+  const canvasRef  = useRef(null)
+  const previewRef = useRef(null)
+  const photoInputRef = useRef(null)
+
+  // 독립 모드 데이터: 내부 상태를 canvas 렌더에 전달
+  const renderData = {
+    address:   propAddr,
+    profile,
+    photos:    localPhotos,
+    photoUrls,
+    results:   { mls: propDesc },
+    zillow:    { beds: propBeds, baths: propBaths, sqft: propSqft, price: propPrice },
+  }
+
+  // 로컬 사진 추가
+  const handlePhotoAdd = (e) => {
+    const files = Array.from(e.target.files)
+    const readers = files.map(file => new Promise(resolve => {
+      const reader = new FileReader()
+      reader.onload = ev => resolve({ name: file.name, type: file.type, preview: ev.target.result })
+      reader.readAsDataURL(file)
+    }))
+    Promise.all(readers).then(newPhotos => {
+      setLocalPhotos(prev => [...prev, ...newPhotos])
+      setRendered(false)
+    })
+  }
 
   const doRender = useCallback(async () => {
     setRendering(true); setRendered(false); setErrMsg('')
@@ -451,6 +492,53 @@ export default function MarketingModal({ address, results, profile, photos, phot
 
           {/* 우측: 컨트롤 */}
           <div className={styles.controlCol}>
+
+            {/* ── Property Info (독립 모드: 직접 입력 or listing에서 자동입력) ── */}
+            <div className={styles.section}>
+              <p className={styles.sectionTitle}>Property</p>
+              <input
+                className={styles.propInput}
+                placeholder="Property address"
+                value={propAddr}
+                onChange={e => { setPropAddr(e.target.value); setRendered(false) }}
+              />
+              <div className={styles.propRow}>
+                <input className={styles.propInputSm} placeholder="Beds" type="number" min="0" value={propBeds}  onChange={e => { setPropBeds(e.target.value);  setRendered(false) }} />
+                <input className={styles.propInputSm} placeholder="Baths" type="number" min="0" value={propBaths} onChange={e => { setPropBaths(e.target.value); setRendered(false) }} />
+                <input className={styles.propInputSm} placeholder="Sq ft" type="number" min="0" value={propSqft}  onChange={e => { setPropSqft(e.target.value);  setRendered(false) }} />
+                <input className={styles.propInputSm} placeholder="Price" value={propPrice} onChange={e => { setPropPrice(e.target.value); setRendered(false) }} />
+              </div>
+              <textarea
+                className={styles.propTextarea}
+                placeholder="Listing description (optional — used in brochure)"
+                rows={3}
+                value={propDesc}
+                onChange={e => { setPropDesc(e.target.value); setRendered(false) }}
+              />
+            </div>
+
+            {/* ── Photos ─────────────────────────────────────────────────── */}
+            <div className={styles.section}>
+              <div className={styles.photoHeader}>
+                <p className={styles.sectionTitle}>Photos</p>
+                <button className={styles.photoAddBtn} onClick={() => photoInputRef.current?.click()}>
+                  + Add
+                </button>
+                <input ref={photoInputRef} type="file" accept="image/*" multiple hidden onChange={handlePhotoAdd} />
+              </div>
+              {localPhotos.length > 0 ? (
+                <div className={styles.photoStrip}>
+                  {localPhotos.filter(p => !p.isPDF).slice(0, 6).map((p, i) => (
+                    <div key={i} className={styles.photoThumb} style={{ backgroundImage: `url(${p.preview})` }}>
+                      <button className={styles.photoRemove} onClick={() => { setLocalPhotos(prev => prev.filter((_, j) => j !== i)); setRendered(false) }}>×</button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className={styles.photoEmpty}>No photos — click Add to upload property photos</p>
+              )}
+            </div>
+
             {/* 탭: Brochure / SNS */}
             <div className={styles.tabRow}>
               <button

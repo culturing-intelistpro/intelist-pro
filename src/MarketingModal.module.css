@@ -422,3 +422,111 @@
   }
   .controlCol { padding: 16px; }
 }
+
+/* ── Property Info 독립 입력 폼 ──────────────────────────────────────────── */
+.propInput {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-1);
+  background: var(--bg);
+  outline: none;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+}
+.propInput:focus { border-color: var(--accent); }
+.propRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1.4fr;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.propInputSm {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text-1);
+  background: var(--bg);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.propInputSm:focus { border-color: var(--accent); }
+.propTextarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text-1);
+  background: var(--bg);
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
+  line-height: 1.5;
+}
+.propTextarea:focus { border-color: var(--accent); }
+.photoHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.photoHeader .sectionTitle { margin: 0; flex: 1; }
+.photoAddBtn {
+  padding: 4px 10px;
+  border: 1.5px solid var(--accent);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.photoAddBtn:hover { background: var(--accent); color: #fff; }
+.photoStrip {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.photoThumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--border-light);
+  position: relative;
+  flex-shrink: 0;
+}
+.photoRemove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #FF3B30;
+  color: #fff;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+}
+.photoEmpty {
+  font-size: 12px;
+  color: var(--text-3);
+  padding: 10px 0;
+}
