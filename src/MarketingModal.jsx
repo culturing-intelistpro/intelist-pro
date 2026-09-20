@@ -70,7 +70,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 99) {
 }
 
 // ─── 브로셔 렌더러 ───────────────────────────────────────────────────────────
-async function renderBrochure(canvas, { orientation, address, results, profile, photos, photoUrls, zillow }) {
+async function renderBrochureClassic(canvas, { orientation, address, results, profile, photos, photoUrls, zillow }) {
   const dim = BROCHURE[orientation]
   canvas.width  = dim.w
   canvas.height = dim.h
@@ -260,6 +260,163 @@ async function renderBrochure(canvas, { orientation, address, results, profile, 
   }
 }
 
+
+// ─── MODERN 템플릿 ───────────────────────────────────────────────────────────
+async function renderBrochureModern(canvas, { orientation, address, results, profile, photos, photoUrls, zillow }) {
+  const dim = BROCHURE[orientation]
+  canvas.width = dim.w; canvas.height = dim.h
+  const ctx = canvas.getContext('2d')
+  const W = dim.w; const H = dim.h
+  const BRAND = profile?.brand_color || '#D94035'
+  const isPort = orientation === 'portrait'
+  const PAD = isPort ? 120 : 100
+  const imgSrcs = [...photos.filter(p=>!p.isPDF).map(p=>p.preview||`data:image/jpeg;base64,${p.base64}`),...photoUrls].filter(Boolean).slice(0,6)
+  let imgs = []; try { imgs = await Promise.all(imgSrcs.map(loadImage)) } catch {}
+
+  if (isPort) {
+    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H)
+    const heroH = Math.round(H * 0.40)
+    if (imgs[0]) { drawCover(ctx, imgs[0], 0, 0, W, heroH) } else { ctx.fillStyle = '#E8E8E8'; ctx.fillRect(0, 0, W, heroH) }
+    ctx.fillStyle = BRAND; ctx.fillRect(0, heroH, W, 12)
+    const addrY = heroH + 90
+    ctx.fillStyle = '#1A1A1A'; ctx.font = `bold 90px system-ui, sans-serif`
+    const parts = address.split(',')
+    const addrEndY = wrapText(ctx, parts[0] || address, PAD, addrY, W - PAD * 2, 100, 2)
+    if (parts[1]) { ctx.fillStyle = '#888'; ctx.font = `48px system-ui, sans-serif`; ctx.fillText(parts.slice(1).join(',').trim(), PAD, addrEndY + 20) }
+    const specs = [zillow?.beds?`${zillow.beds} Beds`:null, zillow?.baths?`${zillow.baths} Baths`:null, zillow?.sqft?`${Number(zillow.sqft).toLocaleString()} sf`:null, zillow?.price?zillow.price:null].filter(Boolean)
+    const pillY = addrEndY + 110
+    let pillX = PAD
+    ctx.font = `bold 36px system-ui, sans-serif`
+    specs.forEach(s => {
+      const tw = ctx.measureText(s).width; const ph = 72
+      roundRect(ctx, pillX, pillY - ph + 12, tw + 56, ph, 36)
+      ctx.fillStyle = BRAND + '18'; ctx.fill()
+      ctx.strokeStyle = BRAND + '88'; ctx.lineWidth = 2; ctx.stroke()
+      ctx.fillStyle = BRAND; ctx.fillText(s, pillX + 28, pillY)
+      pillX += tw + 76
+    })
+    ctx.fillStyle = '#E0E0E0'; ctx.fillRect(PAD, pillY + 50, W - PAD * 2, 2)
+    ctx.fillStyle = '#444'; ctx.font = `38px system-ui, sans-serif`
+    wrapText(ctx, results?.mls || '', PAD, pillY + 110, W - PAD * 2, 56, 9)
+    const gridY = pillY + 820; const gridH = 500; const gridW = (W - PAD * 2 - 20) / 3
+    if (imgs.length > 1) {
+      for (let i = 0; i < Math.min(3, imgs.length - 1); i++) {
+        const gx = PAD + i * (gridW + 10)
+        ctx.save(); roundRect(ctx, gx, gridY, gridW, gridH, 16); ctx.clip(); drawCover(ctx, imgs[i+1], gx, gridY, gridW, gridH); ctx.restore()
+      }
+    }
+    const agY = H - 400
+    ctx.fillStyle = '#FAFAFA'; ctx.fillRect(0, agY, W, H - agY)
+    ctx.fillStyle = BRAND; ctx.fillRect(PAD, agY + 10, 80, 6)
+    ctx.fillStyle = '#1A1A1A'; ctx.font = `bold 52px system-ui, sans-serif`; ctx.fillText(profile?.full_name || '', PAD, agY + 90)
+    ctx.fillStyle = BRAND; ctx.font = `36px system-ui, sans-serif`; ctx.fillText(profile?.brokerage || '', PAD, agY + 145)
+    ctx.fillStyle = '#666'; ctx.font = `32px system-ui, sans-serif`
+    const contacts = [profile?.phone, profile?.website_url?.replace(/^https?:\/\//, '')].filter(Boolean)
+    contacts.forEach((c, i) => ctx.fillText(c, PAD, agY + 200 + i * 48))
+  } else {
+    const leftW = Math.round(W * 0.50)
+    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H)
+    if (imgs[0]) { drawCover(ctx, imgs[0], 0, 0, leftW, H) } else { ctx.fillStyle = '#E8E8E8'; ctx.fillRect(0, 0, leftW, H) }
+    ctx.fillStyle = BRAND; ctx.fillRect(leftW, 0, 8, H)
+    const rx = leftW + PAD + 8; const rw = W - leftW - PAD * 2 - 8
+    ctx.fillStyle = '#1A1A1A'; ctx.font = `bold 76px system-ui, sans-serif`
+    const parts = address.split(',')
+    const addrEndY = wrapText(ctx, parts[0] || address, rx, PAD + 120, rw, 88)
+    if (parts[1]) { ctx.fillStyle = '#888'; ctx.font = `42px system-ui, sans-serif`; ctx.fillText(parts.slice(1).join(',').trim(), rx, addrEndY + 20) }
+    const specs = [zillow?.beds?`${zillow.beds} BD`:null, zillow?.baths?`${zillow.baths} BA`:null, zillow?.sqft?`${Number(zillow.sqft).toLocaleString()} SF`:null].filter(Boolean)
+    const specY = addrEndY + 80
+    ctx.fillStyle = BRAND; ctx.font = `bold 44px system-ui, sans-serif`; ctx.fillText(specs.join('  ·  '), rx, specY)
+    ctx.fillStyle = '#E0E0E0'; ctx.fillRect(rx, specY + 28, rw, 2)
+    ctx.fillStyle = '#444'; ctx.font = `34px system-ui, sans-serif`; wrapText(ctx, results?.mls || '', rx, specY + 72, rw, 52, 7)
+    const agY = H - 300
+    ctx.fillStyle = '#FAFAFA'; ctx.fillRect(leftW + 8, agY, W - leftW - 8, H - agY)
+    ctx.fillStyle = BRAND; ctx.fillRect(rx, agY + 8, 60, 5)
+    ctx.fillStyle = '#1A1A1A'; ctx.font = `bold 44px system-ui, sans-serif`; ctx.fillText(profile?.full_name || '', rx, agY + 72)
+    ctx.fillStyle = BRAND; ctx.font = `30px system-ui, sans-serif`; ctx.fillText(profile?.brokerage || '', rx, agY + 118)
+    ctx.fillStyle = '#666'; ctx.font = `26px system-ui, sans-serif`
+    const cs = [profile?.phone, profile?.website_url?.replace(/^https?:\/\//, '')].filter(Boolean)
+    cs.forEach((c, i) => ctx.fillText(c, rx, agY + 162 + i * 40))
+  }
+}
+
+// ─── DARK 템플릿 ─────────────────────────────────────────────────────────────
+async function renderBrochureDark(canvas, { orientation, address, results, profile, photos, photoUrls, zillow }) {
+  const dim = BROCHURE[orientation]
+  canvas.width = dim.w; canvas.height = dim.h
+  const ctx = canvas.getContext('2d')
+  const W = dim.w; const H = dim.h
+  const BRAND = profile?.brand_color || '#D94035'
+  const isPort = orientation === 'portrait'
+  const PAD = isPort ? 120 : 100
+  const imgSrcs = [...photos.filter(p=>!p.isPDF).map(p=>p.preview||`data:image/jpeg;base64,${p.base64}`),...photoUrls].filter(Boolean).slice(0,6)
+  let imgs = []; try { imgs = await Promise.all(imgSrcs.map(loadImage)) } catch {}
+
+  if (isPort) {
+    ctx.fillStyle = '#141414'; ctx.fillRect(0, 0, W, H)
+    const heroH = Math.round(H * 0.45)
+    if (imgs[0]) { drawCover(ctx, imgs[0], 0, 0, W, heroH) } else { ctx.fillStyle = '#2A2A2A'; ctx.fillRect(0, 0, W, heroH) }
+    const heroGrad = ctx.createLinearGradient(0, heroH * 0.5, 0, heroH)
+    heroGrad.addColorStop(0, 'rgba(20,20,20,0)'); heroGrad.addColorStop(1, 'rgba(20,20,20,0.80)')
+    ctx.fillStyle = heroGrad; ctx.fillRect(0, 0, W, heroH)
+    ctx.fillStyle = BRAND; ctx.fillRect(0, heroH, W, 10)
+    const addrY = heroH + 90
+    ctx.fillStyle = '#FFFFFF'; ctx.font = `bold 90px system-ui, sans-serif`
+    const parts = address.split(',')
+    const addrEndY = wrapText(ctx, parts[0] || address, PAD, addrY, W - PAD * 2, 100, 2)
+    if (parts[1]) { ctx.fillStyle = '#888'; ctx.font = `48px system-ui, sans-serif`; ctx.fillText(parts.slice(1).join(',').trim(), PAD, addrEndY + 20) }
+    if (zillow?.price) { ctx.fillStyle = BRAND; ctx.font = `bold 64px system-ui, sans-serif`; ctx.fillText(zillow.price, PAD, addrEndY + 110) }
+    const specs = [zillow?.beds?`${zillow.beds} Beds`:null, zillow?.baths?`${zillow.baths} Baths`:null, zillow?.sqft?`${Number(zillow.sqft).toLocaleString()} sq ft`:null].filter(Boolean)
+    const specY = addrEndY + (zillow?.price ? 195 : 105)
+    if (specs.length) { ctx.fillStyle = 'rgba(255,255,255,0.50)'; ctx.font = `40px system-ui, sans-serif`; ctx.fillText(specs.join('  ·  '), PAD, specY) }
+    ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(PAD, specY + 30, W - PAD * 2, 1)
+    ctx.fillStyle = '#AAAAAA'; ctx.font = `38px system-ui, sans-serif`; wrapText(ctx, results?.mls || '', PAD, specY + 88, W - PAD * 2, 56, 8)
+    const gridY = specY + 840; const gridH = 500; const gridW = (W - PAD * 2 - 20) / 3
+    if (imgs.length > 1) {
+      for (let i = 0; i < Math.min(3, imgs.length - 1); i++) {
+        const gx = PAD + i * (gridW + 10)
+        ctx.save(); roundRect(ctx, gx, gridY, gridW, gridH, 16); ctx.clip(); drawCover(ctx, imgs[i+1], gx, gridY, gridW, gridH); ctx.restore()
+        ctx.save(); roundRect(ctx, gx, gridY, gridW, gridH, 16); ctx.clip(); ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(gx, gridY, gridW, gridH); ctx.restore()
+      }
+    }
+    const agY = H - 420
+    ctx.fillStyle = '#1E1E1E'; ctx.fillRect(0, agY, W, H - agY)
+    ctx.fillStyle = BRAND; ctx.fillRect(PAD, agY + 10, 80, 4)
+    ctx.fillStyle = '#FFFFFF'; ctx.font = `bold 52px system-ui, sans-serif`; ctx.fillText(profile?.full_name || '', PAD, agY + 90)
+    ctx.fillStyle = BRAND; ctx.font = `36px system-ui, sans-serif`; ctx.fillText(profile?.brokerage || '', PAD, agY + 145)
+    ctx.fillStyle = '#777'; ctx.font = `32px system-ui, sans-serif`
+    const contacts = [profile?.phone, profile?.website_url?.replace(/^https?:\/\//, '')].filter(Boolean)
+    contacts.forEach((c, i) => ctx.fillText(c, PAD, agY + 200 + i * 48))
+    ctx.fillStyle = BRAND; ctx.fillRect(0, H - 12, W, 12)
+  } else {
+    const leftW = Math.round(W * 0.52)
+    ctx.fillStyle = '#141414'; ctx.fillRect(0, 0, W, H)
+    if (imgs[0]) { drawCover(ctx, imgs[0], 0, 0, leftW, H) } else { ctx.fillStyle = '#2A2A2A'; ctx.fillRect(0, 0, leftW, H) }
+    const lGrad = ctx.createLinearGradient(leftW * 0.6, 0, leftW, 0)
+    lGrad.addColorStop(0, 'rgba(20,20,20,0)'); lGrad.addColorStop(1, 'rgba(20,20,20,0.55)')
+    ctx.fillStyle = lGrad; ctx.fillRect(0, 0, leftW, H)
+    ctx.fillStyle = BRAND; ctx.fillRect(leftW, 0, 8, H)
+    const rx = leftW + PAD + 8; const rw = W - leftW - PAD * 2 - 8
+    if (zillow?.price) { ctx.fillStyle = BRAND; ctx.font = `bold 60px system-ui, sans-serif`; ctx.fillText(zillow.price, rx, PAD + 80) }
+    ctx.fillStyle = '#FFFFFF'; ctx.font = `bold 72px system-ui, sans-serif`
+    const parts = address.split(',')
+    const addrEndY = wrapText(ctx, parts[0] || address, rx, PAD + (zillow?.price ? 170 : 80), rw, 84)
+    if (parts[1]) { ctx.fillStyle = '#888'; ctx.font = `40px system-ui, sans-serif`; ctx.fillText(parts.slice(1).join(',').trim(), rx, addrEndY + 20) }
+    const specs = [zillow?.beds?`${zillow.beds} BD`:null, zillow?.baths?`${zillow.baths} BA`:null, zillow?.sqft?`${Number(zillow.sqft).toLocaleString()} SF`:null].filter(Boolean)
+    const specY = addrEndY + 70
+    if (specs.length) { ctx.fillStyle = 'rgba(255,255,255,0.50)'; ctx.font = `38px system-ui, sans-serif`; ctx.fillText(specs.join('  ·  '), rx, specY) }
+    ctx.fillStyle = 'rgba(255,255,255,0.10)'; ctx.fillRect(rx, specY + 28, rw, 1)
+    ctx.fillStyle = '#AAAAAA'; ctx.font = `32px system-ui, sans-serif`; wrapText(ctx, results?.mls || '', rx, specY + 72, rw, 48, 7)
+    const agY = H - 300
+    ctx.fillStyle = '#1E1E1E'; ctx.fillRect(leftW + 8, agY, W - leftW - 8, H - agY)
+    ctx.fillStyle = BRAND; ctx.fillRect(rx, agY + 8, 60, 4)
+    ctx.fillStyle = '#FFFFFF'; ctx.font = `bold 44px system-ui, sans-serif`; ctx.fillText(profile?.full_name || '', rx, agY + 72)
+    ctx.fillStyle = BRAND; ctx.font = `30px system-ui, sans-serif`; ctx.fillText(profile?.brokerage || '', rx, agY + 118)
+    ctx.fillStyle = '#777'; ctx.font = `26px system-ui, sans-serif`
+    const cs = [profile?.phone, profile?.website_url?.replace(/^https?:\/\//, '')].filter(Boolean)
+    cs.forEach((c, i) => ctx.fillText(c, rx, agY + 162 + i * 40))
+  }
+}
+
 // ─── SNS 템플릿 렌더러 ───────────────────────────────────────────────────────
 async function renderSNS(canvas, { format, address, results, profile, photos, photoUrls, zillow }) {
   const dim = SNS[format]
@@ -368,6 +525,7 @@ export default function MarketingModal({ address, results, profile, photos = [],
   const [rendering,   setRendering]   = useState(false)
   const [rendered,    setRendered]    = useState(false)
   const [errMsg,      setErrMsg]      = useState('')
+  const [template,    setTemplate]    = useState('classic')
 
   // ─── 독립 모드: 자체 입력값 (props로 초기화, 직접 편집 가능) ───────────────
   const [propAddr,  setPropAddr]  = useState(address || '')
@@ -420,7 +578,9 @@ export default function MarketingModal({ address, results, profile, photos = [],
     try {
       const canvas = canvasRef.current
       if (tab === 'brochure') {
-        await renderBrochure(canvas, { ...renderData, orientation })
+        if (template === 'modern') await renderBrochureModern(canvas, { ...renderData, orientation })
+        else if (template === 'dark') await renderBrochureDark(canvas, { ...renderData, orientation })
+        else await renderBrochureClassic(canvas, { ...renderData, orientation })
       } else {
         await renderSNS(canvas, { ...renderData, format: snsFormat })
       }
@@ -434,7 +594,7 @@ export default function MarketingModal({ address, results, profile, photos = [],
     } finally {
       setRendering(false)
     }
-  }, [tab, orientation, snsFormat, address, results, profile, photos, photoUrls, zillow])
+  }, [tab, orientation, snsFormat, template, address, results, profile, photos, photoUrls, zillow])
 
   const downloadPNG = () => {
     if (!canvasRef.current || !rendered) return
@@ -568,6 +728,27 @@ export default function MarketingModal({ address, results, profile, photos = [],
                   ))}
                 </div>
                 <p className={styles.hint}>Portrait: Print / Email  ·  Landscape: Presentation</p>
+              </div>
+
+              <div className={styles.section}>
+                <p className={styles.sectionTitle}>Template</p>
+                <div className={styles.optionRow}>
+                  <button
+                    className={`${styles.optBtn} ${template === 'classic' ? styles.optBtnActive : ''}`}
+                    onClick={() => { setTemplate('classic'); setRendered(false) }}>
+                    ⬜ Classic
+                  </button>
+                  <button
+                    className={`${styles.optBtn} ${template === 'modern' ? styles.optBtnActive : ''}`}
+                    onClick={() => { setTemplate('modern'); setRendered(false) }}>
+                    🗒 Modern
+                  </button>
+                  <button
+                    className={`${styles.optBtn} ${template === 'dark' ? styles.optBtnActive : ''}`}
+                    onClick={() => { setTemplate('dark'); setRendered(false) }}>
+                    🌑 Dark
+                  </button>
+                </div>
               </div>
             )}
 
