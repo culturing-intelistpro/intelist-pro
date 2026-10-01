@@ -304,35 +304,58 @@ function saveGenTime(ms) {
 }
 
 function GenerateCountdown({ loading, startTimeRef }) {
-  const [elapsed, setElapsed] = useState(0)
+  const avgMs   = getAverageGenTime()
+  const DEFAULT_SECS = 60
+  const avgSecs = avgMs ? Math.round(avgMs / 1000) : DEFAULT_SECS
+  const [secs, setSecs]   = useState(avgSecs)
+  const [phase, setPhase] = useState('counting') // 'counting' | 'done' | 'over'
 
   useEffect(() => {
-    if (!loading) { setElapsed(0); return }
-    setElapsed(0)
-    const start = startTimeRef?.current ?? Date.now()
+    if (!loading) return
+    setSecs(avgSecs)
+    setPhase('counting')
     const interval = setInterval(() => {
-      setElapsed(Math.round((Date.now() - start) / 1000))
+      setSecs(prev => {
+        if (prev === null) return null
+        if (prev <= 1) { setPhase('over'); clearInterval(interval); return 0 }
+        return prev - 1
+      })
     }, 1000)
     return () => clearInterval(interval)
   }, [loading])
 
+  useEffect(() => {
+    if (!loading && phase === 'counting' && secs !== null && secs > 0) setPhase('done')
+  }, [loading])
+
   if (!loading) return null
 
-  const r = 26
+  if (phase === 'done') {
+    return (
+      <p style={{ fontSize: 13, color: '#34c759', textAlign: 'center', fontWeight: 600, margin: 0 }}>
+        ✓ Done faster than expected
+      </p>
+    )
+  }
+
+  const total = avgSecs
+  const pct   = phase === 'over' ? 1 : Math.max(0, Math.min(1, (total - (secs ?? 0)) / total))
+  const r   = 26
   const circ = 2 * Math.PI * r
+  const dash = circ * (1 - pct)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
       <div style={{ position: 'relative', width: 64, height: 64 }}>
-        <svg width="64" height="64" viewBox="0 0 64 64"
-          style={{ transformOrigin: '50% 50%', animation: 'spin 1.4s linear infinite' }}>
+        <svg width="64" height="64" viewBox="0 0 64 64" style={{ transform: 'rotate(-90deg)' }}>
           <circle cx="32" cy="32" r={r} fill="none"
             stroke="var(--border-light, rgba(0,0,0,0.08))" strokeWidth="3"/>
           <circle cx="32" cy="32" r={r} fill="none"
             stroke="var(--accent, #D94035)" strokeWidth="3"
             strokeLinecap="round"
             strokeDasharray={circ}
-            strokeDashoffset={circ * 0.75}/>
+            strokeDashoffset={dash}
+            style={{ transition: 'stroke-dashoffset 0.9s ease' }}/>
         </svg>
         <div style={{
           position: 'absolute', inset: 0,
@@ -340,15 +363,29 @@ function GenerateCountdown({ loading, startTimeRef }) {
           alignItems: 'center', justifyContent: 'center',
           lineHeight: 1,
         }}>
-          <span style={{
-            fontVariantNumeric: 'tabular-nums',
-            fontSize: 18, fontWeight: 700,
-            color: 'var(--text-1, #1D1D1F)',
-            letterSpacing: '-0.5px',
-          }}>{elapsed}</span>
-          <span style={{ fontSize: 9, color: 'var(--text-3, #8a8a8e)', letterSpacing: '0.5px' }}>sec</span>
+          {phase === 'over' ? (
+            <span style={{ fontSize: 10, color: 'var(--accent, #D94035)', fontWeight: 600, textAlign: 'center', lineHeight: 1.2 }}>almost<br/>there</span>
+          ) : (
+            <>
+              <span style={{
+                fontVariantNumeric: 'tabular-nums',
+                fontSize: 18, fontWeight: 700,
+                color: 'var(--text-1, #1D1D1F)',
+                letterSpacing: '-0.5px',
+              }}>{secs}</span>
+              <span style={{ fontSize: 9, color: 'var(--text-3, #8a8a8e)', letterSpacing: '0.5px' }}>sec</span>
+            </>
+          )}
         </div>
       </div>
+      {phase === 'over' && (
+        <p style={{
+          fontSize: 12, color: 'var(--accent, #D94035)', fontWeight: 600,
+          margin: 0, textAlign: 'center', letterSpacing: '0.01em',
+        }}>
+          A few more seconds…
+        </p>
+      )}
     </div>
   )
 }
