@@ -2571,12 +2571,10 @@ Each section must bring new information or perspective — not restate what anot
                   rows={6}
                 />
               ) : (
-                <p
-                  className={styles.cardText}
-                  onClick={() => setDirEditing(true)}
-                  title="클릭해서 수정"
-                  style={{cursor:'text', whiteSpace:'pre-wrap'}}
-                >{dirEditText || directions.text}</p>
+                <div className={styles.editableBlock} onClick={() => setDirEditing(true)}>
+                  <p className={styles.cardText} style={{whiteSpace:'pre-wrap', margin:0}}>{dirEditText || directions.text}</p>
+                  <span className={styles.editHint}>✏ Edit</span>
+                </div>
               )}
             </div>
           )}
@@ -2609,14 +2607,12 @@ Each section must bring new information or perspective — not restate what anot
                         rows={cat.items.length + 1}
                       />
                     ) : (
-                      <ul
-                        className={styles.nearbyList}
-                        onClick={() => setNearbyEditing(key)}
-                        title="클릭해서 수정"
-                        style={{cursor:'text'}}
-                      >
-                        {cat.items.map((item, i) => <li key={i}>{item}</li>)}
-                      </ul>
+                      <div className={styles.editableBlock} onClick={() => setNearbyEditing(key)}>
+                        <ul className={styles.nearbyList} style={{margin:0}}>
+                          {cat.items.map((item, i) => <li key={i}>{item}</li>)}
+                        </ul>
+                        <span className={styles.editHint}>✏ Edit</span>
+                      </div>
                     )}
                   </div>
                 ))}
