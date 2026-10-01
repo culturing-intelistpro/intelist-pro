@@ -776,6 +776,10 @@ export default function App() {
   const [zillowData, setZillowData]       = useState(null)
   const [directions, setDirections]       = useState(null)
   const [nearby, setNearby]               = useState(null)
+  const [nearbyData, setNearbyData]       = useState(null)   // editable copy
+  const [nearbyEditing, setNearbyEditing] = useState(null)   // key of category being edited
+  const [dirEditText, setDirEditText]     = useState('')
+  const [dirEditing, setDirEditing]       = useState(false)
   const [results, setResults]             = useState(null)
   const [activeTab, setActiveTab]         = useState('mls')
   const [error, setError]                 = useState(null)
@@ -1121,6 +1125,8 @@ Use only data found on Zillow. Set any unfound field to null.`,
     setZillowData(null)
     setDirections(null)
     setNearby(null)
+    setNearbyData(null); setNearbyEditing(null)
+    setDirEditText(''); setDirEditing(false)
     setActiveTab('mls')
     setLoading(true)
     setLoadingStep('zillow')
@@ -1137,12 +1143,14 @@ Use only data found on Zillow. Set any unfound field to null.`,
       ])
       setZillowData(zillow)
       setDirections(directionsResult)
+      setDirEditText(directionsResult?.text || '')
 
       // Nearby & Commute's "Schools" category now uses the same GIS result as the
       // generated copy — one accurate source for both.
       const schoolsCategory = buildSchoolsCategory(schoolData?.found ? schoolData : null)
       const mergedNearby = schoolsCategory ? { schools: schoolsCategory, ...(nearbyResult || {}) } : nearbyResult
       setNearby(mergedNearby)
+      setNearbyData(mergedNearby ? JSON.parse(JSON.stringify(mergedNearby)) : null)
       setLoadingStep('generating')
 
       // GIS boundary lookup is the authoritative source — no local fallback needed
@@ -1600,7 +1608,7 @@ Each section must bring new information or perspective — not restate what anot
     setNotes(''); setTranscript(''); setPrevListing('')
     setActivePanel(null); setStyleFiles([])
     images.forEach((img) => URL.revokeObjectURL(img.preview))
-    setImages([]); setListingId(null); setZillowData(null); setDirections(null); setNearby(null)
+    setImages([]); setListingId(null); setZillowData(null); setDirections(null); setNearby(null); setNearbyData(null); setNearbyEditing(null); setDirEditText(''); setDirEditing(false)
     setActiveTab('mls'); setElapsedMs(null)
   }
 
@@ -2050,7 +2058,23 @@ Each section must bring new information or perspective — not restate what anot
                 </div>
                 <CopyButton text={directions.text} />
               </div>
-              <p className={styles.cardText}>{directions.text}</p>
+              {dirEditing ? (
+                <textarea
+                  className={styles.sectionEditor}
+                  value={dirEditText}
+                  onChange={e => setDirEditText(e.target.value)}
+                  onBlur={() => { setDirEditing(false); setDirections(d => ({...d, text: dirEditText})) }}
+                  autoFocus
+                  rows={6}
+                />
+              ) : (
+                <p
+                  className={styles.cardText}
+                  onClick={() => setDirEditing(true)}
+                  title="클릭해서 수정"
+                  style={{cursor:'text', whiteSpace:'pre-wrap'}}
+                >{dirEditText || directions.text}</p>
+              )}
             </div>
           )}
 
@@ -2062,16 +2086,35 @@ Each section must bring new information or perspective — not restate what anot
                   <p className={styles.cardSub}>Drive times from this address</p>
                 </div>
                 <CopyButton text={
-                  Object.values(nearby).map((c) => `${c.label}\n${c.items.map((i) => `• ${i}`).join('\n')}`).join('\n\n')
+                  Object.values(nearbyData || nearby).map((c) => `${c.label}\n${c.items.map((i) => `• ${i}`).join('\n')}`).join('\n\n')
                 } />
               </div>
               <div className={styles.nearbyGroups}>
-                {Object.entries(nearby).map(([key, cat]) => (
+                {Object.entries(nearbyData || nearby).map(([key, cat]) => (
                   <div key={key} className={styles.nearbyGroup}>
                     <p className={styles.nearbyGroupLabel}>{cat.label}</p>
-                    <ul className={styles.nearbyList}>
-                      {cat.items.map((item, i) => <li key={i}>{item}</li>)}
-                    </ul>
+                    {nearbyEditing === key ? (
+                      <textarea
+                        className={styles.sectionEditor}
+                        defaultValue={cat.items.join('\n')}
+                        onBlur={e => {
+                          const lines = e.target.value.split('\n').map(s => s.trim()).filter(Boolean)
+                          setNearbyData(prev => ({...prev, [key]: {...cat, items: lines}}))
+                          setNearbyEditing(null)
+                        }}
+                        autoFocus
+                        rows={cat.items.length + 1}
+                      />
+                    ) : (
+                      <ul
+                        className={styles.nearbyList}
+                        onClick={() => setNearbyEditing(key)}
+                        title="클릭해서 수정"
+                        style={{cursor:'text'}}
+                      >
+                        {cat.items.map((item, i) => <li key={i}>{item}</li>)}
+                      </ul>
+                    )}
                   </div>
                 ))}
               </div>

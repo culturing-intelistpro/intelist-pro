@@ -1451,3 +1451,25 @@
   color: #fff;
   white-space: nowrap;
 }
+
+
+.sectionEditor {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sectionEditor {
+    background: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #444;
+  }
+}
+
