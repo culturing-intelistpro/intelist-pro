@@ -946,7 +946,10 @@
   border-bottom: 1px solid var(--border-light);
   margin-bottom: 20px;
   overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.tabBar::-webkit-scrollbar { display: none; }
 
 .tabBtn {
   appearance: none;
