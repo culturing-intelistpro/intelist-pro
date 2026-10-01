@@ -2602,44 +2602,59 @@ Each section must bring new information or perspective — not restate what anot
                   Object.values(nearbyData || nearby).map((c) => `${c.label}\n${c.items.map((i) => `• ${i}`).join('\n')}`).join('\n\n')
                 } />
               </div>
-              <div className={styles.nearbyGroups}>
-                {Object.entries(nearbyData || nearby).map(([key, cat]) => (
-                  <div key={key} className={styles.nearbyGroup}>
-                    <p className={styles.nearbyGroupLabel}>{cat.label}</p>
-                    {nearbyEditing === key ? (
-                      <>
-                        <textarea
-                          className={styles.cardEditArea}
-                          defaultValue={cat.items.join('\n')}
-                          autoFocus
-                          rows={cat.items.length + 2}
-                          style={{marginTop:4}}
-                          id={`nearby-ta-${key}`}
-                        />
-                        <div className={styles.editActions}>
-                          <button className={styles.saveBtn} onClick={() => {
-                            const ta = document.getElementById(`nearby-ta-${key}`)
-                            const lines = ta ? ta.value.split('\n').map(s => s.trim()).filter(Boolean) : cat.items
-                            setNearbyData(prev => ({...prev, [key]: {...cat, items: lines}}))
-                            setNearbyEditing(null)
-                          }}>Save</button>
-                          <button className={styles.cancelBtn} onClick={() => setNearbyEditing(null)}>Cancel</button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
+              {nearbyEditing === 'all' ? (
+                <>
+                  <textarea
+                    className={styles.cardEditArea}
+                    defaultValue={Object.values(nearbyData || nearby).map(c => `[${c.label}]\n${c.items.join('\n')}`).join('\n\n')}
+                    autoFocus
+                    rows={20}
+                    id="nearby-ta-all"
+                  />
+                  <div className={styles.editActions}>
+                    <button className={styles.saveBtn} onClick={() => {
+                      const ta = document.getElementById('nearby-ta-all')
+                      if (!ta) { setNearbyEditing(null); return }
+                      const raw = ta.value
+                      const current = nearbyData || nearby
+                      const keys = Object.keys(current)
+                      const blocks = raw.split(/\n\n+/)
+                      const updated = {...current}
+                      blocks.forEach((block, i) => {
+                        const lines = block.split('\n').map(s => s.trim()).filter(Boolean)
+                        const key = keys[i]
+                        if (!key) return
+                        const items = lines.filter(l => !l.startsWith('['))
+                        updated[key] = {...current[key], items}
+                      })
+                      setNearbyData(updated)
+                      setNearbyEditing(null)
+                    }}>Save</button>
+                    <button className={styles.cancelBtn} onClick={() => setNearbyEditing(null)}>Cancel</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.nearbyGroups}>
+                    {Object.entries(nearbyData || nearby).map(([key, cat]) => (
+                      <div key={key} className={styles.nearbyGroup}>
+                        <p className={styles.nearbyGroupLabel}>{cat.label}</p>
                         <ul className={styles.nearbyList}>
                           {cat.items.map((item, i) => <li key={i}>{item}</li>)}
                         </ul>
-                        <button className={styles.editTextBtn} style={{marginTop:6}} onClick={() => setNearbyEditing(key)}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                          Edit
-                        </button>
-                      </>
-                    )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                  <div className={styles.cardBottom}>
+                    <div className={styles.cardBottomRow}>
+                      <button className={styles.editTextBtn} onClick={() => setNearbyEditing('all')}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
