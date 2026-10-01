@@ -839,7 +839,9 @@ function FeedbackModal({ listingId, onClose }) {
 function HistoryModal({ listings, loading, onClose, onRestore }) {
   const fmt = (iso) => {
     const d = new Date(iso)
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    const date = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    return `${date} · ${time}`
   }
 
   return (
@@ -899,7 +901,6 @@ function HistoryModal({ listings, loading, onClose, onRestore }) {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#86868B', marginBottom: 6 }}>
                   {fmt(l.created_at)}
-                  {l.tier && <span style={{ background: '#F5F5F5', borderRadius: 4, padding: '1px 6px', fontSize: 11, textTransform: 'capitalize' }}>{l.tier}</span>}
                   {l.property_type && <span style={{ background: '#F5F5F5', borderRadius: 4, padding: '1px 6px', fontSize: 11, textTransform: 'capitalize' }}>{l.property_type}</span>}
                 </div>
                 {l.mls_copy && (
