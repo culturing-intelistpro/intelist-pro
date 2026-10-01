@@ -9,6 +9,7 @@ import NotifyModal from './NotifyModal'
 import OnboardingTour from './OnboardingTour'
 import masterPromptRules from './masterPromptRules'
 import { callClaude } from './anthropicClient'
+import AgentProfileModal from './AgentProfileModal'
 
 // ─── Listing metadata helpers ──────────────────────────────────────────────────
 function detectTier(addr) {
@@ -262,6 +263,27 @@ function GenerateTimeline({ loadingStep }) {
 // ─── Generation countdown timer ──────────────────────────────────────────────
 const GEN_TIMES_KEY = 'intelist_gen_times'
 
+// ── Local listing history (localStorage fallback) ─────────────────────────
+const LOCAL_HISTORY_KEY = 'intelist_local_history'
+
+function saveLocalListing(listing) {
+  try {
+    const raw = localStorage.getItem(LOCAL_HISTORY_KEY)
+    const arr = raw ? JSON.parse(raw) : []
+    // 같은 id 있으면 제거 후 앞에 추가
+    const filtered = arr.filter(l => String(l.id) !== String(listing.id))
+    filtered.unshift(listing)
+    localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(filtered.slice(0, 30)))
+  } catch {}
+}
+
+function getLocalListings() {
+  try {
+    const raw = localStorage.getItem(LOCAL_HISTORY_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch { return [] }
+}
+
 function getAverageGenTime() {
   try {
     const raw = localStorage.getItem(GEN_TIMES_KEY)
@@ -289,73 +311,92 @@ function GenerateCountdown({ loading, startTimeRef }) {
 
   useEffect(() => {
     if (!loading) return
-    if (avgSecs === null) return  // no history yet — skip countdown
+    if (avgSecs === null) return
     setSecs(avgSecs)
     setPhase('counting')
     const interval = setInterval(() => {
       setSecs(prev => {
         if (prev === null) return null
-        if (prev <= 1) {
-          setPhase('over')
-          clearInterval(interval)
-          return 0
-        }
+        if (prev <= 1) { setPhase('over'); clearInterval(interval); return 0 }
         return prev - 1
       })
     }, 1000)
     return () => clearInterval(interval)
   }, [loading])
 
-  // When loading goes false while still counting — flash early-finish message
   useEffect(() => {
-    if (!loading && phase === 'counting' && secs !== null && secs > 0) {
-      setPhase('done')
-    }
+    if (!loading && phase === 'counting' && secs !== null && secs > 0) setPhase('done')
   }, [loading])
 
-  if (avgSecs === null) return null  // first few runs — existing spinner handles it
-
-  if (phase === 'over') {
-    return (
-      <p style={{
-        marginTop: 16,
-        fontSize: 13,
-        color: '#8a8a8e',
-        textAlign: 'center',
-        lineHeight: 1.5,
-      }}>
-        Almost there…<br/>Just a little longer 😊
-      </p>
-    )
-  }
+  if (avgSecs === null) return null
 
   if (phase === 'done') {
     return (
-      <p style={{
-        marginTop: 16,
-        fontSize: 13,
-        color: '#34c759',
-        textAlign: 'center',
-        fontWeight: 500,
-      }}>
-        Done faster than expected ✓
+      <p style={{ fontSize: 13, color: '#34c759', textAlign: 'center', fontWeight: 600, margin: 0 }}>
+        ✓ Done faster than expected
       </p>
     )
   }
 
-  // counting phase
+  const total = avgSecs
+  const pct   = phase === 'over' ? 1 : Math.max(0, Math.min(1, (total - (secs ?? 0)) / total))
+  // Hourglass geometry (viewBox 0 0 64 108)
+  // Top bulb: triangle (2,4) → (62,4) → (32,52)
+  // Bottom bulb: triangle (32,56) → (62,104) → (2,104)
+  const topH  = Math.round(48 * (1 - pct))   // top sand height — shrinks
+  const botH  = Math.round(48 * pct)           // bottom sand height — grows
+
+  // 원 둘레 계산: r=26 → circumference ≈ 163.4
+  const r   = 26
+  const circ = 2 * Math.PI * r
+  const dash = circ * (1 - pct)
+
   return (
-    <div style={{ marginTop: 16, textAlign: 'center' }}>
-      <span style={{
-        fontVariantNumeric: 'tabular-nums',
-        fontSize: 28,
-        fontWeight: 600,
-        color: '#1c1c1e',
-        letterSpacing: '-0.5px',
-      }}>
-        {secs}
-      </span>
-      <span style={{ fontSize: 13, color: '#8a8a8e', marginLeft: 4 }}>sec</span>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+      {/* 얇은 원형 프로그레스 */}
+      <div style={{ position: 'relative', width: 64, height: 64 }}>
+        <svg width="64" height="64" viewBox="0 0 64 64" style={{ transform: 'rotate(-90deg)' }}>
+          {/* 배경 트랙 */}
+          <circle cx="32" cy="32" r={r} fill="none"
+            stroke="var(--border-light, rgba(0,0,0,0.08))" strokeWidth="3"/>
+          {/* 진행 바 */}
+          <circle cx="32" cy="32" r={r} fill="none"
+            stroke="var(--accent, #D94035)" strokeWidth="3"
+            strokeLinecap="round"
+            strokeDasharray={circ}
+            strokeDashoffset={dash}
+            style={{ transition: 'stroke-dashoffset 0.9s ease' }}/>
+        </svg>
+        {/* 중앙 숫자 */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          lineHeight: 1,
+        }}>
+          {phase === 'over' ? (
+            <span style={{ fontSize: 10, color: 'var(--accent, #D94035)', fontWeight: 600, textAlign: 'center', lineHeight: 1.2 }}>almost<br/>there</span>
+          ) : (
+            <>
+              <span style={{
+                fontVariantNumeric: 'tabular-nums',
+                fontSize: 18, fontWeight: 700,
+                color: 'var(--text-1, #1D1D1F)',
+                letterSpacing: '-0.5px',
+              }}>{secs}</span>
+              <span style={{ fontSize: 9, color: 'var(--text-3, #8a8a8e)', letterSpacing: '0.5px' }}>sec</span>
+            </>
+          )}
+        </div>
+      </div>
+      {phase === 'over' && (
+        <p style={{
+          fontSize: 12, color: 'var(--accent, #D94035)', fontWeight: 600,
+          margin: 0, textAlign: 'center', letterSpacing: '0.01em',
+        }}>
+          A few more seconds…
+        </p>
+      )}
     </div>
   )
 }
@@ -449,9 +490,10 @@ function useRelativeTime(timestamp) {
 }
 
 // ─── Result card ───────────────────────────────────────────────────────────────
-function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, initialVerb = 'Generated', revisingAll = false }) {
+function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, initialVerb = 'Generated', revisingAll = false, onTrackEvent, onCopy }) {
   const [text, setText]                   = useState(content)
   const [original]                        = useState(content)
+  const [revisionHistory, setRevisionHistory] = useState([])   // stack for multi-step undo
   const [isEditing, setIsEditing]         = useState(false)
   const [editDraft, setEditDraft]         = useState(content)
   const [reviseInput, setReviseInput]     = useState('')
@@ -479,10 +521,12 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
   const [timestamp, setTimestamp]         = useState(new Date())
   const [timestampVerb, setTimestampVerb] = useState(initialVerb)
   const relativeTime = useRelativeTime(timestamp)
+  const sectionReviseCountRef             = useRef(0)  // per-section revise count for event tracking
 
   const isModified = text !== original
 
-  const commitText = (newText, verb) => {
+  const commitText = (newText, verb, pushHistory = true) => {
+    if (pushHistory) setRevisionHistory(prev => [...prev, text])
     setText(newText)
     onChange?.(newText)
     setTimestamp(new Date())
@@ -492,13 +536,24 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
   const saveEdit = async () => {
     commitText(editDraft, 'Revised')
     setIsEditing(false)
+    // Track manual edit event (section-level text edited by hand)
+    onTrackEvent?.('edit_manual', {
+      section:       sectionKey,
+      revise_count:  sectionReviseCountRef.current,
+      chars_changed: Math.abs(editDraft.length - text.length),
+    })
     if (listingId) {
       const { data } = await supabase.from('listings').select('edit_count').eq('id', listingId).single()
       supabase.from('listings').update({ edit_count: (data?.edit_count || 0) + 1 }).eq('id', listingId)
     }
   }
 
-  const undo = () => commitText(original, 'Restored')
+  const undoRevision = () => {
+    if (revisionHistory.length === 0) return
+    const prev = revisionHistory[revisionHistory.length - 1]
+    setRevisionHistory(h => h.slice(0, -1))
+    commitText(prev, revisionHistory.length === 1 ? 'Restored' : 'Reverted', false)
+  }
 
   const revise = async () => {
     if (!reviseInput.trim()) return
@@ -515,6 +570,13 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
       })
       commitText(msg.content[0]?.text?.trim() ?? text, 'Revised')
       setReviseInput('')
+      sectionReviseCountRef.current += 1
+      // Track per-section AI revise event (prompt + section logged for personalization)
+      onTrackEvent?.('revise_section', {
+        section:       sectionKey,
+        prompt,
+        revise_count:  sectionReviseCountRef.current,
+      })
       if (listingId) {
         const { data } = await supabase.from('listings').select('ai_revise_count, revise_prompts').eq('id', listingId).single()
         supabase.from('listings').update({
@@ -537,6 +599,15 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
           <p className={styles.cardSub}>{sublabel}</p>
         </div>
         <CopyButton text={text} onCopy={async () => {
+          // Rich copy event: which section, timing, how many revisions were made first
+          onTrackEvent?.('copy_section', {
+            section:      sectionKey,
+            revise_count: sectionReviseCountRef.current,
+            text_length:  text.length,
+            was_modified: text !== original,
+          })
+          onCopy?.()
+          // Also keep the legacy sections_copied array for backward compat
           if (listingId && sectionKey) {
             const { data } = await supabase.from('listings').select('sections_copied').eq('id', listingId).single()
             supabase.from('listings').update({ sections_copied: [...(data?.sections_copied || []), sectionKey] }).eq('id', listingId)
@@ -581,8 +652,10 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
               <PenLine size={14} />
               Edit
             </button>
-            {isModified && (
-              <button className={styles.undoBtn} onClick={undo}>Undo</button>
+            {revisionHistory.length > 0 && (
+              <button className={styles.undoBtn} onClick={undoRevision}>
+                ↩ Undo
+              </button>
             )}
           </div>
           {/* Row 2: AI revise */}
@@ -623,12 +696,12 @@ function ResultCard({ tag, sublabel, content, onChange, listingId, sectionKey, i
 
 // ─── Onboarding tour ────────────────────────────────────────────────────────────
 const ONBOARDING_STEPS = [
-  { targetId: 'address-input',    message: "Start here! Enter the property address — we'll pull up everything we need." },
-  { targetId: 'tour-notes-btn',   message: 'Add any special features or highlights about the property here.' },
-  { targetId: 'tour-record-btn',  message: "Prefer to talk? Record your notes and we'll transcribe them for you." },
-  { targetId: 'tour-photos-btn',  message: "Upload 5–10 listing photos and your MLS sheet. Choose the photos that best showcase this home — what you pick tells us what matters most." },
-  { targetId: 'tour-style-btn',   message: 'Paste your past listing descriptions so we can match your writing style.' },
-  { targetId: 'tour-submit-arrow', message: 'All set! Enter your address and hit the arrow to generate your listing copy.' },
+  { targetId: 'address-input',     emoji: '📍', title: 'Property Address',      message: "Start here. Enter the property address and we'll automatically pull up the Zillow data, school assignments, and neighborhood details." },
+  { targetId: 'tour-notes-btn',    emoji: '📝', title: 'Notes',                 message: 'Add any standout features — recent upgrades, finishes, layout highlights. The more specific you are, the stronger the copy.' },
+  { targetId: 'tour-record-btn',   emoji: '🎙️', title: 'Voice Input',           message: "Prefer to talk it out? Hit record and describe the home — we'll transcribe your words and weave them in." },
+  { targetId: 'tour-photos-btn',   emoji: '📸', title: 'Photos & Documents',    message: 'Upload 5–10 listing photos and your MLS sheet. The photos you choose signal what makes this home special — we read that.' },
+  { targetId: 'tour-style-btn',    emoji: '✍️', title: 'Your Writing Style',    message: 'Paste a few of your past listing descriptions. We study your voice and match it — so every output sounds like you wrote it.' },
+  { targetId: 'tour-submit-arrow', emoji: '✨', title: "You're All Set",         message: "Hit the arrow to generate MLS copy, a Zillow 'What’s Special' description, and a social media caption — all in seconds." },
 ]
 
 // ─── Coming Soon ────────────────────────────────────────────────────────────────
@@ -643,6 +716,205 @@ const COMING_SOON_FEATURES = [
   { key: 'social-media-kit',        title: 'Social Media Kit',        tagline: 'Instagram & Facebook ready in seconds' },
   { key: 'stock-photo-marketplace', title: 'Stock Photo Marketplace', tagline: 'Buy and sell listing photos' },
 ]
+
+// ── HistoryModal ─────────────────────────────────────────────────────────────
+
+/* ─────────────────────────────────────────────────────────────
+   FeedbackModal — appears once after user copies their first listing
+   ───────────────────────────────────────────────────────────── */
+function FeedbackModal({ listingId, onClose }) {
+  const [rating, setRating]   = useState(0)
+  const [hovered, setHovered] = useState(0)
+  const [comment, setComment] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+
+  const submit = async () => {
+    if (rating === 0) return
+    setSubmitted(true)
+    try {
+      await supabase.from('listings').update({
+        feedback_rating: rating,
+        feedback_comment: comment.trim() || null,
+        feedback_at: new Date().toISOString(),
+      }).eq('id', listingId)
+    } catch (e) {
+      console.error('[Intelist Pro] feedback save error', e)
+    }
+    setTimeout(onClose, 1400)
+  }
+
+  const labels = ['', 'Needs work', 'Could be better', 'Pretty good', 'Really good', 'Amazing!']
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9000,
+      background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(4px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '0 16px',
+    }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: 'var(--surface, #fff)',
+        borderRadius: 20, padding: '32px 28px 28px',
+        width: '100%', maxWidth: 400,
+        boxShadow: '0 24px 64px rgba(0,0,0,0.18)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
+      }}>
+        {submitted ? (
+          <div style={{ textAlign: 'center', padding: '12px 0' }}>
+            <div style={{ fontSize: 40, marginBottom: 10 }}>🙏</div>
+            <p style={{ fontSize: 17, fontWeight: 600, color: 'var(--text, #1d1d1f)' }}>Thanks for your feedback!</p>
+          </div>
+        ) : (
+          <>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>⭐</div>
+              <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--text, #1d1d1f)', marginBottom: 4 }}>
+                How was your experience?
+              </p>
+              <p style={{ fontSize: 14, color: '#8a8a8e', lineHeight: 1.4 }}>
+                Rate your first listing creation — your feedback helps us improve.
+              </p>
+            </div>
+
+            {/* Star rating */}
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[1,2,3,4,5].map(n => (
+                <button key={n}
+                  onMouseEnter={() => setHovered(n)}
+                  onMouseLeave={() => setHovered(0)}
+                  onClick={() => setRating(n)}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontSize: 36, padding: 2, lineHeight: 1,
+                    filter: n <= (hovered || rating) ? 'none' : 'grayscale(1) opacity(0.35)',
+                    transition: 'filter 0.12s, transform 0.1s',
+                    transform: n <= (hovered || rating) ? 'scale(1.15)' : 'scale(1)',
+                  }}
+                >⭐</button>
+              ))}
+            </div>
+
+            {/* Label under stars */}
+            <p style={{ fontSize: 13, color: '#3B82F6', fontWeight: 600, minHeight: 20, marginTop: -8 }}>
+              {labels[hovered || rating]}
+            </p>
+
+            {/* Optional comment */}
+            <textarea
+              placeholder="Any comments? (optional)"
+              value={comment}
+              onChange={e => setComment(e.target.value)}
+              rows={3}
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                border: '1.5px solid #e0e0e5', borderRadius: 10,
+                padding: '10px 12px', fontSize: 14,
+                fontFamily: 'inherit', resize: 'vertical',
+                outline: 'none', color: 'var(--text, #1d1d1f)',
+                background: 'var(--bg, #f5f5f7)',
+              }}
+            />
+
+            <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+              <button onClick={onClose} style={{
+                flex: 1, padding: '11px 0', borderRadius: 12,
+                border: '1.5px solid #e0e0e5', background: 'transparent',
+                color: '#8a8a8e', fontSize: 15, cursor: 'pointer', fontFamily: 'inherit',
+              }}>Skip</button>
+              <button onClick={submit} disabled={rating === 0} style={{
+                flex: 2, padding: '11px 0', borderRadius: 12,
+                border: 'none', background: rating === 0 ? '#e0e0e5' : '#0071E3',
+                color: rating === 0 ? '#aaa' : '#fff', fontSize: 15,
+                fontWeight: 600, cursor: rating === 0 ? 'default' : 'pointer',
+                fontFamily: 'inherit', transition: 'background 0.15s',
+              }}>Submit Feedback</button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function HistoryModal({ listings, loading, onClose, onRestore }) {
+  const fmt = (iso) => {
+    const d = new Date(iso)
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
+        zIndex: 9999, display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: '#fff', width: 'min(420px, 100vw)', height: '100dvh',
+          display: 'flex', flexDirection: 'column', boxShadow: '-4px 0 24px rgba(0,0,0,0.18)',
+          overflowY: 'hidden',
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '20px 20px 16px', borderBottom: '1px solid #E5E5E5', flexShrink: 0,
+        }}>
+          <span style={{ fontSize: 16, fontWeight: 600, color: '#1D1D1F' }}>My Listings</span>
+          <button onClick={onClose} style={{
+            background: 'none', border: 'none', fontSize: 18, color: '#86868B',
+            cursor: 'pointer', lineHeight: 1, padding: '4px 6px',
+          }}>✕</button>
+        </div>
+
+        {/* Body */}
+        {loading ? (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#86868B', fontSize: 14 }}>
+            Loading…
+          </div>
+        ) : listings.length === 0 ? (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#86868B', fontSize: 14, textAlign: 'center', padding: 24 }}>
+            <p style={{ margin: 0, fontSize: 32 }}>📋</p>
+            <p style={{ margin: '8px 0 0', fontWeight: 600, color: '#1D1D1F' }}>No listings yet</p>
+            <p style={{ margin: '4px 0 0', fontSize: 12, opacity: 0.7 }}>Generate a listing and it will appear here automatically.</p>
+          </div>
+        ) : (
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, overflowY: 'auto', flex: 1 }}>
+            {listings.map((l) => (
+              <li
+                key={l.id}
+                onClick={() => onRestore(l)}
+                style={{
+                  padding: '14px 20px', borderBottom: '1px solid #F0F0F0',
+                  cursor: 'pointer', transition: 'background 0.1s',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#FAFAFA'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <div style={{ fontSize: 14, fontWeight: 500, color: '#1D1D1F', marginBottom: 4, lineHeight: 1.3 }}>
+                  {l.address}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#86868B', marginBottom: 6 }}>
+                  {fmt(l.created_at)}
+                  {l.tier && <span style={{ background: '#F5F5F5', borderRadius: 4, padding: '1px 6px', fontSize: 11, textTransform: 'capitalize' }}>{l.tier}</span>}
+                  {l.property_type && <span style={{ background: '#F5F5F5', borderRadius: 4, padding: '1px 6px', fontSize: 11, textTransform: 'capitalize' }}>{l.property_type}</span>}
+                </div>
+                {l.mls_copy && (
+                  <p style={{ fontSize: 12, color: '#86868B', lineHeight: 1.5, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {l.mls_copy.slice(0, 140)}{l.mls_copy.length > 140 ? '…' : ''}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
+}
 
 function ComingSoonSection({ onNotify }) {
   return (
@@ -683,31 +955,126 @@ export default function App() {
 
   // ── Onboarding tour: only for users who haven't completed it ────────────────
   const checkOnboarding = useCallback(async (userId) => {
+    // localStorage is primary — instant, reliable, per-browser
     try {
-      const { data, error } = await supabase
+      const key = `intelist_onboarding_done_${userId}`
+      if (localStorage.getItem(key) === 'true') return  // already done
+    } catch {}
+    // Supabase as secondary (gracefully fails if column missing)
+    try {
+      const { data } = await supabase
         .from('profiles')
         .select('onboarding_completed')
         .eq('id', userId)
         .maybeSingle()
-      if (error) console.warn('[Intelist Pro] Onboarding check query error:', error)
-      if (!data?.onboarding_completed) {
-        setShowOnboarding(true)
-        setTourStep(0)
+      if (data?.onboarding_completed) {
+        // Mark in localStorage so we skip the DB call next time
+        try { localStorage.setItem(`intelist_onboarding_done_${userId}`, 'true') } catch {}
+        return
       }
     } catch (e) {
       console.warn('[Intelist Pro] Onboarding check error:', e)
     }
+    setShowOnboarding(true)
+    setTourStep(0)
   }, [])
 
   const finishOnboarding = useCallback(async () => {
     setShowOnboarding(false)
+    // Save to localStorage first (always works)
     if (user) {
-      const { error: upsertError } = await supabase
-        .from('profiles')
-        .upsert({ id: user.id, onboarding_completed: true })
-      if (upsertError) console.warn('[Intelist Pro] Onboarding save error:', upsertError)
+      try { localStorage.setItem(`intelist_onboarding_done_${user.id}`, 'true') } catch {}
+      // Also save to Supabase (best-effort — may fail if column missing)
+      try {
+        await supabase.from('profiles').upsert({ id: user.id, onboarding_completed: true })
+      } catch (e) {
+        console.warn('[Intelist Pro] Onboarding save error:', e)
+      }
     }
   }, [user])
+
+  // ── Profile loading ───────────────────────────────────────────────────────
+  const loadProfile = useCallback(async (userId) => {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, phone, brokerage, brand_color, logo_url, agent_photo_url, website_url, instagram_url, facebook_url, linkedin_url, writing_style, copy_tone, specialties, certifications, tagline')
+        .eq('id', userId)
+        .maybeSingle()
+      if (data) setProfile(data)
+    } catch (e) {
+      console.warn('[Intelist Pro] Profile load error:', e)
+    }
+  }, [])
+
+  // ── History loading ───────────────────────────────────────────────────────
+  const loadHistory = useCallback(async (userId) => {
+    setLoadingHistory(true)
+    try {
+      const { data } = await supabase
+        .from('listings')
+        .select('id, address, mls_copy, marketing_copy, social_copy, created_at, tier, property_type')
+        .eq('user_id', userId)
+        .not('mls_copy', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(30)
+      const local = getLocalListings()
+      const dbData = data ?? []
+      if (dbData.length === 0 && local.length > 0) {
+        setHistoryListings(local)
+      } else {
+        const dbIds = new Set(dbData.map(l => String(l.id)))
+        const extras = local.filter(l => !dbIds.has(String(l.id)))
+        setHistoryListings([...dbData, ...extras])
+      }
+    } catch (e) {
+      console.warn('[Intelist Pro] History load error:', e)
+      setHistoryListings(getLocalListings())
+    } finally {
+      setLoadingHistory(false)
+    }
+  }, [])
+
+  const openHistory = () => {
+    setShowHistory(true)
+    if (user) {
+      loadHistory(user.id)
+    } else {
+      setHistoryListings(getLocalListings())
+    }
+  }
+
+  const restoreFromHistory = (listing) => {
+    reset()
+    setAddress(listing.address ?? '')
+    setResults({
+      address:   listing.address ?? '',
+      mls:       listing.mls_copy ?? '',
+      marketing: listing.marketing_copy ?? '',
+      social:    listing.social_copy ?? '',
+    })
+    setListingId(listing.id)
+    setShowHistory(false)
+  }
+
+  // ── Post-generation event tracker (personalization data) ──────────────────
+  // Logs rich behavioral data: what was copied, when, after how many revisions,
+  // what revision prompts were used — used to learn each agent's preferences.
+  const trackEvent = useCallback(async (type, extra = {}) => {
+    const id = listingIdRef.current
+    if (!id) return
+    const event = {
+      type,
+      ts:              new Date().toISOString(),
+      ms_since_gen:    generationTimeRef.current ? Date.now() - generationTimeRef.current : null,
+      ...extra,
+    }
+    try {
+      await supabase.rpc('append_listing_event', { p_listing_id: id, p_event: event })
+    } catch (e) {
+      console.warn('[Intelist Pro] Event tracking error:', e)
+    }
+  }, [])
 
   // ── Subscription / usage check ────────────────────────────────────────────
   const checkSubscription = useCallback(async (userId) => {
@@ -740,7 +1107,7 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setAuthChecked(true)
-      if (session?.user) { checkSubscription(session.user.id); checkOnboarding(session.user.id) }
+      if (session?.user) { checkSubscription(session.user.id); checkOnboarding(session.user.id); loadProfile(session.user.id) }
 
       // Handle return from Stripe Checkout
       const params = new URLSearchParams(window.location.search)
@@ -754,10 +1121,10 @@ export default function App() {
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
-      if (session?.user) { checkSubscription(session.user.id); checkOnboarding(session.user.id) }
+      if (session?.user) { checkSubscription(session.user.id); checkOnboarding(session.user.id); loadProfile(session.user.id) }
     })
     return () => subscription.unsubscribe()
-  }, [checkSubscription, checkOnboarding])
+  }, [checkSubscription, checkOnboarding, loadProfile])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -782,6 +1149,10 @@ export default function App() {
   const [dirEditing, setDirEditing]       = useState(false)
   const [results, setResults]             = useState(null)
   const [activeTab, setActiveTab]         = useState('mls')
+  const [visitedTabs, setVisitedTabs]     = useState(new Set(['mls']))
+  const [showMlsNudge, setShowMlsNudge]   = useState(false)
+  const [showFeedback, setShowFeedback]   = useState(false)
+  const feedbackShownRef = useRef(false)   // show feedback only once per listing session
   const [error, setError]                 = useState(null)
   const [activePanel, setActivePanel]     = useState(null) // 'notes'|'record'|'photos'|'style'|null
   const [styleFiles, setStyleFiles]       = useState([])
@@ -796,6 +1167,13 @@ export default function App() {
   const [revisingAll,    setRevisingAll]       = useState(false)
   const [reviseAllCount, setReviseAllCount]   = useState(0)
   const [elapsedMs,      setElapsedMs]         = useState(null)
+
+  // ── History & Profile ────────────────────────────────────────────────────────
+  const [showHistory,     setShowHistory]     = useState(false)
+  const [historyListings, setHistoryListings] = useState([])
+  const [loadingHistory,  setLoadingHistory]  = useState(false)
+  const [profile,         setProfile]         = useState(null)
+  const [showProfile,     setShowProfile]     = useState(false)
 
   const fileInputRef         = useRef(null)
   const styleFileInputRef    = useRef(null)
@@ -1162,10 +1540,24 @@ Use only data found on Zillow. Set any unfound field to null.`,
 
       const styleTextParts = [
         prevListing.trim(),
+        // Also include saved writing_style from profile (if not already added as styleFile)
+        profile?.writing_style?.trim() ?? '',
         ...styleFiles.filter((f) => f.text).map((f) => `[${f.name}]\n${f.text.trim()}`),
       ].filter(Boolean)
       const prevBlock = styleTextParts.length
         ? `\nAgent's previous listing sample(s) (use only to calibrate tone and writing style — do NOT copy facts or phrases):\n"""\n${styleTextParts.join('\n\n---\n\n')}\n"""`
+        : ''
+
+      // ── Agent profile block — brand info injected into prompt ──────────────
+      const agentProfileLines = []
+      if (profile?.full_name)     agentProfileLines.push(`Agent name: ${profile.full_name}`)
+      if (profile?.brokerage)     agentProfileLines.push(`Brokerage: ${profile.brokerage}`)
+      if (profile?.copy_tone)     agentProfileLines.push(`Preferred writing tone: ${profile.copy_tone}`)
+      if (profile?.specialties)   agentProfileLines.push(`Agent specialties: ${profile.specialties}`)
+      if (profile?.certifications) agentProfileLines.push(`Certifications: ${profile.certifications}`)
+      if (profile?.tagline)       agentProfileLines.push(`Agent tagline: "${profile.tagline}"`)
+      const agentProfileBlock = agentProfileLines.length
+        ? `\nAgent profile (use for attribution and tone calibration — do NOT invent facts):\n${agentProfileLines.join('\n')}`
         : ''
 
       // Build Zillow block
@@ -1199,7 +1591,7 @@ First, normalize the property address to proper US real estate format (title cas
 Property address: ${address}${combinedNotes ? `\nAgent notes: ${combinedNotes}` : ''}${(images.length) ? `\n${Math.min(images.filter(i=>!i.isPDF).length, 5)} photo(s) and ${images.filter(i=>i.isPDF).length} MLS/PDF file(s) attached.` : ''}${prevBlock /* agent style samples — if provided */}
 ${zillowBlock ? `\n${zillowBlock}` : ''}${/* Zillow data — if provided */''}
 ${schoolBlock ? `\n${schoolBlock}` : ''}${/* school data — if provided */''}
-${communityBlock ? `\n${communityBlock}` : ''}${/* community data — if provided */''}
+${communityBlock ? `\n${communityBlock}` : ''}${agentProfileBlock}
 
 === HOW TO USE ATTACHED FILES ===
 MLS SHEET (image or PDF): Extract as verified facts — specs, schools, HOA, transportation, room details. These are the factual backbone.
@@ -1522,6 +1914,21 @@ Each section must bring new information or perspective — not restate what anot
       setElapsedMs(elapsed)
       setResults(parsed)
       setReviseAllCount(0)
+      // localStorage에 먼저 저장 (DB 성공 여부 무관)
+      {
+        const combinedText = combinedNotes + ' ' + (zillowBlock || '')
+        const localId = `local_${Date.now()}`
+        saveLocalListing({
+          id: localId,
+          address,
+          mls_copy:       parsed.mls       ?? null,
+          marketing_copy: parsed.marketing ?? null,
+          social_copy:    parsed.social    ?? null,
+          created_at:     new Date().toISOString(),
+          tier:           applyPriceOverride(detectTier(address), detectPriceRange(combinedText)),
+          property_type:  detectPropertyType(combinedText),
+        })
+      }
       // Track listing in Supabase (best-effort)
       try {
         const combinedText = combinedNotes + ' ' + (zillowBlock || '')
@@ -1534,8 +1941,33 @@ Each section must bring new information or perspective — not restate what anot
           price_range:      priceRange,
           session_start:    new Date(sessionStartRef.current).toISOString(),
           generation_time:  new Date(generationTimeRef.current).toISOString(),
+          // ── Save generated copy for history & personalization ────────────
+          mls_copy:         parsed.mls       ?? null,
+          marketing_copy:   parsed.marketing ?? null,
+          social_copy:      parsed.social    ?? null,
         }).select('id').single()
-        if (newListing) setListingId(newListing.id)
+        if (newListing) {
+          setListingId(newListing.id)
+          // local_ 임시 항목을 실제 DB id로 교체
+          saveLocalListing({
+            id: newListing.id,
+            address,
+            mls_copy:       parsed.mls       ?? null,
+            marketing_copy: parsed.marketing ?? null,
+            social_copy:    parsed.social    ?? null,
+            created_at:     new Date().toISOString(),
+            tier:           applyPriceOverride(detectTier(address), detectPriceRange(combinedNotes + ' ' + (zillowBlock || ''))),
+            property_type:  detectPropertyType(combinedNotes + ' ' + (zillowBlock || '')),
+          })
+          // local_ 임시 항목 제거
+          try {
+            const raw = localStorage.getItem(LOCAL_HISTORY_KEY)
+            const arr = raw ? JSON.parse(raw) : []
+            const cleaned = arr.filter(l => !String(l.id).startsWith('local_'))
+            cleaned.unshift({ id: newListing.id, address, mls_copy: parsed.mls ?? null, marketing_copy: parsed.marketing ?? null, social_copy: parsed.social ?? null, created_at: new Date().toISOString() })
+            localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(cleaned.slice(0, 30)))
+          } catch {}
+        }
         setGenCount((c) => c + 1)
       } catch (e) {
         console.warn('[Intelist Pro] Listing tracking error:', e)
@@ -1572,6 +2004,8 @@ Each section must bring new information or perspective — not restate what anot
         social:    socialMsg.content[0]?.text?.trim()    ?? r.social,
       }))
       setReviseAllCount((c) => c + 1)
+      // Track revise-all event with the full prompt (key personalization signal)
+      trackEvent('revise_all', { prompt, revise_all_count: reviseAllCount + 1 })
       setReviseAllInput('')
     } catch (err) {
       console.error('[Intelist Pro] Revise All error:', err)
@@ -1609,7 +2043,14 @@ Each section must bring new information or perspective — not restate what anot
     setActivePanel(null); setStyleFiles([])
     images.forEach((img) => URL.revokeObjectURL(img.preview))
     setImages([]); setListingId(null); setZillowData(null); setDirections(null); setNearby(null); setNearbyData(null); setNearbyEditing(null); setDirEditText(''); setDirEditing(false)
-    setActiveTab('mls'); setElapsedMs(null)
+    setActiveTab('mls'); setElapsedMs(null); setVisitedTabs(new Set(['mls'])); setShowMlsNudge(false); setShowFeedback(false); feedbackShownRef.current = false
+  }
+
+  // ── Feedback trigger (once per listing session, after first copy) ──────────
+  const triggerFeedback = () => {
+    if (feedbackShownRef.current) return
+    feedbackShownRef.current = true
+    setTimeout(() => setShowFeedback(true), 800)   // small delay so copy action feels done
   }
 
   // ── Opt button class helper ─────────────────────────────────────────────────
@@ -1628,6 +2069,16 @@ Each section must bring new information or perspective — not restate what anot
       <div className={styles.page}>
         {/* Toast */}
         {toast && <div className={styles.toast}>{toast}</div>}
+
+        {/* Agent Profile Modal */}
+        {showProfile && (
+          <AgentProfileModal
+            user={user}
+            initialProfile={profile}
+            onClose={() => setShowProfile(false)}
+            onSave={(updated) => setProfile(prev => ({ ...prev, ...updated }))}
+          />
+        )}
 
         {/* Auth modal */}
         {showAuth && (
@@ -1710,6 +2161,7 @@ Each section must bring new information or perspective — not restate what anot
                 </button>
               )}
               {isPro && <span className={styles.proBadge}>Pro ✦</span>}
+              <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>
               <span className={styles.headerName}>
                 {user.user_metadata?.full_name ?? user.email}
               </span>
@@ -1957,6 +2409,16 @@ Each section must bring new information or perspective — not restate what anot
         {SHOW_COMING_SOON && notifyFeature && (
           <NotifyModal feature={notifyFeature} onClose={() => setNotifyFeature(null)} />
         )}
+
+        {/* ── History modal ── */}
+        {showHistory && (
+          <HistoryModal
+            listings={historyListings}
+            loading={loadingHistory}
+            onClose={() => setShowHistory(false)}
+            onRestore={restoreFromHistory}
+          />
+        )}
       </div>
     )
   }
@@ -1969,7 +2431,7 @@ Each section must bring new information or perspective — not restate what anot
   const hasNearby     = Boolean(nearby && Object.keys(nearby).length > 0)
   const tabs = [
     { key: 'mls',       label: 'MLS' },
-    { key: 'zillow',    label: 'Zillow' },
+    { key: 'zillow',    label: "What's Special" },
     { key: 'instagram', label: 'Social Media' },
     ...(hasDirections ? [{ key: 'directions', label: 'Directions' }] : []),
     ...(hasNearby     ? [{ key: 'nearby',     label: 'Nearby & Commute' }] : []),
@@ -1985,6 +2447,7 @@ Each section must bring new information or perspective — not restate what anot
               {user.user_metadata?.full_name ?? user.email}
             </span>
           )}
+          <button className={styles.historyBtn} onClick={openHistory} title="My past listings">My Listings</button>
           <button className={styles.newBtn} onClick={reset}>New listing</button>
           {user && (
             <button className={styles.signOutBtn} onClick={handleSignOut}>Sign out</button>
@@ -2006,7 +2469,8 @@ Each section must bring new information or perspective — not restate what anot
           <h2 className={styles.resultsAddress}>{displayAddress}</h2>
         </div>
         <div className={styles.copyAllRow} style={{ marginBottom: 16 }}>
-          <CopyButton text={allText} label="Copy all three" className={styles.copyAllBtn} />
+          <CopyButton text={allText} label="Copy all three" className={styles.copyAllBtn}
+            onCopy={() => { trackEvent('copy_all', { revise_all_count: reviseAllCount, text_length: allText.length }); triggerFeedback() }} />
         </div>
 
         {/* ── Revise All ── */}
@@ -2027,9 +2491,19 @@ Each section must bring new information or perspective — not restate what anot
               role="tab"
               aria-selected={activeTab === t.key}
               className={`${styles.tabBtn} ${activeTab === t.key ? styles.tabBtnActive : ''}`}
-              onClick={() => setActiveTab(t.key)}
+              onClick={() => {
+                setActiveTab(t.key)
+                setVisitedTabs((prev) => new Set([...prev, t.key]))
+              }}
             >
               {t.label}
+              {!visitedTabs.has(t.key) && activeTab !== t.key && (
+                <span style={{
+                  display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
+                  background: '#D94035', marginLeft: 5, verticalAlign: 'middle',
+                  marginBottom: 2, flexShrink: 0,
+                }} />
+              )}
             </button>
           ))}
         </div>
@@ -2038,13 +2512,42 @@ Each section must bring new information or perspective — not restate what anot
           {/* MLS / Zillow / Instagram stay mounted (so edits, drafts, and undo state
               survive tab switches) — only their visibility toggles. */}
           <div style={{ display: activeTab === 'mls' ? 'block' : 'none' }}>
-            <ResultCard key={`mls-${reviseAllCount}`} tag="MLS Description" sublabel="Short description · 200–250 words" content={results.mls} onChange={(t) => setResults((r) => ({ ...r, mls: t }))} listingId={listingId} sectionKey="mls" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
+            <ResultCard key={`mls-${reviseAllCount}`} tag="MLS Description" sublabel="Short description · 200–250 words" content={results.mls} onChange={(t) => setResults((r) => ({ ...r, mls: t }))} listingId={listingId} sectionKey="mls" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} onCopy={() => { if (!visitedTabs.has('zillow') || !visitedTabs.has('instagram')) setShowMlsNudge(true); triggerFeedback() }} />
+            {showMlsNudge && (!visitedTabs.has('zillow') || !visitedTabs.has('instagram')) && (
+              <div style={{
+                marginTop: 10, padding: '12px 16px', background: '#EFF6FF',
+                border: '1px solid #BFDBFE', borderRadius: 12,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+              }}>
+                <span style={{ fontSize: 13, color: '#1E40AF', lineHeight: 1.4 }}>
+                  ✨ You also have{!visitedTabs.has('zillow') && !visitedTabs.has('instagram') ? " What's Special + Social Media" : !visitedTabs.has('zillow') ? " a What's Special" : " a Social Media"} caption ready.
+                </span>
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  {!visitedTabs.has('zillow') && (
+                    <button onClick={() => { setActiveTab('zillow'); setVisitedTabs((p) => new Set([...p, 'zillow'])); setShowMlsNudge(false) }}
+                      style={{ background: '#0071E3', color: '#fff', border: 'none', borderRadius: 20, padding: '5px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      What's Special
+                    </button>
+                  )}
+                  {!visitedTabs.has('instagram') && (
+                    <button onClick={() => { setActiveTab('instagram'); setVisitedTabs((p) => new Set([...p, 'instagram'])); setShowMlsNudge(false) }}
+                      style={{ background: '#0071E3', color: '#fff', border: 'none', borderRadius: 20, padding: '5px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      Social Media
+                    </button>
+                  )}
+                  <button onClick={() => setShowMlsNudge(false)}
+                    style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: 16, cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}>
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           <div style={{ display: activeTab === 'zillow' ? 'block' : 'none' }}>
-            <ResultCard key={`zillow-${reviseAllCount}`} tag="Zillow · What's Special" sublabel="Long form · 300–400 words" content={results.marketing} onChange={(t) => setResults((r) => ({ ...r, marketing: t }))} listingId={listingId} sectionKey="zillow" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
+            <ResultCard key={`zillow-${reviseAllCount}`} tag="Listing Portal" sublabel="Long form · 300–400 words" content={results.marketing} onChange={(t) => setResults((r) => ({ ...r, marketing: t }))} listingId={listingId} sectionKey="zillow" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} onCopy={triggerFeedback} />
           </div>
           <div style={{ display: activeTab === 'instagram' ? 'block' : 'none' }}>
-            <ResultCard key={`instagram-${reviseAllCount}`} tag="Social Media Caption" sublabel="Instagram / Facebook caption" content={results.social} onChange={(t) => setResults((r) => ({ ...r, social: t }))} listingId={listingId} sectionKey="instagram" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} />
+            <ResultCard key={`instagram-${reviseAllCount}`} tag="Social Media Caption" sublabel="Instagram / Facebook caption" content={results.social} onChange={(t) => setResults((r) => ({ ...r, social: t }))} listingId={listingId} sectionKey="instagram" initialVerb={reviseAllCount > 0 ? 'Revised' : 'Generated'} revisingAll={revisingAll} onTrackEvent={trackEvent} onCopy={triggerFeedback} />
           </div>
 
           {activeTab === 'directions' && hasDirections && (
@@ -2122,6 +2625,24 @@ Each section must bring new information or perspective — not restate what anot
           )}
         </div>
       </main>
+
+      {/* ── History modal (results page) ── */}
+      {showHistory && (
+        <HistoryModal
+          listings={historyListings}
+          loading={loadingHistory}
+          onClose={() => setShowHistory(false)}
+          onRestore={restoreFromHistory}
+        />
+      )}
+
+      {/* ── Feedback modal (shows once after first copy) ── */}
+      {showFeedback && listingId && (
+        <FeedbackModal
+          listingId={listingId}
+          onClose={() => setShowFeedback(false)}
+        />
+      )}
     </div>
   )
 }
