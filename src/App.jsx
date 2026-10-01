@@ -304,99 +304,51 @@ function saveGenTime(ms) {
 }
 
 function GenerateCountdown({ loading, startTimeRef }) {
-  const avgMs   = getAverageGenTime()
-  const avgSecs = avgMs ? Math.round(avgMs / 1000) : null
-  const [secs, setSecs]   = useState(avgSecs)
-  const [phase, setPhase] = useState('counting') // 'counting' | 'done' | 'over'
+  const [elapsed, setElapsed] = useState(0)
 
   useEffect(() => {
-    if (!loading) return
-    if (avgSecs === null) return
-    setSecs(avgSecs)
-    setPhase('counting')
+    if (!loading) { setElapsed(0); return }
+    setElapsed(0)
+    const start = startTimeRef?.current ?? Date.now()
     const interval = setInterval(() => {
-      setSecs(prev => {
-        if (prev === null) return null
-        if (prev <= 1) { setPhase('over'); clearInterval(interval); return 0 }
-        return prev - 1
-      })
+      setElapsed(Math.round((Date.now() - start) / 1000))
     }, 1000)
     return () => clearInterval(interval)
   }, [loading])
 
-  useEffect(() => {
-    if (!loading && phase === 'counting' && secs !== null && secs > 0) setPhase('done')
-  }, [loading])
+  if (!loading) return null
 
-  if (avgSecs === null) return null
-
-  if (phase === 'done') {
-    return (
-      <p style={{ fontSize: 13, color: '#34c759', textAlign: 'center', fontWeight: 600, margin: 0 }}>
-        ✓ Done faster than expected
-      </p>
-    )
-  }
-
-  const total = avgSecs
-  const pct   = phase === 'over' ? 1 : Math.max(0, Math.min(1, (total - (secs ?? 0)) / total))
-  // Hourglass geometry (viewBox 0 0 64 108)
-  // Top bulb: triangle (2,4) → (62,4) → (32,52)
-  // Bottom bulb: triangle (32,56) → (62,104) → (2,104)
-  const topH  = Math.round(48 * (1 - pct))   // top sand height — shrinks
-  const botH  = Math.round(48 * pct)           // bottom sand height — grows
-
-  // 원 둘레 계산: r=26 → circumference ≈ 163.4
-  const r   = 26
+  const r = 26
   const circ = 2 * Math.PI * r
-  const dash = circ * (1 - pct)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-      {/* 얇은 원형 프로그레스 */}
       <div style={{ position: 'relative', width: 64, height: 64 }}>
-        <svg width="64" height="64" viewBox="0 0 64 64" style={{ transform: 'rotate(-90deg)' }}>
-          {/* 배경 트랙 */}
+        <svg width="64" height="64" viewBox="0 0 64 64"
+          style={{ transformOrigin: '50% 50%', animation: 'spin 1.4s linear infinite' }}>
           <circle cx="32" cy="32" r={r} fill="none"
             stroke="var(--border-light, rgba(0,0,0,0.08))" strokeWidth="3"/>
-          {/* 진행 바 */}
           <circle cx="32" cy="32" r={r} fill="none"
             stroke="var(--accent, #D94035)" strokeWidth="3"
             strokeLinecap="round"
             strokeDasharray={circ}
-            strokeDashoffset={dash}
-            style={{ transition: 'stroke-dashoffset 0.9s ease' }}/>
+            strokeDashoffset={circ * 0.75}/>
         </svg>
-        {/* 중앙 숫자 */}
         <div style={{
           position: 'absolute', inset: 0,
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
           lineHeight: 1,
         }}>
-          {phase === 'over' ? (
-            <span style={{ fontSize: 10, color: 'var(--accent, #D94035)', fontWeight: 600, textAlign: 'center', lineHeight: 1.2 }}>almost<br/>there</span>
-          ) : (
-            <>
-              <span style={{
-                fontVariantNumeric: 'tabular-nums',
-                fontSize: 18, fontWeight: 700,
-                color: 'var(--text-1, #1D1D1F)',
-                letterSpacing: '-0.5px',
-              }}>{secs}</span>
-              <span style={{ fontSize: 9, color: 'var(--text-3, #8a8a8e)', letterSpacing: '0.5px' }}>sec</span>
-            </>
-          )}
+          <span style={{
+            fontVariantNumeric: 'tabular-nums',
+            fontSize: 18, fontWeight: 700,
+            color: 'var(--text-1, #1D1D1F)',
+            letterSpacing: '-0.5px',
+          }}>{elapsed}</span>
+          <span style={{ fontSize: 9, color: 'var(--text-3, #8a8a8e)', letterSpacing: '0.5px' }}>sec</span>
         </div>
       </div>
-      {phase === 'over' && (
-        <p style={{
-          fontSize: 12, color: 'var(--accent, #D94035)', fontWeight: 600,
-          margin: 0, textAlign: 'center', letterSpacing: '0.01em',
-        }}>
-          A few more seconds…
-        </p>
-      )}
     </div>
   )
 }
@@ -838,10 +790,18 @@ function FeedbackModal({ listingId, onClose }) {
 
 function HistoryModal({ listings, loading, onClose, onRestore }) {
   const fmt = (iso) => {
-    const d = new Date(iso)
-    const date = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-    return `${date} · ${time}`
+    if (!iso) return ''
+    // Safari-safe: replace space before timezone offset for proper parsing
+    const d = new Date(iso.replace(' ', 'T'))
+    if (isNaN(d)) return iso
+    const mo  = d.toLocaleString('en-US', { month: 'short' })
+    const day = d.getDate()
+    const yr  = d.getFullYear()
+    const hr  = d.getHours()
+    const min = String(d.getMinutes()).padStart(2, '0')
+    const ampm = hr >= 12 ? 'PM' : 'AM'
+    const hr12 = hr % 12 || 12
+    return mo + ' ' + day + ', ' + yr + ' · ' + hr12 + ':' + min + ' ' + ampm
   }
 
   return (
